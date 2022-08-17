@@ -13,7 +13,7 @@ por Jesús M. González Barahona
 ## Instrucciones
 
 1. ```$ ln -f -s scenario_NAME/machineNames.json .```
-2. ```$ ln -f -s scenario_NAME/netkit.nkp .```
+2. ```$ ln -f -s scenario_NAME/netgui.nkp .```
 3. ```$ ln -f -s scenario_NAME/caps.json .```
 4. ```ln -f -s scenario_NAME/shared/*.json . ```
 Enlazar todos los ficheros listados en caps.json.
