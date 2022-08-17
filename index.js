@@ -1,5 +1,5 @@
-var TICK = 2000 // 10000
-var DURATION = 1000 // 5000
+var TICK = 10000 // 10000
+var DURATION = 5000 // 5000
 
 /* global AFRAME */
 if (typeof AFRAME === 'undefined') {
@@ -257,7 +257,7 @@ AFRAME.registerComponent('packet', {
                     var nodeFromAnimation = document.getElementById(nodeAnimation.name);
                     console.log(nodeAnimation.name)
 
-                    if(nodeAnimation.name.startsWith('pc')){
+                    if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
                         nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
                     }else if(nodeAnimation.name.startsWith('hub')){
                         nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
@@ -336,6 +336,12 @@ AFRAME.registerComponent('packet', {
                         }
                         levels = Object.assign(levels,arpInfo);
                     }
+                    if(packetParams.icmp){
+                        const icmpInfo = {
+                            icmp: packetParams.icmpInfo
+                        }
+                        levels = Object.assign(levels,icmpInfo);
+                    }
                     if(packetParams.tcp){
                         const tcpInfo = {
                             tcp: packetParams.tcpInfo
@@ -348,12 +354,6 @@ AFRAME.registerComponent('packet', {
                         }
                         levels = Object.assign(levels,udpInfo);
                     }
-                    if(packetParams.icmp){
-                        const icmpInfo = {
-                            icmp: packetParams.icmpInfo
-                        }
-                        levels = Object.assign(levels,icmpInfo);
-                    }
                     if(packetParams.http){
                         const httpInfo = {
                             http: packetParams.httpInfo
@@ -362,7 +362,7 @@ AFRAME.registerComponent('packet', {
                     }
                     if(packetParams.dns){
                         const dnsInfo = {
-                            ddns: packetParams.dnsInfo
+                            dns: packetParams.dns
                         }
                         levels = Object.assign(levels,dnsInfo);
                     }
@@ -650,7 +650,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'dns')
                         let newDnsBox = document.createElement('a-box');
                         newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newDnsBox.setAttribute('color', 'goldenrot');
+                        newDnsBox.setAttribute('color', 'goldenrod');
                         newDnsBox.setAttribute('visible', true); // pheras
                         newDnsBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newDnsBox);
@@ -664,7 +664,7 @@ AFRAME.registerComponent('packet', {
                         });
                         newDnsBox.addEventListener('click', function () {
                             if(newDnsBox.hasAttribute('isVisible')){
-                                let infoText = ''/'<p>Nivel DNS:</p><p>Puerto origen: ' + packetParams.dns['dns.srcport'] + '</p><p>Puerto destino: ' + packetParams.dns['dns.dstport'] + '</p>'
+                                let infoText = 'dns'//'<p>Nivel DNS:</p><p>Puerto origen: ' + packetParams.dns['dns.srcport'] + '</p><p>Puerto destino: ' + packetParams.dns['dns.dstport'] + '</p>'
                                 if(closeInfo == true){
                                     closeInfo = false
                                     actualInfoShown = 'dns'
@@ -1012,7 +1012,7 @@ function setNodes(nodes, nodeList, data) {
 
         let newNodeElement = document.createElement('a-entity');
 
-        if(newNode.name.startsWith('pc')){
+        if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
