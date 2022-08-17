@@ -114,7 +114,7 @@ AFRAME.registerComponent('network', {
             requestMachineNames.onload = function() {
                 response = requestMachineNames.response;
                 responseParse = JSON.parse(response);
-        
+		
                 for (const interface in responseParse) {
                     for (const currentNode in responseParse[interface]) {
                         node = nodeList.find(o => o.name === currentNode)
@@ -137,7 +137,7 @@ AFRAME.registerComponent('network', {
                 requestPackets.onload = function() {
                     response = requestPackets.response;
                     responseParse = JSON.parse(response);
- 
+		    
                     packets = readPackets(responseParse)
 
 
@@ -160,7 +160,7 @@ AFRAME.registerComponent('network', {
                     animatePackets(packets, finalConnectionsLinks, data)
                 }
             }
-        
+            
 
             
         }
@@ -172,18 +172,18 @@ function eucDistance(a, b) {
     return a
         .map((x, i) => Math.abs( x - b[i] ) ** 2) // square the difference
         .reduce((sum, now) => sum + now) // sum
-        ** (1/2)
+    ** (1/2)
 }
 
 function hex_with_colons_to_ascii(str1)
- {
-	var hex  = str1.toString();
-	var str = '';
-	for (var n = 0; n < hex.length; n += 3) {
-		str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-	}
-	return str;
- }
+{
+    var hex  = str1.toString();
+    var str = '';
+    for (var n = 0; n < hex.length; n += 3) {
+	str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+    }
+    return str;
+}
 
 AFRAME.registerComponent('packet', {
     schema: {
@@ -214,7 +214,7 @@ AFRAME.registerComponent('packet', {
 
         console.log(packetParams.yPosition)
         
-       
+	
 
         let i = 0;
 
@@ -253,7 +253,7 @@ AFRAME.registerComponent('packet', {
 			    minDistance = distance
 			}
 		    }
-			    
+		    
                     var nodeFromAnimation = document.getElementById(nodeAnimation.name);
                     console.log(nodeAnimation.name)
 
@@ -975,12 +975,12 @@ AFRAME.registerComponent('packet', {
 
         var animationStatus = 'animation-starts'
         startButton.addEventListener('click', function () {
-           
-          for (var a=0; a< packets.length; a++) {
-            packets[a].emit(animationStatus,null,false)
-          }
+            
+            for (var a=0; a< packets.length; a++) {
+		packets[a].emit(animationStatus,null,false)
+            }
 
-          switch(animationStatus) {
+            switch(animationStatus) {
             case 'animation-starts':
                 setInterval(startAnimation, 1000);
                 animationStatus = 'move-pause'
@@ -993,7 +993,7 @@ AFRAME.registerComponent('packet', {
                 animationStatus = 'move-resume'
                 console.log('click2')
                 break
-          }
+            }
         });
     }
 });
@@ -1175,7 +1175,7 @@ function animatePackets(packets, connectionsLinks, data){
     console.log(data.elementsScale)
     finalPackets = []
     for (var j = 0; j < packets.length; j++) {
-        from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
+        var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
 	    console.log("en el if")
@@ -1202,7 +1202,7 @@ function animatePackets(packets, connectionsLinks, data){
 		    'dns': packets[j].dns,
 		    'http': packets[j].http
                 })
-               
+		
             } else
 	    { // hwaddr destino del paquete NO es vecina del
 		// nodo que estamos considerando (from). Es
@@ -1272,155 +1272,156 @@ function animatePackets(packets, connectionsLinks, data){
 	    }
         } else { // paquete de broadcast
 	    console.log("broadcast")
-		
-		escena = document.querySelector('#escena');
-		
-		var i = from.hwaddr.findIndex(o => o == packets[j].src)
-		nodeName = from.to[i]
-		console.log("nodeName: " + nodeName)
-		
-		to = connectionsLinks.find(o => o.from == nodeName)
-		
-		console.log("to:")
-		console.log(to)
-		
-		if (to.from.startsWith('hub')){
-                    packetDelay = TICK * j
-                    finalPackets.push({
-			'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
-			'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale, 
-			'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
-			'toZPosition': (to.position.split(',')[1] / 15)/data.elementsScale,
-			'duration': DURATION,
-			'packetDelay': packetDelay,
-			'id': packets[j].id,
-			'ip': packets[j].ip,
-			'eth': packets[j].eth,
-			'arp': packets[j].arp,
-			'dataInfo': packets[j].dataInfo,
-			'data': packets[j].data,			
-			'tcp': packets[j].tcp,
-			'udp': packets[j].udp,
-			'icmp': packets[j].icmp,
-			'dns': packets[j].dns,
-			'http': packets[j].http		    
-                    })
-		    
-		    console.log("antes del for")
-                    for (var d = 0; d < to.to.length; d++) {
-			if (to.to[d] != from.from){
-			    console.log("dentro del for")
-			    
-                            secondFrom = to
-                            secondTo = connectionsLinks.find(o => o.from === to.to[d])
-			    
-			    console.log(secondFrom)
-			    console.log(secondTo)
-			    
-                            packetDelay = TICK * j + DURATION
-			    
-			    finalPackets.push({
-				'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
-				'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
-				'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
-				'toZPosition': (secondTo.position.split(',')[1] / 15)/data.elementsScale,
-				'duration': DURATION,
-				'packetDelay': packetDelay,
-				'id': packets[j].id,
-				'ip': packets[j].ip,
-				'eth': packets[j].eth,
-				'arp': packets[j].arp,
-				'dataInfo': packets[j].dataInfo,
-				'data': packets[j].data,				
-				'tcp': packets[j].tcp,
-				'udp': packets[j].udp,
-				'icmp': packets[j].icmp,
-				'dns': packets[j].dns,
-				'http': packets[j].http		    
-                            })
-			    console.log("---")
-			}
-                    }
-		} else {
-		    packetDelay = TICK * j
-		    finalPackets.push({
-			'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
-			'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
-			'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
-			'toZPosition': (to.position.split(',')[1] / 15)/data.elementsScale,
-			'duration': TICK,
-			'packetDelay': packetDelay,
-			'id': packets[j].id,
-			'ip': packets[j].ip,
-			'eth': packets[j].eth,
-			'arp': packets[j].arp,
-			'dataInfo': packets[j].dataInfo,
-			'data': packets[j].data,			
-			'tcp': packets[j].tcp,
-			'udp': packets[j].udp,
-			'icmp': packets[j].icmp,
-			'dns': packets[j].dns,
-			'http': packets[j].http		    
-		    })
-		    
-		}
-		
-            }
-	}
-	
-	console.log("finalPackets:")
-	console.log(finalPackets)
-	
-	// --------- Create animations ----------
-	escena = document.querySelector('#escena');
-	for (var currentPacket = 0; currentPacket < finalPackets.length; currentPacket++) {
-            var newPacket = document.createElement('a-entity');
-            newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
-            newPacket.setAttribute('packet','yPosition', ' ' + data.height + ' ');
-            newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
-            newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
-            newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
-            newPacket.setAttribute('packet','toYPosition', ' ' + data.height + ' ');
-            newPacket.setAttribute('packet','elementsScale', data.elementsScale);
-            newPacket.setAttribute('packet','class', 'packetClass')
-            newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
-            newPacket.setAttribute('packet','id', currentPacket);
-            newPacket.setAttribute('packet','start', finalPackets[currentPacket].packetDelay);
-            console.log(finalPackets[currentPacket].xPosition)
-            console.log(finalPackets[currentPacket].zPosition)
-            
-            if (finalPackets[currentPacket].ip){
-		newPacket.setAttribute('packet','ip', finalPackets[currentPacket].ip);
-            }
-            if (finalPackets[currentPacket].eth){
-		newPacket.setAttribute('packet','eth', finalPackets[currentPacket].eth);
-            }
-            if (finalPackets[currentPacket].arp){
-		newPacket.setAttribute('packet','arp', finalPackets[currentPacket].arp);
-            }
-            if (finalPackets[currentPacket].dataInfo){
-		newPacket.setAttribute('packet','dataInfo', finalPackets[currentPacket].dataInfo);
-            }
-            if (finalPackets[currentPacket].data){
-		newPacket.setAttribute('packet','data', finalPackets[currentPacket].data);
-            }
-            if (finalPackets[currentPacket].tcp){
-		newPacket.setAttribute('packet','tcp', finalPackets[currentPacket].tcp);
-            }
-            if (finalPackets[currentPacket].udp){
-		newPacket.setAttribute('packet','udp', finalPackets[currentPacket].udp);
-            }
-            if (finalPackets[currentPacket].icmp){
-		newPacket.setAttribute('packet','icmp', finalPackets[currentPacket].icmp);
-            }
-            if (finalPackets[currentPacket].dns){
-		newPacket.setAttribute('packet','dns', finalPackets[currentPacket].dns);
-            }
-            if (finalPackets[currentPacket].http){
-		newPacket.setAttribute('packet','http', finalPackets[currentPacket].http);
-            }
 	    
-            escena.appendChild(newPacket);
-	}
+	    escena = document.querySelector('#escena');
+	    
+
+	    i = from.hwaddr.findIndex(o => o == packets[j].src)
+	    nodeName = from.to[i]
+	    console.log("nodeName: " + nodeName)
+	    
+	    to = connectionsLinks.find(o => o.from == nodeName)
+	    
+	    console.log("to:")
+	    console.log(to)
+	    
+	    if (to.from.startsWith('hub')){
+                packetDelay = TICK * j
+                finalPackets.push({
+		    'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
+		    'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale, 
+		    'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
+		    'toZPosition': (to.position.split(',')[1] / 15)/data.elementsScale,
+		    'duration': DURATION,
+		    'packetDelay': packetDelay,
+		    'id': packets[j].id,
+		    'ip': packets[j].ip,
+		    'eth': packets[j].eth,
+		    'arp': packets[j].arp,
+		    'dataInfo': packets[j].dataInfo,
+		    'data': packets[j].data,			
+		    'tcp': packets[j].tcp,
+		    'udp': packets[j].udp,
+		    'icmp': packets[j].icmp,
+		    'dns': packets[j].dns,
+		    'http': packets[j].http		    
+                })
+		
+		console.log("antes del for")
+                for (var d = 0; d < to.to.length; d++) {
+		    if (to.to[d] != from.from){
+			console.log("dentro del for")
+			
+                        secondFrom = to
+                        secondTo = connectionsLinks.find(o => o.from === to.to[d])
+			
+			console.log(secondFrom)
+			console.log(secondTo)
+			
+                        packetDelay = TICK * j + DURATION
+			
+			finalPackets.push({
+			    'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
+			    'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
+			    'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
+			    'toZPosition': (secondTo.position.split(',')[1] / 15)/data.elementsScale,
+			    'duration': DURATION,
+			    'packetDelay': packetDelay,
+			    'id': packets[j].id,
+			    'ip': packets[j].ip,
+			    'eth': packets[j].eth,
+			    'arp': packets[j].arp,
+			    'dataInfo': packets[j].dataInfo,
+			    'data': packets[j].data,				
+			    'tcp': packets[j].tcp,
+			    'udp': packets[j].udp,
+			    'icmp': packets[j].icmp,
+			    'dns': packets[j].dns,
+			    'http': packets[j].http		    
+                        })
+			console.log("---")
+		    }
+                }
+	    } else {
+		packetDelay = TICK * j
+		finalPackets.push({
+		    'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
+		    'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
+		    'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
+		    'toZPosition': (to.position.split(',')[1] / 15)/data.elementsScale,
+		    'duration': TICK,
+		    'packetDelay': packetDelay,
+		    'id': packets[j].id,
+		    'ip': packets[j].ip,
+		    'eth': packets[j].eth,
+		    'arp': packets[j].arp,
+		    'dataInfo': packets[j].dataInfo,
+		    'data': packets[j].data,			
+		    'tcp': packets[j].tcp,
+		    'udp': packets[j].udp,
+		    'icmp': packets[j].icmp,
+		    'dns': packets[j].dns,
+		    'http': packets[j].http		    
+		})
+		
+	    }
+	    
+        }
     }
     
+    console.log("finalPackets:")
+    console.log(finalPackets)
+    
+    // --------- Create animations ----------
+    escena = document.querySelector('#escena');
+    for (var currentPacket = 0; currentPacket < finalPackets.length; currentPacket++) {
+        var newPacket = document.createElement('a-entity');
+        newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
+        newPacket.setAttribute('packet','yPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
+        newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
+        newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
+        newPacket.setAttribute('packet','toYPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','elementsScale', data.elementsScale);
+        newPacket.setAttribute('packet','class', 'packetClass')
+        newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
+        newPacket.setAttribute('packet','id', currentPacket);
+        newPacket.setAttribute('packet','start', finalPackets[currentPacket].packetDelay);
+        console.log(finalPackets[currentPacket].xPosition)
+        console.log(finalPackets[currentPacket].zPosition)
+        
+        if (finalPackets[currentPacket].ip){
+	    newPacket.setAttribute('packet','ip', finalPackets[currentPacket].ip);
+        }
+        if (finalPackets[currentPacket].eth){
+	    newPacket.setAttribute('packet','eth', finalPackets[currentPacket].eth);
+        }
+        if (finalPackets[currentPacket].arp){
+	    newPacket.setAttribute('packet','arp', finalPackets[currentPacket].arp);
+        }
+        if (finalPackets[currentPacket].dataInfo){
+	    newPacket.setAttribute('packet','dataInfo', finalPackets[currentPacket].dataInfo);
+        }
+        if (finalPackets[currentPacket].data){
+	    newPacket.setAttribute('packet','data', finalPackets[currentPacket].data);
+        }
+        if (finalPackets[currentPacket].tcp){
+	    newPacket.setAttribute('packet','tcp', finalPackets[currentPacket].tcp);
+        }
+        if (finalPackets[currentPacket].udp){
+	    newPacket.setAttribute('packet','udp', finalPackets[currentPacket].udp);
+        }
+        if (finalPackets[currentPacket].icmp){
+	    newPacket.setAttribute('packet','icmp', finalPackets[currentPacket].icmp);
+        }
+        if (finalPackets[currentPacket].dns){
+	    newPacket.setAttribute('packet','dns', finalPackets[currentPacket].dns);
+        }
+        if (finalPackets[currentPacket].http){
+	    newPacket.setAttribute('packet','http', finalPackets[currentPacket].http);
+        }
+	
+        escena.appendChild(newPacket);
+    }
+}
+
