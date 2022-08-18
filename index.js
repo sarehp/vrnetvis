@@ -1,5 +1,5 @@
-var TICK = 10000 // 10000
-var DURATION = 5000 // 5000
+var TICK = 2000 // 10000
+var DURATION = 1000 // 5000
 
 /* global AFRAME */
 if (typeof AFRAME === 'undefined') {
@@ -185,6 +185,44 @@ function hex_with_colons_to_ascii(str1)
     return str;
 }
 
+
+function dns_info (packetParams)
+{
+
+    info = '<p>Nivel DNS</p>'
+
+    // It's a pure query
+    if (packetParams.dns["dns.count.add_rr"] == 0 && packetParams.dns["dns.count.answers"] == 0){
+	info += '<p>Queries:</p>'
+
+	for (const [key, value] of Object.entries(packetParams.dns.Queries))
+	    info += '<p>Query: ' + key + '</p>';
+    }
+    
+
+    if (packetParams.dns["dns.count.answers"] != 0){
+	info += '<p>Answers: </p>'	
+	for (const [key, value] of Object.entries(packetParams.dns["Answers"]))
+    	    info += '<p>' + key + '</p>';
+    }
+
+    if (packetParams.dns["dns.count.add_rr"] != 0){
+	
+	info += '<p>Authoritative nameservers: </p>'	
+	for (const [key, value] of Object.entries(packetParams.dns["Authoritative nameservers"]))
+    	    info += '<p>' + key + '</p>';
+	
+	info += '<p>Additional records: </p>'		
+	for (const [key, value] of Object.entries(packetParams.dns["Additional records"]))
+            info += '<p>' + key + '</p>';
+    }
+
+    
+    return info;
+}
+
+
+
 AFRAME.registerComponent('packet', {
     schema: {
         xPosition: {type: 'number', default: 0},
@@ -212,10 +250,6 @@ AFRAME.registerComponent('packet', {
         let packet = this.el
         let packetParams = this.data
 
-        console.log(packetParams.yPosition)
-        
-	
-
         let i = 0;
 
         function startAnimation() {
@@ -241,13 +275,12 @@ AFRAME.registerComponent('packet', {
    		    nodeXPosition = nodeList[0].position.split(',')[0]
    		    nodeZPosition = nodeList[0].position.split(',')[1]		    
 		    var minDistance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
-		    console.log("minDistance: " + minDistance)
 
 		    for (var k=1; k < nodeList.length; k++) {
    			nodeXPosition = nodeList[k].position.split(',')[0]
    			nodeZPosition = nodeList[k].position.split(',')[1]		    
 			var distance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
-			console.log("distance: " + distance + "     k: " + k)			
+
 			if (distance < minDistance) {
 			    nodeAnimation=nodeList[k]
 			    minDistance = distance
@@ -255,7 +288,6 @@ AFRAME.registerComponent('packet', {
 		    }
 		    
                     var nodeFromAnimation = document.getElementById(nodeAnimation.name);
-                    console.log(nodeAnimation.name)
 
                     if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
                         nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
@@ -664,7 +696,8 @@ AFRAME.registerComponent('packet', {
                         });
                         newDnsBox.addEventListener('click', function () {
                             if(newDnsBox.hasAttribute('isVisible')){
-                                let infoText = 'dns'//'<p>Nivel DNS:</p><p>Puerto origen: ' + packetParams.dns['dns.srcport'] + '</p><p>Puerto destino: ' + packetParams.dns['dns.dstport'] + '</p>'
+                                let infoText = dns_info(packetParams)
+
                                 if(closeInfo == true){
                                     closeInfo = false
                                     actualInfoShown = 'dns'
@@ -987,11 +1020,9 @@ AFRAME.registerComponent('packet', {
                 break
             case 'move-resume':
                 animationStatus = 'move-pause'
-                console.log('click')
                 break
             case 'move-pause':
                 animationStatus = 'move-resume'
-                console.log('click2')
                 break
             }
         });
@@ -1029,7 +1060,7 @@ function setNodes(nodes, nodeList, data) {
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 0.008/data.elementsScale, y: 0.008/data.elementsScale, z: 0.008/data.elementsScale});
         }
-        
+
         scene.appendChild(newNodeElement);
 
         var htmltemplates = document.getElementById("htmltemplates");
@@ -1087,18 +1118,50 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
             from: nodeList[k].name,
             to: actualNode,
             position: nodeList[k].position,
-            hwaddr: nodeList[k].hwaddr
+            hwaddr: nodeList[k].hwaddr,
+	    ipaddr: nodeList[k].ipaddr,
+	    mask: nodeList[k].mask
         }
         connectionsLinksStandard.push(connectionLink)
     }
 
     writeConnections(connectionsLinksStandard, nodeList, data)
 
-    console.log("connectionsLinksStandard: ")
-    console.log(connectionsLinksStandard)
-    
     return connectionsLinksStandard
 }
+
+
+
+function shiftCoords (from, to, elementsScale){
+    coordinates = {};
+    coordinates.x = from.x;
+    coordinates.z = from.z;   
+
+    SHIFT = 20 
+    shift_x = SHIFT / (15 * elementsScale);
+    shift_z = SHIFT / (15 * elementsScale);
+    
+    if (to.x > from.x && to.z > from.z){
+	coordinates.x += shift_x;
+	coordinates.z += shift_z;    
+    }
+    else if (to.x > from.x && to.z < from.z){
+	coordinates.x += shift_x;
+	coordinates.z -= shift_z;    
+    }
+    else if (to.x < from.x && to.z > from.z){
+	coordinates.x -= shift_x;
+	coordinates.z += shift_z;    
+    }
+    else if (to.x < from.x && to.z < from.z){
+	coordinates.x -= shift_x;
+	coordinates.z -= shift_z;    
+    }
+
+
+    return coordinates;
+}
+
 
 
 function writeConnections(connectionsLinksStandard, nodeList, data) {
@@ -1111,11 +1174,54 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             let newLine = document.createElement('a-entity');
             newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
             scene.appendChild(newLine);
+
+
+	    // Labels for IP addresses on the link
+            nodeFrom = connectionsLinksStandard.find(o => o.from === connectionsLinksStandard[k].from)
+	    if (nodeFrom.from.startsWith("hub"))
+		continue;
+	    
+	    var label_id = connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j];
+	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
+	    
+            var htmltemplates = document.getElementById("htmltemplates");
+            var newSectionTemplate = document.createElement("section");
+            templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 700;">' + label_id + '</h1>'
+            newSectionTemplate.innerHTML = templateText;
+            newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
+            newSectionTemplate.id = id_text + "-template";
+            htmltemplates.appendChild(newSectionTemplate);
+
+
+	    coordinates = shiftCoords (
+		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale,  "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
+		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
+		data.elementsScale
+	    )
+	    
+            let newText = document.createElement('a-entity');
+            newText.setAttribute('position', {
+		x: coordinates.x,
+		y: data.height * 1.5,
+		z: coordinates.z
+	    });
+
+
+	    console.log("id_text: " + id_text);
+            newText.setAttribute('html', '#' + id_text + "-template");
+            newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
+            newText.setAttribute('look-at', "[camera]");
+	    
+            scene = document.querySelector('#escena');
+
+            scene.appendChild(newText);
+
         }
     }
 
     return connectionsLinksStandard
 }
+
 
 function  readPackets(responseParse) {
     packets = []
@@ -1172,13 +1278,11 @@ function  readPackets(responseParse) {
 }
 
 function animatePackets(packets, connectionsLinks, data){
-    console.log(data.elementsScale)
     finalPackets = []
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
-	    console.log("en el if")
             escena = document.querySelector('#escena');
             to = connectionsLinks.find(o => o.hwaddr.includes(packets[j].dst))
             if (from.to.includes(to.from)){ // hwaddr destino del paquete es vecino del nodo que estamos considerando (from)
@@ -1237,13 +1341,8 @@ function animatePackets(packets, connectionsLinks, data){
 		
                 for (var d = 0; d < to.to.length; d++) {
                     if (to.to[d] != from.from){
-			console.log("dentro del for")
-			
                         secondFrom = to
                         secondTo = connectionsLinks.find(o => o.from === to.to[d])
-			
-			console.log(secondFrom)
-			console.log(secondTo)
 			
                         packetDelay = TICK * j + DURATION
 			
@@ -1266,24 +1365,18 @@ function animatePackets(packets, connectionsLinks, data){
 			    'dns': packets[j].dns,
 			    'http': packets[j].http		    
                         })
-			console.log("---")
 		    }
                 }
 	    }
         } else { // paquete de broadcast
-	    console.log("broadcast")
 	    
 	    escena = document.querySelector('#escena');
 	    
 
 	    i = from.hwaddr.findIndex(o => o == packets[j].src)
 	    nodeName = from.to[i]
-	    console.log("nodeName: " + nodeName)
 	    
 	    to = connectionsLinks.find(o => o.from == nodeName)
-	    
-	    console.log("to:")
-	    console.log(to)
 	    
 	    if (to.from.startsWith('hub')){
                 packetDelay = TICK * j
@@ -1307,16 +1400,11 @@ function animatePackets(packets, connectionsLinks, data){
 		    'http': packets[j].http		    
                 })
 		
-		console.log("antes del for")
                 for (var d = 0; d < to.to.length; d++) {
 		    if (to.to[d] != from.from){
-			console.log("dentro del for")
 			
                         secondFrom = to
                         secondTo = connectionsLinks.find(o => o.from === to.to[d])
-			
-			console.log(secondFrom)
-			console.log(secondTo)
 			
                         packetDelay = TICK * j + DURATION
 			
@@ -1339,7 +1427,7 @@ function animatePackets(packets, connectionsLinks, data){
 			    'dns': packets[j].dns,
 			    'http': packets[j].http		    
                         })
-			console.log("---")
+
 		    }
                 }
 	    } else {
@@ -1387,8 +1475,7 @@ function animatePackets(packets, connectionsLinks, data){
         newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','id', currentPacket);
         newPacket.setAttribute('packet','start', finalPackets[currentPacket].packetDelay);
-        console.log(finalPackets[currentPacket].xPosition)
-        console.log(finalPackets[currentPacket].zPosition)
+
         
         if (finalPackets[currentPacket].ip){
 	    newPacket.setAttribute('packet','ip', finalPackets[currentPacket].ip);

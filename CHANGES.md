@@ -1,7 +1,7 @@
 ### CHANGES
 
 - Correcciones al código que anima nodo cuando llega/sale mensaje. Dependía de cálculos de posición imprecisos
-- Añadido a fichero machineNames.json: hwaddr, ipaddr y máscara, estos dos últimos sin uso por ahora
+- Añadido a fichero machineNames.json: hwaddr, ipaddr y máscara
 - Corregido parsing de fichero de machineNames.json: hay que leer en cierto orden para que se pueda hacer matching de direcciones hwaddr a enlaces
 - Añadidas constantes para tiempos de animación al principio
 - Añadido soporte para ICMP, UDP, TCP, HTTP, DNS
