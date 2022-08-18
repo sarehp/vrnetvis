@@ -1,5 +1,17 @@
 var TICK = 2000 // 10000
 var DURATION = 1000 // 5000
+var COLORS = {dns:"goldenrod",
+	      http:"gold",
+	      dataInfo:"white",
+	      data:"white",
+	      tcp:"steelblue",
+	      udp:"olive",
+	      icmp:"red",
+	      ip:"lightgreen",
+	      arp:"sandybrown",
+	      ethernet:"khaki"}
+
+
 
 /* global AFRAME */
 if (typeof AFRAME === 'undefined') {
@@ -223,6 +235,62 @@ function dns_info (packetParams)
 
 
 
+
+function getColor(protocol){
+    return COLORS[protocol];
+}
+
+// aqui
+function showInfoText(protocol, packetParams, newInfoText, newBox){
+
+    let infoText = ""
+
+    switch (protocol){
+    case 'dns':
+	infoText += dns_info(packetParams);
+	break;
+    case 'http':
+	infoText += ''//'<p>Nivel HTTP:</p><p>Puerto origen: ' + packetParams.http['http.srcport'] + '</p><p>Puerto destino: ' + packetParams.http['http.dstport'] + '</p>'
+	break;
+    case 'dataInfo':
+	infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
+	break;
+    case 'data':
+	infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
+	break;
+    case 'tcp':
+	infoText += '<p>Nivel TCP:</p><p>Puerto origen: ' + packetParams.tcp['tcp.srcport'] + '</p><p>Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p>'
+	break;
+    case 'udp':
+	infoText += '<p>Nivel UDP:</p><p>Puerto origen: ' + packetParams.udp['udp.srcport'] + '</p><p>Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p>'
+	break;
+    case 'icmp':
+	infoText += '<p>Nivel ICMP:</p><p>Type: ' + packetParams.icmp['icmp.type'] + '</p><p>Code: ' + packetParams.icmp['icmp.code'] + '</p>'
+	break;
+    case 'ip':
+	infoText += '<p>Nivel IP:</p><p>Origen: ' + packetParams.ip['ip.src'] + '</p><p>Destino: ' + packetParams.ip['ip.dst'] + '</p><p>Version: ' + packetParams.ip['ip.version'] + '</p><p>Ttl: ' + packetParams.ip['ip.ttl'] + '</p>'
+	break;
+    case 'arp': 
+	infoText += '<p>Nivel ARP:</p><p>Origen: ' + packetParams.arp['arp.src.hw_mac'] + '</p><p>Destino: ' + packetParams.arp['arp.dst.hw_mac']  + '</p><p>Target: ' + packetParams.arp['arp.dst.proto_ipv4'] + '</p>'
+	break;
+    case 'ethernet':
+	infoText += '<p>Nivel Ethernet:</p><p>Origen: ' + packetParams.eth['eth.src'] + '</p><p>Destino: ' + packetParams.eth['eth.dst'] + '</p><p>Tipo: ' + packetParams.eth['eth.type'] + '</p>'
+	break;
+    }
+    
+    
+    newInfoText.setAttribute('visible', true);
+    newInfoText.removeAttribute('html');
+    var textTemplate = document.getElementById(packetParams.id + '-template');
+    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: ' + getColor(protocol) + '">' + infoText + '</h1>'
+    textTemplate.innerHTML = textTemplateContent;
+    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
+    newInfoText.setAttribute('visible', true);
+    newBox.removeAttribute('sound');
+    newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+}
+
+
 AFRAME.registerComponent('packet', {
     schema: {
         xPosition: {type: 'number', default: 0},
@@ -255,19 +323,6 @@ AFRAME.registerComponent('packet', {
         function startAnimation() {
             if (animationStatus == 'move-pause') {
                 if (i == Math.ceil(packetParams.start/1000)) {
-                    // let nodePositionFrom = ''
-                    // if(Number.isInteger((packetParams.xPosition * 15)*packetParams.elementsScale)){
-                    //     nodePositionFrom += parseFloat((packetParams.xPosition * 15)*packetParams.elementsScale).toFixed(1).toString()
-                    // }else{
-                    //     nodePositionFrom += ((packetParams.xPosition * 15)*packetParams.elementsScale).toString()
-                    // }
-                    // nodePositionFrom += ','
-                    // if(Number.isInteger((packetParams.zPosition * 15)*packetParams.elementsScale)){
-                    //     nodePositionFrom += parseFloat((packetParams.zPosition * 15)*packetParams.elementsScale).toFixed(1).toString()
-                    // }else{
-                    //     nodePositionFrom += ((packetParams.zPosition * 15)*packetParams.elementsScale).toString()
-                    // }
-
 		    // Find in which node is now the packet based on the position of the packet
 		    var nodeAnimation = nodeList[0]
 		    packetXPosition = packetParams.xPosition * 15 * packetParams.elementsScale
@@ -298,29 +353,33 @@ AFRAME.registerComponent('packet', {
                     }
                     
                     packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
-                    let packetColor = ''
 
+
+		    let topmost_protocol = "";
 		    if(packetParams.dns){
-                        packetColor = 'goldenrod'
+			topmost_protocol = "dns"
 		    }else if(packetParams.http){
-                        packetColor = 'gold'
+			topmost_protocol = "http"
 		    }else if(packetParams.dataInfo){
-                        packetColor = 'white'
+			topmost_protocol = "dataInfo"                        
 		    }else if(packetParams.data){
-                        packetColor = 'white'
+			topmost_protocol = "data"                        
 		    }else if(packetParams.tcp){
-                        packetColor = 'steelblue'
+			topmost_protocol = "tcp"                        
 		    }else if(packetParams.udp){
-                        packetColor = 'olive'	
+			topmost_protocol = "udp"                        
 		    }else if(packetParams.icmp){
-                        packetColor = 'red'			
+			topmost_protocol = "icmp"                        
 		    }else if(packetParams.ip){
-                        packetColor = 'lightgreen'
+			topmost_protocol = "ip"                        
 		    }else if(packetParams.arp){
-                        packetColor = 'sandybrown'
-		    }else{ // ethernet
-                        packetColor = 'khaki'
+			topmost_protocol = "arp"                        
+		    }else if(packetParams.eth){
+			topmost_protocol = "ethernet"                        
                     }
+
+		    let packetColor = getColor(topmost_protocol);
+		    
                     packet.setAttribute('material', 'color', packetColor);
                     packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
                     packet.setAttribute('class', packetParams.class);
@@ -350,6 +409,8 @@ AFRAME.registerComponent('packet', {
 
                     packet.appendChild(newInfoText);
 
+
+		    
                     if(packetParams.eth){
                         const ethInfo = {
                             eth: packetParams.eth
@@ -418,9 +479,15 @@ AFRAME.registerComponent('packet', {
                         newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
                         newEthBox.setAttribute('color', 'khaki');
                         newEthBox.setAttribute('visible', true); // pheras
-                        newEthBox.setAttribute('isVisible', true); // pheras			
+                        newEthBox.setAttribute('isVisible', true); // pheras
+
                         packet.appendChild(newEthBox);
 
+			if (topmost_protocol == "ethernet")
+			    showInfoText("ethernet", packetParams, newInfoText, newEthBox)
+			
+
+			
                         newEthBox.addEventListener('mouseenter', function () {
                             newEthBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -474,6 +541,11 @@ AFRAME.registerComponent('packet', {
                         newIpBox.setAttribute('visible', true); // pheras
                         newIpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newIpBox);
+
+			if (topmost_protocol == "ip")
+			    showInfoText("ip", packetParams, newInfoText, newIpBox)
+			
+			
                         newIpBox.addEventListener('mouseenter', function () {
                             newIpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -527,6 +599,11 @@ AFRAME.registerComponent('packet', {
                         newArpBox.setAttribute('visible', true); // pheras
                         newArpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newArpBox);
+
+			if (topmost_protocol == "arp")
+			    showInfoText("arp", packetParams, newInfoText, newArpBox)
+
+			
                         newArpBox.addEventListener('mouseenter', function () {
                             newArpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -580,6 +657,10 @@ AFRAME.registerComponent('packet', {
                         newTcpBox.setAttribute('visible', true); // pheras
                         newTcpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newTcpBox);
+
+			if (topmost_protocol == "tcp")
+			    showInfoText("tcp", packetParams, newInfoText, newTcpBox)
+			
                         newTcpBox.addEventListener('mouseenter', function () {
                             newTcpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -633,6 +714,10 @@ AFRAME.registerComponent('packet', {
                         newUdpBox.setAttribute('visible', true); // pheras
                         newUdpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newUdpBox);
+
+			if (topmost_protocol == "udp")
+			    showInfoText("udp", packetParams, newInfoText, newUdpBox)
+
                         newUdpBox.addEventListener('mouseenter', function () {
                             newUdpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -686,6 +771,10 @@ AFRAME.registerComponent('packet', {
                         newDnsBox.setAttribute('visible', true); // pheras
                         newDnsBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newDnsBox);
+
+			if (topmost_protocol == "dns")
+			    showInfoText("dns", packetParams, newInfoText, newDnsBox)
+			
                         newDnsBox.addEventListener('mouseenter', function () {
                             newDnsBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -740,6 +829,10 @@ AFRAME.registerComponent('packet', {
                         newHttpBox.setAttribute('visible', true); // pheras
                         newHttpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newHttpBox);
+
+			if (topmost_protocol == "http")
+			    showInfoText("http", packetParams, newInfoText, newHttpBox)
+			
                         newHttpBox.addEventListener('mouseenter', function () {
                             newHttpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -793,6 +886,10 @@ AFRAME.registerComponent('packet', {
                         newIcmpBox.setAttribute('visible', true); // pheras
                         newIcmpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newIcmpBox);
+
+			if (topmost_protocol == "icmp")
+			    showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
+			
                         newIcmpBox.addEventListener('mouseenter', function () {
                             newIcmpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -848,6 +945,10 @@ AFRAME.registerComponent('packet', {
                         newDataBox.setAttribute('visible', true); // pheras
                         newDataBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newDataBox);
+
+			if (topmost_protocol == "dataInfo")
+			    showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
+			
                         newDataBox.addEventListener('mouseenter', function () {
                             newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
@@ -902,6 +1003,12 @@ AFRAME.registerComponent('packet', {
                         newDataBox.setAttribute('visible', true); // pheras
                         newDataBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newDataBox);
+
+
+			if (topmost_protocol == "data")
+			    showInfoText("data", packetParams, newInfoText, newDataBox)
+
+			
                         newDataBox.addEventListener('mouseenter', function () {
                             newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
                         });
