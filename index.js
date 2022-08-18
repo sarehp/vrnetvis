@@ -256,9 +256,12 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 	infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
 	break;
     case 'data':
-	infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
+	
+	if (packetParams.tcp != null)
+	    infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
+	else if (packetParams.udp != null)
+	    infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
 
-	// infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
 	break;
     case 'tcp':
 	infoText += '<p>Nivel TCP:</p><p>Puerto origen: ' + packetParams.tcp['tcp.srcport'] + '</p><p>Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p>'
@@ -1062,7 +1065,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
-            templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 700;">' + label_id + '</h1>'
+            templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
             newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
             newSectionTemplate.id = id_text + "-template";
