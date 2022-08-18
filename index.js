@@ -951,7 +951,7 @@ function setNodes(nodes, nodeList, data) {
         htmltemplates.appendChild(newSectionTemplate);
 
         let newText = document.createElement('a-entity');
-        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/data.elementsScale, y: (4)/data.elementsScale + data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
+        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/data.elementsScale, y: (2.5)/data.elementsScale + data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
         newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
         newText.setAttribute('look-at', "[camera]");
