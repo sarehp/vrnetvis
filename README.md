@@ -20,6 +20,14 @@ Enlazar todos los ficheros listados en caps.json.
 
 Normalmente sólo usamos un fichero que hemos mezclado con mergecap.
 
+Ver sección Generación de capturas y mezcla
+
 5. ```python3 unifycaps.py ```
 6. ```python -m SimpleHTTPServer 8888 . ```
 7. Cargar en navegador ```localhost:8888```
+
+## Generación de capturas y mezcla
+1. Arrancamos en kathara el escenario
+2. Capturamos en un máquina por dominio de broadcast, minimizando el número total de máquinas en las que capturamos. De este modo reducimos la posibilidad de paquetes desordenados.
+3. mergecap de todas las capturas
+4. generación de json de la captura fusionada 
