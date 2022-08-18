@@ -482,7 +482,7 @@ AFRAME.registerComponent('packet', {
 
                         let newEthBox = document.createElement('a-box');
                         newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
-                        newEthBox.setAttribute('color', 'khaki');
+                        newEthBox.setAttribute('color', getColor("ethernet"));
                         newEthBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newEthBox);
@@ -520,7 +520,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'ip')
                         let newIpBox = document.createElement('a-box');
                         newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newIpBox.setAttribute('color', 'lightgreen');
+                        newIpBox.setAttribute('color', getColor("ip"));
                         newIpBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newIpBox);
@@ -559,7 +559,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'arp')
                         let newArpBox = document.createElement('a-box');
                         newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newArpBox.setAttribute('color', 'sandybrown');
+                        newArpBox.setAttribute('color', getColor("arp"));
                         newArpBox.setAttribute('visible', true); // pheras
                         packet.appendChild(newArpBox);
 
@@ -601,7 +601,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'tcp')
                         let newTcpBox = document.createElement('a-box');
                         newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newTcpBox.setAttribute('color', 'steelblue');
+                        newTcpBox.setAttribute('color', getColor("tcp"));
                         newTcpBox.setAttribute('visible', true); // pheras
                         packet.appendChild(newTcpBox);
 
@@ -638,7 +638,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'udp')
                         let newUdpBox = document.createElement('a-box');
                         newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newUdpBox.setAttribute('color', 'olive');
+                        newUdpBox.setAttribute('color', getColor("udp"));
                         newUdpBox.setAttribute('visible', true); // pheras
                         packet.appendChild(newUdpBox);
 
@@ -674,7 +674,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'dns')
                         let newDnsBox = document.createElement('a-box');
                         newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newDnsBox.setAttribute('color', 'goldenrod');
+                        newDnsBox.setAttribute('color', getColor("dns"));
                         newDnsBox.setAttribute('visible', true); // pheras
                         packet.appendChild(newDnsBox);
 
@@ -710,7 +710,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'http')
                         let newHttpBox = document.createElement('a-box');
                         newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newHttpBox.setAttribute('color', 'gold');
+                        newHttpBox.setAttribute('color', getColor("http"));
                         newHttpBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newHttpBox);
@@ -747,7 +747,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'icmp')
                         let newIcmpBox = document.createElement('a-box');
                         newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newIcmpBox.setAttribute('color', 'red');
+                        newIcmpBox.setAttribute('color', getColor("icmp"));
                         newIcmpBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newIcmpBox);
@@ -783,7 +783,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'dataInfo')
                         let newDataBox = document.createElement('a-box');
                         newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newDataBox.setAttribute('color', 'white');
+                        newDataBox.setAttribute('color', getColor("dataInfo"));
                         newDataBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newDataBox);
@@ -819,7 +819,7 @@ AFRAME.registerComponent('packet', {
                         index = Object.keys(levels).findIndex(item => item === 'data')
                         let newDataBox = document.createElement('a-box');
                         newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newDataBox.setAttribute('color', 'white');
+                        newDataBox.setAttribute('color', getColor("data"));
                         newDataBox.setAttribute('visible', true); // pheras
 
                         packet.appendChild(newDataBox);
