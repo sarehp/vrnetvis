@@ -1,3 +1,20 @@
+var VIEWS=["APPLICATION", "TRANSPORT", "NETWORK", "ALL"]
+var VIEW="APPLICATION" // VIEW must be one oF VIEWS
+
+// APPLICATION
+
+// 1)
+// pintar sólo hosts (pc*, dns*)
+// no pintar enlaces
+
+
+// 2)
+// 2.a) filtrar los dns http data dataInfo | quedarse sólo con una copia filtrando por datagrama id
+// 2.b) al generar animación de paquete poner from y to en los nodos de las ips origen y destino
+
+
+
+
 var TICK = 2000 // 10000
 var DURATION = 1000 // 5000
 var COLORS = {dns:"goldenrod",
@@ -920,6 +937,9 @@ function setNodes(nodes, nodeList, data) {
 	    mask:[]
         }
 
+	// if ((VIEW=="APPLICATION" || VIEW=="TRANSPORT") && !(newNode.name.startsWith("dns") || newNode.name.startsWith("pc")))
+	//     continue;
+	
         let newNodeElement = document.createElement('a-entity');
 
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
@@ -1103,9 +1123,14 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 
 function  readPackets(responseParse) {
-    packets = []
+    var seen_packets = [];
+    
+    packets = [];
+    
     for (var j = 0; j < responseParse.length; j++) {
-        newAnimation = {
+	protocols=[];
+
+	newAnimation = {
             src: responseParse[j].src,
             dst: responseParse[j].dst,
             time: responseParse[j].time,
@@ -1114,47 +1139,88 @@ function  readPackets(responseParse) {
 
 	// tcp and raw data encapsulated
         if(responseParse[j].tcp.length !== 0){
+	    protocols.push("TRANSPORT")
+	    
             newAnimation.tcp = responseParse[j].tcp;
 	    
 	    if(responseParse[j].tcp["tcp.len"] !== 0){ // TCP segment with data => add data layer
+		protocols.push("APPLICATION");		
 		newAnimation.data = responseParse[j].tcp["tcp.payload"];
 	    }
 	}
 
 	// udp and raw data encapsulated
         if(responseParse[j].udp.length !== 0){
-            newAnimation.udp = responseParse[j].udp;
+	    protocols.push("TRANSPORT");
+
+	    newAnimation.udp = responseParse[j].udp;
 
 	    if(responseParse[j].data["data.len"] !== 0){ // UDP segment with data => add data layer
+		protocols.push("APPLICATION");
 		newAnimation.data = responseParse[j].data["data.data"];
 	    }	    
         }
 
         if(responseParse[j].icmp.length !== 0){
-            newAnimation.icmp = responseParse[j].icmp;
+	    protocols.push("NETWORK");
+
+	    newAnimation.icmp = responseParse[j].icmp;
         }
 
         if(responseParse[j].dns.length !== 0){
+	    protocols.push("APPLICATION");
             newAnimation.dns = responseParse[j].dns;
         }
 
         if(responseParse[j].http.length !== 0){
+	    protocols.push("APPLICATION");
             newAnimation.http = responseParse[j].http;
         }
 	
         if(responseParse[j].arp.length !== 0){
+	    protocols.push("ALL");	    
             newAnimation.arp = responseParse[j].arp;
         }
         if(responseParse[j].ip.length !== 0){
+	    protocols.push("NETWORK");	    
             newAnimation.ip = responseParse[j].ip;
         }
         if(responseParse[j].eth.length !== 0){
+	    protocols.push("ALL");
             newAnimation.eth = responseParse[j].eth;
         }
-        packets.push(newAnimation)
-    }
-    return packets
+
+
+
+	// Filter packets depending on VIEW
+	if (protocols.includes(VIEW)){
+	    if  (VIEW == "APPLICATION" || VIEW == "TRANSPORT"){
+		packet = {
+		    ip_src: responseParse[j].ip["ip.src"],
+		    ip_id: responseParse[j].ip["ip.id"]
+		}
+		console.log("packet: ")
+		console.log(packet)
+		console.log("seen_packets: ")
+		console.log(seen_packets)
+
+		if (!seen_packets.some (e => e.ip_src === packet.ip_src && e.ip_id === packet.ip_id)){
+		    packets.push(newAnimation);
+		    seen_packets.push(packet);
+		}
+	    } else // "NETWORK" || "ALL":
+		packets.push(newAnimation)
+	    
+	}
+	
+	
+    }// for
+    
+    return packets;
 }
+
+
+
 
 function animatePackets(packets, connectionsLinks, data){
     finalPackets = []
@@ -1251,7 +1317,8 @@ function animatePackets(packets, connectionsLinks, data){
 	    
 	    escena = document.querySelector('#escena');
 	    
-
+            var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
+	    
 	    i = from.hwaddr.findIndex(o => o == packets[j].src)
 	    nodeName = from.to[i]
 	    
