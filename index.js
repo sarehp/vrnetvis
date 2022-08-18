@@ -288,6 +288,7 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
     newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+
 }
 
 
@@ -389,9 +390,8 @@ AFRAME.registerComponent('packet', {
                     var packet_move = document.getElementById(packetParams.id);
 
                     let levels = {}
-                    let closeInfo = true
-                    let actualInfoShown = ''
-                    notValid = false
+                    let isClosedInfo = false
+                    let actualInfoShown = topmost_protocol;
 
                     var htmltemplates = document.getElementById("htmltemplates");
                     var newSectionTemplate = document.createElement("section");
@@ -479,7 +479,6 @@ AFRAME.registerComponent('packet', {
                         newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
                         newEthBox.setAttribute('color', 'khaki');
                         newEthBox.setAttribute('visible', true); // pheras
-                        newEthBox.setAttribute('isVisible', true); // pheras
 
                         packet.appendChild(newEthBox);
 
@@ -497,40 +496,19 @@ AFRAME.registerComponent('packet', {
                             newEthBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
                         });
                         newEthBox.addEventListener('click', function () {
-                            if(newEthBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel Ethernet:</p><p>Origen: ' + packetParams.eth['eth.src'] + '</p><p>Destino: ' + packetParams.eth['eth.dst'] + '</p><p>Tipo: ' + packetParams.eth['eth.type'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'eth'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: khaki">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newInfoText.setAttribute('visible', true);
-                                    newEthBox.removeAttribute('sound');
-                                    newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'eth'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newEthBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'eth'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: khaki"">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newEthBox.removeAttribute('sound');
-                                    newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            } else {
-                                notValid = true
+                            if(isClosedInfo == false && actualInfoShown == "ethernet"){
+				isClosedInfo = true
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newEthBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else{
+                                isClosedInfo = false
+				actualInfoShown = "ethernet"
+				showInfoText("ethernet", packetParams, newInfoText, newEthBox);
                             }
+			    
                         });
                     }
                     if(levels.hasOwnProperty('ip')){
@@ -539,7 +517,7 @@ AFRAME.registerComponent('packet', {
                         newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newIpBox.setAttribute('color', 'lightgreen');
                         newIpBox.setAttribute('visible', true); // pheras
-                        newIpBox.setAttribute('isVisible', true); // pheras			
+
                         packet.appendChild(newIpBox);
 
 			if (topmost_protocol == "ip")
@@ -555,38 +533,19 @@ AFRAME.registerComponent('packet', {
                             newIpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newIpBox.addEventListener('click', function () {
-                            if(newIpBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel IP:</p><p>Origen: ' + packetParams.ip['ip.src'] + '</p><p>Destino: ' + packetParams.ip['ip.dst'] + '</p><p>Version: ' + packetParams.ip['ip.version'] + '</p><p>Ttl: ' + packetParams.ip['ip.ttl'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'ip'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: lightgreen">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newIpBox.removeAttribute('sound');
-                                    newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'ip'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newIpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'ip'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: lightgreen">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newIpBox.removeAttribute('sound');
-                                    newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
+
+
+                            if(isClosedInfo == false && actualInfoShown == 'ip'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newIpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
                             }else{
-                                notValid = true
+                                isClosedInfo = false
+				actualInfoShown = "ip"
+				showInfoText("ip", packetParams, newInfoText, newIpBox);
+
                             }
                             
                         });
@@ -597,7 +556,6 @@ AFRAME.registerComponent('packet', {
                         newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
                         newArpBox.setAttribute('color', 'sandybrown');
                         newArpBox.setAttribute('visible', true); // pheras
-                        newArpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newArpBox);
 
 			if (topmost_protocol == "arp")
@@ -613,39 +571,24 @@ AFRAME.registerComponent('packet', {
                             newArpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newArpBox.addEventListener('click', function () {
-                            if(newArpBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel ARP:</p><p>Origen: ' + packetParams.arp['arp.src.hw_mac'] + '</p><p>Destino: ' + packetParams.arp['arp.dst.hw_mac']  + '</p><p>Target: ' + packetParams.arp['arp.dst.proto_ipv4'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'arp'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: sandybrown">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newArpBox.removeAttribute('sound');
-                                    newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'arp'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newArpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'arp'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: sandybrown">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newArpBox.removeAttribute('sound');
-                                    newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
+
+
+                            if(isClosedInfo == true){
+                                isClosedInfo = false
+                                actualInfoShown = 'arp'
+				showInfoText("arp", packetParams, newInfoText, newArpBox);
+                            }else if(isClosedInfo == false && actualInfoShown == 'arp'){
+				isClosedInfo = true
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newArpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else if(isClosedInfo == false){
+				actualInfoShown = "arp"
+				showInfoText("arp", packetParams, newInfoText, newArpBox);
                             }
+
                             
                         });
                     }
@@ -655,7 +598,6 @@ AFRAME.registerComponent('packet', {
                         newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newTcpBox.setAttribute('color', 'steelblue');
                         newTcpBox.setAttribute('visible', true); // pheras
-                        newTcpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newTcpBox);
 
 			if (topmost_protocol == "tcp")
@@ -670,39 +612,20 @@ AFRAME.registerComponent('packet', {
                             newTcpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newTcpBox.addEventListener('click', function () {
-                            if(newTcpBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel TCP:</p><p>Puerto origen: ' + packetParams.tcp['tcp.srcport'] + '</p><p>Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'tcp'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: steelblue">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newTcpBox.removeAttribute('sound');
-                                    newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'tcp'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newTcpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'tcp'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: steelblue">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newTcpBox.removeAttribute('sound');
-                                    newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
+
+                            if(isClosedInfo == false && actualInfoShown == 'tcp'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newTcpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else {
+                                isClosedInfo = false
+				actualInfoShown = "tcp"
+				showInfoText("tcp", packetParams, newInfoText, newTcpBox);				    
+				
                             }
+
                             
                         });
                     }
@@ -712,7 +635,6 @@ AFRAME.registerComponent('packet', {
                         newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newUdpBox.setAttribute('color', 'olive');
                         newUdpBox.setAttribute('visible', true); // pheras
-                        newUdpBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newUdpBox);
 
 			if (topmost_protocol == "udp")
@@ -727,38 +649,18 @@ AFRAME.registerComponent('packet', {
                             newUdpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newUdpBox.addEventListener('click', function () {
-                            if(newUdpBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel UDP:</p><p>Puerto origen: ' + packetParams.udp['udp.srcport'] + '</p><p>Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'udp'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: olive">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newUdpBox.removeAttribute('sound');
-                                    newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'udp'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newUdpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'udp'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: olive">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newUdpBox.removeAttribute('sound');
-                                    newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
+
+
+                            if(isClosedInfo == false && actualInfoShown == 'udp'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newUdpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
                             }else{
-                                notValid = true
+                                isClosedInfo = false
+                                actualInfoShown = 'udp'
+				showInfoText("udp", packetParams, newInfoText, newUdpBox);
                             }
                             
                         });
@@ -769,7 +671,6 @@ AFRAME.registerComponent('packet', {
                         newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newDnsBox.setAttribute('color', 'goldenrod');
                         newDnsBox.setAttribute('visible', true); // pheras
-                        newDnsBox.setAttribute('isVisible', true); // pheras			
                         packet.appendChild(newDnsBox);
 
 			if (topmost_protocol == "dns")
@@ -784,40 +685,19 @@ AFRAME.registerComponent('packet', {
                             newDnsBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newDnsBox.addEventListener('click', function () {
-                            if(newDnsBox.hasAttribute('isVisible')){
-                                let infoText = dns_info(packetParams)
 
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'dns'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: goldenrod">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDnsBox.removeAttribute('sound');
-                                    newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'dns'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newDnsBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'dns'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: goldenrod">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDnsBox.removeAttribute('sound');
-                                    newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
+                            if(isClosedInfo == false && actualInfoShown == 'dns'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newDnsBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else {
+                                isClosedInfo = false
+                                actualInfoShown = 'dns';
+				showInfoText("dns", packetParams, newInfoText, newDnsBox);				    
                             }
+
                             
                         });
                     }
@@ -827,7 +707,7 @@ AFRAME.registerComponent('packet', {
                         newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newHttpBox.setAttribute('color', 'gold');
                         newHttpBox.setAttribute('visible', true); // pheras
-                        newHttpBox.setAttribute('isVisible', true); // pheras			
+
                         packet.appendChild(newHttpBox);
 
 			if (topmost_protocol == "http")
@@ -842,38 +722,18 @@ AFRAME.registerComponent('packet', {
                             newHttpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newHttpBox.addEventListener('click', function () {
-                            if(newHttpBox.hasAttribute('isVisible')){
-                                let infoText = ''//'<p>Nivel HTTP:</p><p>Puerto origen: ' + packetParams.http['http.srcport'] + '</p><p>Puerto destino: ' + packetParams.http['http.dstport'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'http'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: gold">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newHttpBox.removeAttribute('sound');
-                                    newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'http'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newHttpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'http'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: gold">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newHttpBox.removeAttribute('sound');
-                                    newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
+
+
+                            if(isClosedInfo == false && actualInfoShown == 'http'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newHttpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else {
+                                isClosedInfo = false
+                                actualInfoShown = 'http';
+				showInfoText("http", packetParams, newInfoText, newHttpBox);				    				    
                             }
                             
                         });
@@ -884,7 +744,7 @@ AFRAME.registerComponent('packet', {
                         newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newIcmpBox.setAttribute('color', 'red');
                         newIcmpBox.setAttribute('visible', true); // pheras
-                        newIcmpBox.setAttribute('isVisible', true); // pheras			
+
                         packet.appendChild(newIcmpBox);
 
 			if (topmost_protocol == "icmp")
@@ -899,39 +759,16 @@ AFRAME.registerComponent('packet', {
                             newIcmpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newIcmpBox.addEventListener('click', function () {
-                            if(newIcmpBox.hasAttribute('isVisible')){
-                                let infoText = '<p>Nivel ICMP:</p><p>Type: ' + packetParams.icmp['icmp.type'] + '</p><p>Code: ' + packetParams.icmp['icmp.code'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'icmp'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: red">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newIcmpBox.removeAttribute('sound');
-                                    newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'icmp'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newIcmpBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'icmp'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: red">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newIcmpBox.removeAttribute('sound');
-                                    newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
-                            }
+                            if(isClosedInfo == false && actualInfoShown == 'icmp'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newIcmpBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else {
+                                isClosedInfo = false
+                                actualInfoShown = 'icmp'
+				showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                          }
                             
                         });
                     }
@@ -943,7 +780,7 @@ AFRAME.registerComponent('packet', {
                         newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
                         newDataBox.setAttribute('color', 'white');
                         newDataBox.setAttribute('visible', true); // pheras
-                        newDataBox.setAttribute('isVisible', true); // pheras			
+
                         packet.appendChild(newDataBox);
 
 			if (topmost_protocol == "dataInfo")
@@ -958,39 +795,17 @@ AFRAME.registerComponent('packet', {
                             newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newDataBox.addEventListener('click', function () {
-                            if(newDataBox.hasAttribute('isVisible')){
-                                let infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'dataInfo'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: black">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDataBox.removeAttribute('sound');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'dataInfo'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newDataBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'dataInfo'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: black">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDataBox.removeAttribute('sound');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
-                            }else{
-                                notValid = true
-                            }
+
+			    if(isClosedInfo == false && actualInfoShown == 'dataInfo'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newDataBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                            }else {
+                                isClosedInfo = false;
+                                actualInfoShown = 'dataInfo';
+				showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                              }
                         });
                     }
 
@@ -1001,7 +816,7 @@ AFRAME.registerComponent('packet', {
                         newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
                         newDataBox.setAttribute('color', 'white');
                         newDataBox.setAttribute('visible', true); // pheras
-                        newDataBox.setAttribute('isVisible', true); // pheras			
+
                         packet.appendChild(newDataBox);
 
 
@@ -1018,76 +833,28 @@ AFRAME.registerComponent('packet', {
                             newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
                         });
                         newDataBox.addEventListener('click', function () {
-                            if(newDataBox.hasAttribute('isVisible')){
+			    if (levels.hasOwnProperty('udp'))
+                                infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
+			    else if (levels.hasOwnProperty('tcp'))
+                                infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
+			    
 
-				if (levels.hasOwnProperty('udp'))
-                                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
-				else if (levels.hasOwnProperty('tcp'))
-                                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-				
-                                if(closeInfo == true){
-                                    closeInfo = false
-                                    actualInfoShown = 'data'
-                                    newInfoText.setAttribute('visible', true);
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: black">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDataBox.removeAttribute('sound');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown == 'data'){
-                                    actualInfoShown = ''
-                                    newInfoText.setAttribute('visible', false);
-                                    newDataBox.removeAttribute('sound');
-                                    newInfoText.removeAttribute('html');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }else if(closeInfo == false && actualInfoShown != ''){
-                                    closeInfo = false
-                                    actualInfoShown = 'data'
-                                    newInfoText.removeAttribute('html');
-                                    var textTemplate = document.getElementById(packetParams.id + '-template');
-                                    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: black">' + infoText + '</h1>'
-                                    textTemplate.innerHTML = textTemplateContent;
-                                    newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
-                                    newDataBox.removeAttribute('sound');
-                                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                                }
+                            if(isClosedInfo == false && actualInfoShown == 'data'){
+                                actualInfoShown = ''
+                                newInfoText.setAttribute('visible', false);
+                                newDataBox.removeAttribute('sound');
+                                newInfoText.removeAttribute('html');
+                                newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
                             }else{
-                                notValid = true
+                                isClosedInfo = false
+                                actualInfoShown = 'data'
+				showInfoText("data", packetParams, newInfoText, newDataBox);				    
                             }
+
                         });
                     }
 		    
 
-                    packet.addEventListener('click', function () {    
-                        if(notValid){
-                            notValid = false
-                        } else{
-                            if(closeInfo){
-                                for (var a=0; a< packet.children.length; a++) {
-                                    if(packet.children[a].hasAttribute('isVisible')){
-                                        packet.children[a].setAttribute('visible', false);
-                                        packet.children[a].removeAttribute('isVisible');
-                                        packet.removeAttribute('sound');
-                                        packet.setAttribute('sound', {src: '#showInfo', volume: 5, autoplay: "true"});
-                                    }else{
-                                        if(!packet.children[a].hasAttribute('isPoster')){
-                                            packet.children[a].setAttribute('isVisible', null);
-                                            packet.children[a].setAttribute('visible', true);
-                                            packet.removeAttribute('sound');
-                                            packet.setAttribute('sound', {src: '#showInfo', volume: 5, autoplay: "true"});
-                                        }    
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if(actualInfoShown == ''){
-                            closeInfo = true
-                        }
-                        
-                    });
 
                     packet_move.setAttribute('animation', {
                         property: 'position',
