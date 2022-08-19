@@ -1,5 +1,10 @@
 ### CHANGES
 
+# v0.1
+Añadidas views
+
+# Funcionalidad inicial añadida al TFG
+
 - Correcciones al código que anima nodo cuando llega/sale mensaje. Dependía de cálculos de posición imprecisos
 - Añadido a fichero machineNames.json: hwaddr, ipaddr y máscara
 - Corregido parsing de fichero de machineNames.json: hay que leer en cierto orden para que se pueda hacer matching de direcciones hwaddr a enlaces
