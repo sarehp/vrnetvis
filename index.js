@@ -170,7 +170,9 @@ AFRAME.registerComponent('network', {
 		    
 		    if(!node.name.startsWith('hub')){
 			coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
-			createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+			node.routingTableText =
+			    createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+
 		    }
 		}
 		
@@ -280,23 +282,18 @@ function getColor(protocol){
 
 
 function showRoutingTable(id, newInfoText, newBox){
-    let infoText = "Routing Table"
-
-    newInfoText.setAttribute('visible', true);
     newInfoText.removeAttribute('html');
 
     var textTemplate = document.getElementById(id + '-template');
 	
-    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: ' + "black" + '">' + infoText + '</h1>'
-    textTemplate.innerHTML = textTemplateContent;
-
-    newInfoText.setAttribute('html', '#' + id + '-template');
+    newInfoText.setAttribute('html', '#' + id +  "routing_table" + '-template');
 
 	
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
     newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
 }
+
 
 function showInfoText(protocol, packetParams, newInfoText, newBox){
 
@@ -994,6 +991,7 @@ function setNodes(nodes, nodeList, data) {
 	    ipaddr:[],
 	    mask:[],
 	    routing_table:[],
+	    routingTableText:""
         }
 
 
@@ -1026,32 +1024,28 @@ function setNodes(nodes, nodeList, data) {
 
 	
 	// Add routing table info
-	// isClosedRoutingTableInfo = true;
+	isClosedRoutingTableInfo = true;
 	
-        // let routingTableText = document.createElement('a-entity');
-        // routingTableText.setAttribute('position', { x: 5 , y: 3, z: 0 });
-        // routingTableText.setAttribute('look-at', "[camera]");
-        // routingTableText.setAttribute('visible', false);
-        // routingTableText.setAttribute('scale', {x: 20, y: 20, z: 20});
-        // routingTableText.setAttribute('isPoster', true); 
-        // newNodeElement.appendChild(routingTableText);
-	
-	
-        // newNodeElement.addEventListener('click', function () {
-	//     console.log("En click de nodo")
-        //     if(isClosedRoutingTableInfo == false){
-	//     	isClosedRoutingTableInfo = true
-        //         actualInfoShown = 'tabla routing'
-        //         routingTableText.setAttribute('visible', false);
-        //         newNodeElement.removeAttribute('sound');
-        //         routingTableText.removeAttribute('html');
-        //         newNodeElement.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-        //     }else{
-        //         isClosedRoutingTableInfo = false
-	//     	actualInfoShown = "routing_table"
-	//     	showRoutingTable(newNodeElement.id, routingTableText, newNodeElement);
-        //     }
-        // });
+        newNodeElement.addEventListener('click', function () {
+	    console.log("En click de nodo")
+
+            node = nodeList.find(o => o.name === newNodeElement.id)
+            if(isClosedRoutingTableInfo == false){
+	    	isClosedRoutingTableInfo = true
+
+
+                node.routingTableText.removeAttribute('html');
+
+		node.routingTableText.setAttribute('visible', false);
+                newNodeElement.removeAttribute('sound');
+
+
+                newNodeElement.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+            }else{ 
+                isClosedRoutingTableInfo = false
+	    	showRoutingTable(newNodeElement.id, node.routingTableText, newNodeElement);
+            }
+        });
 
 	
 	
@@ -1254,10 +1248,13 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
     newText.setAttribute('html', '#' + id_text + "-template");
     newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
     newText.setAttribute('look-at', "[camera]");
-	    
+    newText.setAttribute('visible', false);
+    
     scene = document.querySelector('#escena');
 
     scene.appendChild(newText);
+
+    return newText;
 
 }
 
