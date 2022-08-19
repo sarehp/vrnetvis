@@ -1,5 +1,5 @@
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION+TRANSPORT"  // VIEW must be one oF VIEWS
 
 
 var TICK = 2000 // 10000
@@ -1027,7 +1027,10 @@ function setNodes(nodes, nodeList, data) {
 	isClosedRoutingTableInfo = true;
 	
         newNodeElement.addEventListener('click', function () {
-	    console.log("En click de nodo")
+	    if  (isEndToEndVIEW()){
+		console.log("No routing table available in end-to-end views")
+		return;
+	    }
 
             node = nodeList.find(o => o.name === newNodeElement.id)
             if(isClosedRoutingTableInfo == false){
