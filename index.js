@@ -1,3 +1,5 @@
+last_packet_id=null
+
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
 var VIEW="ALL"  // VIEW must be one oF VIEWS
 
@@ -14,6 +16,7 @@ var COLORS = {dns:"goldenrod",
 	      ip:"lightgreen",
 	      arp:"sandybrown",
 	      ethernet:"khaki"}
+
 
 
 function isEndToEndVIEW() {
@@ -103,6 +106,7 @@ AFRAME.registerComponent('inmersiveMode', {
         scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
     }
 });
+
 
 AFRAME.registerComponent('network', {
     schema: {
@@ -210,6 +214,8 @@ AFRAME.registerComponent('network', {
 			animateEndToEndPackets(packets, finalConnectionsLinks, data)
 		    else
 			animatePackets(packets, finalConnectionsLinks, data)
+		    
+
                 }
             }
             
@@ -285,10 +291,10 @@ function showRoutingTable(id, newInfoText, newBox){
     newInfoText.removeAttribute('html');
 
     var textTemplate = document.getElementById(id + '-template');
-	
+    
     newInfoText.setAttribute('html', '#' + id +  "routing_table" + '-template');
 
-	
+    
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
     newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
@@ -381,8 +387,9 @@ AFRAME.registerComponent('packet', {
         let i = 0;
 
         function startAnimation() {
-            if (animationStatus == 'move-pause') {
+            if (animationStatusIfStartButtonIsClicked == 'animation-pause') {
                 if (i == Math.ceil(packetParams.start/1000)) {
+		    
 		    // Find in which node is now the packet based on the position of the packet
 		    var nodeAnimation = nodeList[0]
 		    packetXPosition = packetParams.xPosition * 15 * packetParams.elementsScale
@@ -402,6 +409,7 @@ AFRAME.registerComponent('packet', {
 			}
 		    }
 		    
+		    // Animation of a node when a packet arrives to it
                     var nodeFromAnimation = document.getElementById(nodeAnimation.name);
 
                     if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
@@ -572,7 +580,7 @@ AFRAME.registerComponent('packet', {
                     }
                     if(levels.hasOwnProperty('ip')){
                         index = Object.keys(levels).findIndex(item => item === 'ip')
-                       let newIpBox = document.createElement('a-box');
+			let newIpBox = document.createElement('a-box');
                         newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newIpBox.setAttribute('color', getColor("ip"));
                         newIpBox.setAttribute('visible', true); // pheras
@@ -831,7 +839,7 @@ AFRAME.registerComponent('packet', {
                             
                         });
                     }
-
+		    
 		    // TCP data
                     if(levels.hasOwnProperty('dataInfo')){
                         index = Object.keys(levels).findIndex(item => item === 'dataInfo')
@@ -914,22 +922,31 @@ AFRAME.registerComponent('packet', {
                     }
 		    
 
-
                     packet_move.setAttribute('animation', {
                         property: 'position',
                         to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
                         dur: packetParams.duration,
                         easing: 'linear',
-                        pauseEvents:'move-pause', 
-                        resumeEvents:'move-resume'
-                    });       
+                        pauseEvents:'animation-pause', 
+                        resumeEvents:'animation-resume'
+                    });
+		    
                     packet.addEventListener('animationcomplete', function () {
+			console.log("packet.id: " + packet.id)
+			console.log("last_packet_id: " + last_packet_id)			
+			if (packet.id == last_packet_id){
+			    console.log("Animation is finished")
+			    animationStatusIfStartButtonIsClicked = 'animation-finished'
+			    
+			}
+			
                         longitud = packet.children.length
                         nodeFromAnimation.removeAttribute('animation');
                         for (var a=0; a < longitud; a++) {
                             packet.children[0].remove()
                         }
                         packet.parentNode.removeChild(packet);
+			
                     });
                 }
                 i++;
@@ -939,34 +956,69 @@ AFRAME.registerComponent('packet', {
         var startButton = document.querySelector('#startButton');
         var packets = document.getElementsByClassName('packetClass');
 
-        var animationStatus = 'animation-starts'
+	var animationStatusIfStartButtonIsClicked = 'animation-start'
+
         startButton.addEventListener('click', function () {
-            
             for (var a=0; a< packets.length; a++) {
-		packets[a].emit(animationStatus,null,false)
+		packets[a].emit(animationStatusIfStartButtonIsClicked,null,false)
             }
 
-            switch(animationStatus) {
-            case 'animation-starts':
+            switch(animationStatusIfStartButtonIsClicked) {
+            case 'animation-start':
                 setInterval(startAnimation, 1000);
-                animationStatus = 'move-pause'
+                animationStatusIfStartButtonIsClicked = 'animation-pause'
                 break
-            case 'move-resume':
-                animationStatus = 'move-pause'
+            case 'animation-resume':
+                animationStatusIfStartButtonIsClicked = 'animation-pause'
                 break
-            case 'move-pause':
-                animationStatus = 'move-resume'
+            case 'animation-pause':
+                animationStatusIfStartButtonIsClicked = 'animation-resume'
                 break
+	    case 'animation-finished':
+
+                filePackets = 'new_file.json'
+                requestPackets = new XMLHttpRequest();
+                requestPackets.open('GET', filePackets);
+                requestPackets.responseType = 'text';
+                requestPackets.send();
+                requestPackets.onload = function() {
+                    response = requestPackets.response;
+                    responseParse = JSON.parse(response);
+		    
+                    packets = readPackets(responseParse)
+
+
+		    if (isEndToEndVIEW()){
+			animateEndToEndPackets(packets, finalConnectionsLinks, data)
+			console.log("isEndToEndVIEW")
+		    }
+		    else{
+			animatePackets(packets, finalConnectionsLinks, data)
+			console.log("! isEndToEndVIEW")
+		    }
+		
+		
+		}
+                animationStatusIfStartButtonIsClicked = 'animation-pause'				
+		setInterval(startAnimation, 2000);		
+
+            for (var a=0; a< packets.length; a++) {
+		packets[a].emit(animationStatusIfStartButtonIsClicked,null,false)
+            }
+		
+		break
             }
         });
+
+	
     }
 });
+
+    
 
 
 function formatRoutingTable(routing_table){
     text = "<p>Destination  Mask Gateway Iface</p>";
-    console.log("routing_table: ")
-    console.log(routing_table)    
     
     for (var i = 0; i < routing_table.length; i++){
 	text +=
@@ -1140,7 +1192,7 @@ function shiftCoords (from, to, elementsScale){
     coordinates.x = from.x;
     coordinates.z = from.z;   
 
-    SHIFT = 20 
+    SHIFT = 30 
     shift_x = SHIFT / (15 * elementsScale);
     shift_z = SHIFT / (15 * elementsScale);
     
@@ -1243,7 +1295,7 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
     let newText = document.createElement('a-entity');
     newText.setAttribute('position', {
 	x: coordinates.x,
-	y: (2.5)/elementsScale + coordinates.y,
+	y: (4.5)/elementsScale + coordinates.y,
 	z: coordinates.z
     });
     
@@ -1339,10 +1391,6 @@ function  readPackets(responseParse) {
 		    ip_src: responseParse[j].ip["ip.src"],
 		    ip_id: responseParse[j].ip["ip.id"]
 		}
-		console.log("responseParse: ")
-		console.log(responseParse[j])
-		console.log("protocols: " )
-		console.log(protocols)
 
 		// keep only IP datagrams in the broadcast domain, discard others
 		if (!seen_packets.some (e => e.ip_src === packet.ip_src && e.ip_id === packet.ip_id)){
@@ -1363,8 +1411,11 @@ function  readPackets(responseParse) {
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
     finalPackets = []
+    console.log("animateEndToEndPackets")
 
     for (var j = 0; j < packets.length; j++) {
+
+	
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
         to = connectionsLinks.find(o => o.ipaddr.includes(packets[j].ip["ip.dst"]))
@@ -1397,9 +1448,10 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
 }
 
-	    
+
 function animatePackets(packets, connectionsLinks, data){
     finalPackets = []
+
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
@@ -1579,13 +1631,14 @@ function animatePackets(packets, connectionsLinks, data){
         }
     }
     
-    console.log("finalPackets:")
     console.log(finalPackets)
+
 
     create_animations(finalPackets)
 }
 
 function create_animations(finalPackets){
+    last_packet_id = finalPackets.length - 1
     
     // --------- Create animations ----------
     escena = document.querySelector('#escena');
