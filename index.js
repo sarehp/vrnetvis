@@ -111,6 +111,8 @@ AFRAME.registerComponent('network', {
 
     init: function() {
         nodeList = [];
+
+	// request netgui.nkp
         data = this.data
         file = data.filename
         request = new XMLHttpRequest();
@@ -125,7 +127,10 @@ AFRAME.registerComponent('network', {
 
             // Establecemos los diferentes nodos de la escena
             setNodes(nodes, nodeList, data)
-            
+
+
+	    // Request and process machineNames.json
+	    
             // Asociamos a cada nodo su nombre de máquina
             machineNamesFile = 'machineNames.json'
             requestMachineNames = new XMLHttpRequest();
@@ -135,21 +140,42 @@ AFRAME.registerComponent('network', {
             requestMachineNames.onload = function() {
                 response = requestMachineNames.response;
                 responseParse = JSON.parse(response);
-		
-                for (const interface in responseParse) {
-                    for (const currentNode in responseParse[interface]) {
+
+                for (const interface_index in responseParse.interfaces) {
+                    for (const currentNode in responseParse.interfaces[interface_index]) {
                         node = nodeList.find(o => o.name === currentNode)
-			node.hwaddr.push(responseParse[interface][currentNode]["hwaddr"])
-			node.ipaddr.push(responseParse[interface][currentNode]["ipaddr"])
-			node.mask.push(responseParse[interface][currentNode]["mask"])						
+			node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
+			node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
+			node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])						
                     }
                 }
-                
+
+		for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
+                    node = nodeList.find(o => o.name === machineName)
+		    node.routing_table = value.routing_table
+                }
+
+
+		
+                // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in setNodes() !!
                 connections = nodesInfo[1].split('link')
                 connectionsLinks = []
 
                 finalConnectionsLinks = setConnectionsLinks(connections, connectionsLinks, nodeList, data)
 
+
+		// show routing tables
+		for (var k=0; k < nodeList.length; k++) {
+		    node = nodeList[k];
+		    
+		    if(!node.name.startsWith('hub')){
+			coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+			createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+		    }
+		}
+		
+
+		// Process packets
                 filePackets = 'new_file.json'
                 requestPackets = new XMLHttpRequest();
                 requestPackets.open('GET', filePackets);
@@ -252,7 +278,26 @@ function getColor(protocol){
     return COLORS[protocol];
 }
 
-// aqui
+
+function showRoutingTable(id, newInfoText, newBox){
+    let infoText = "Routing Table"
+
+    newInfoText.setAttribute('visible', true);
+    newInfoText.removeAttribute('html');
+
+    var textTemplate = document.getElementById(id + '-template');
+	
+    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: ' + "black" + '">' + infoText + '</h1>'
+    textTemplate.innerHTML = textTemplateContent;
+
+    newInfoText.setAttribute('html', '#' + id + '-template');
+
+	
+    newInfoText.setAttribute('visible', true);
+    newBox.removeAttribute('sound');
+    newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+}
+
 function showInfoText(protocol, packetParams, newInfoText, newBox){
 
     let infoText = ""
@@ -530,7 +575,7 @@ AFRAME.registerComponent('packet', {
                     }
                     if(levels.hasOwnProperty('ip')){
                         index = Object.keys(levels).findIndex(item => item === 'ip')
-                        let newIpBox = document.createElement('a-box');
+                       let newIpBox = document.createElement('a-box');
                         newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
                         newIpBox.setAttribute('color', getColor("ip"));
                         newIpBox.setAttribute('visible', true); // pheras
@@ -920,6 +965,24 @@ AFRAME.registerComponent('packet', {
     }
 });
 
+
+function formatRoutingTable(routing_table){
+    text = "<p>Destination  Mask Gateway Iface</p>";
+    console.log("routing_table: ")
+    console.log(routing_table)    
+    
+    for (var i = 0; i < routing_table.length; i++){
+	text +=
+	    "<p>"+routing_table[i][0] + " "+
+	    routing_table[i][1] + " " +
+	    routing_table[i][2] + " " +
+	    routing_table[i][3] + 
+	    "</p>"
+    }
+
+    return text;
+}
+
 function setNodes(nodes, nodeList, data) {
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
@@ -929,14 +992,18 @@ function setNodes(nodes, nodeList, data) {
             name: nodesName[1],
             hwaddr: [],
 	    ipaddr:[],
-	    mask:[]
+	    mask:[],
+	    routing_table:[],
         }
 
 
+	nodeList.push(newNode)	    
 
 	
         let newNodeElement = document.createElement('a-entity');
 
+	
+	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale }	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
@@ -956,8 +1023,37 @@ function setNodes(nodes, nodeList, data) {
         }
 
 	
-	nodeList.push(newNode)	    
 
+	
+	// Add routing table info
+	// isClosedRoutingTableInfo = true;
+	
+        // let routingTableText = document.createElement('a-entity');
+        // routingTableText.setAttribute('position', { x: 5 , y: 3, z: 0 });
+        // routingTableText.setAttribute('look-at', "[camera]");
+        // routingTableText.setAttribute('visible', false);
+        // routingTableText.setAttribute('scale', {x: 20, y: 20, z: 20});
+        // routingTableText.setAttribute('isPoster', true); 
+        // newNodeElement.appendChild(routingTableText);
+	
+	
+        // newNodeElement.addEventListener('click', function () {
+	//     console.log("En click de nodo")
+        //     if(isClosedRoutingTableInfo == false){
+	//     	isClosedRoutingTableInfo = true
+        //         actualInfoShown = 'tabla routing'
+        //         routingTableText.setAttribute('visible', false);
+        //         newNodeElement.removeAttribute('sound');
+        //         routingTableText.removeAttribute('html');
+        //         newNodeElement.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+        //     }else{
+        //         isClosedRoutingTableInfo = false
+	//     	actualInfoShown = "routing_table"
+	//     	showRoutingTable(newNodeElement.id, routingTableText, newNodeElement);
+        //     }
+        // });
+
+	
 	
 	// In end-to-end views draw only hosts (pcs and dns servers)
 	if  (isEndToEndVIEW())
@@ -1132,6 +1228,38 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
     return connectionsLinksStandard
 }
 
+
+
+function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
+    var htmltemplates = document.getElementById("htmltemplates");
+    var newSectionTemplate = document.createElement("section");
+
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400;">' + info + '</h1>'
+    newSectionTemplate.innerHTML = templateText;
+    
+    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
+    
+    newSectionTemplate.id = id_text + "-template";
+    htmltemplates.appendChild(newSectionTemplate);
+
+
+    let newText = document.createElement('a-entity');
+    newText.setAttribute('position', {
+	x: coordinates.x,
+	y: (2.5)/elementsScale + coordinates.y,
+	z: coordinates.z
+    });
+    
+
+    newText.setAttribute('html', '#' + id_text + "-template");
+    newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
+    newText.setAttribute('look-at', "[camera]");
+	    
+    scene = document.querySelector('#escena');
+
+    scene.appendChild(newText);
+
+}
 
 function  readPackets(responseParse) {
     var seen_packets = [];
