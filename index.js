@@ -1,18 +1,5 @@
-var VIEWS=["APPLICATION", "TRANSPORT", "NETWORK", "ALL"]
-var VIEW="APPLICATION" // VIEW must be one oF VIEWS
-
-// APPLICATION
-
-// 1)
-// pintar sólo hosts (pc*, dns*)
-// no pintar enlaces
-
-
-// 2)
-// 2.a) filtrar los dns http data dataInfo | quedarse sólo con una copia filtrando por datagrama id
-// 2.b) al generar animación de paquete poner from y to en los nodos de las ips origen y destino
-
-
+var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
+var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
 
 
 var TICK = 2000 // 10000
@@ -27,6 +14,11 @@ var COLORS = {dns:"goldenrod",
 	      ip:"lightgreen",
 	      arp:"sandybrown",
 	      ethernet:"khaki"}
+
+
+function isEndToEndVIEW() {
+    return (VIEW == "APPLICATION" || VIEW == "APPLICATION+TRANSPORT");
+}
 
 
 
@@ -186,7 +178,10 @@ AFRAME.registerComponent('network', {
                     buttonText.setAttribute('look-at', "[camera]");
                     scene.appendChild(buttonText);
 
-                    animatePackets(packets, finalConnectionsLinks, data)
+		    if (isEndToEndVIEW())
+			animateEndToEndPackets(packets, finalConnectionsLinks, data)
+		    else
+			animatePackets(packets, finalConnectionsLinks, data)
                 }
             }
             
@@ -937,8 +932,8 @@ function setNodes(nodes, nodeList, data) {
 	    mask:[]
         }
 
-	// if ((VIEW=="APPLICATION" || VIEW=="TRANSPORT") && !(newNode.name.startsWith("dns") || newNode.name.startsWith("pc")))
-	//     continue;
+
+
 	
         let newNodeElement = document.createElement('a-entity');
 
@@ -960,7 +955,18 @@ function setNodes(nodes, nodeList, data) {
             newNodeElement.setAttribute('scale', {x: 0.008/data.elementsScale, y: 0.008/data.elementsScale, z: 0.008/data.elementsScale});
         }
 
-        scene.appendChild(newNodeElement);
+	
+	nodeList.push(newNode)	    
+
+	
+	// In end-to-end views draw only hosts (pcs and dns servers)
+	if  (isEndToEndVIEW())
+	    if (! (newNode.name.startsWith('pc') || newNode.name.startsWith('dns'))) 
+		continue;
+
+
+	scene.appendChild(newNodeElement);
+	
 
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
@@ -978,7 +984,9 @@ function setNodes(nodes, nodeList, data) {
 
         scene = document.querySelector('#escena');
         scene.appendChild(newText);
-        nodeList.push(newNode)
+
+
+
         
     }
 
@@ -1024,7 +1032,10 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
         connectionsLinksStandard.push(connectionLink)
     }
 
-    writeConnections(connectionsLinksStandard, nodeList, data)
+
+    // Only draw links in non end-to-end views
+    if  (! isEndToEndVIEW())
+	writeConnections(connectionsLinksStandard, nodeList, data)
 
     return connectionsLinksStandard
 }
@@ -1139,11 +1150,12 @@ function  readPackets(responseParse) {
 
 	// tcp and raw data encapsulated
         if(responseParse[j].tcp.length !== 0){
-	    protocols.push("TRANSPORT")
-	    
+	    protocols.push("APPLICATION+TRANSPORT")
+	    console.log("soy APPLICATION+TRANSPORT")
             newAnimation.tcp = responseParse[j].tcp;
 	    
-	    if(responseParse[j].tcp["tcp.len"] !== 0){ // TCP segment with data => add data layer
+	    if(responseParse[j].tcp["tcp.len"] !== "0"){ // TCP segment with data => add data layer
+		console.log("soy APPLICATION")
 		protocols.push("APPLICATION");		
 		newAnimation.data = responseParse[j].tcp["tcp.payload"];
 	    }
@@ -1151,18 +1163,18 @@ function  readPackets(responseParse) {
 
 	// udp and raw data encapsulated
         if(responseParse[j].udp.length !== 0){
-	    protocols.push("TRANSPORT");
+	    protocols.push("APPLICATION+TRANSPORT");
 
 	    newAnimation.udp = responseParse[j].udp;
 
-	    if(responseParse[j].data["data.len"] !== 0){ // UDP segment with data => add data layer
+	    if(responseParse[j].data["data.len"] !== "0"){ // UDP segment with data => add data layer
 		protocols.push("APPLICATION");
 		newAnimation.data = responseParse[j].data["data.data"];
 	    }	    
         }
 
         if(responseParse[j].icmp.length !== 0){
-	    protocols.push("NETWORK");
+	    protocols.push("APPLICATION+TRANSPORT+NETWORK");
 
 	    newAnimation.icmp = responseParse[j].icmp;
         }
@@ -1182,7 +1194,7 @@ function  readPackets(responseParse) {
             newAnimation.arp = responseParse[j].arp;
         }
         if(responseParse[j].ip.length !== 0){
-	    protocols.push("NETWORK");	    
+	    protocols.push("APPLICATION+TRANSPORT+NETWORK");	    
             newAnimation.ip = responseParse[j].ip;
         }
         if(responseParse[j].eth.length !== 0){
@@ -1194,23 +1206,23 @@ function  readPackets(responseParse) {
 
 	// Filter packets depending on VIEW
 	if (protocols.includes(VIEW)){
-	    if  (VIEW == "APPLICATION" || VIEW == "TRANSPORT"){
+	    if  (isEndToEndVIEW()){
 		packet = {
 		    ip_src: responseParse[j].ip["ip.src"],
 		    ip_id: responseParse[j].ip["ip.id"]
 		}
-		console.log("packet: ")
-		console.log(packet)
-		console.log("seen_packets: ")
-		console.log(seen_packets)
+		console.log("responseParse: ")
+		console.log(responseParse[j])
+		console.log("protocols: " )
+		console.log(protocols)
 
+		// keep only IP datagrams in the broadcast domain, discard others
 		if (!seen_packets.some (e => e.ip_src === packet.ip_src && e.ip_id === packet.ip_id)){
 		    packets.push(newAnimation);
 		    seen_packets.push(packet);
 		}
-	    } else // "NETWORK" || "ALL":
-		packets.push(newAnimation)
-	    
+	    } else // "APPLICATION+TRANSPORT+NETWORK" || "ALL":
+		packets.push(newAnimation)   
 	}
 	
 	
@@ -1221,14 +1233,52 @@ function  readPackets(responseParse) {
 
 
 
+function animateEndToEndPackets(packets, connectionsLinks, data){
+    finalPackets = []
 
+    for (var j = 0; j < packets.length; j++) {
+        var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
+
+        to = connectionsLinks.find(o => o.ipaddr.includes(packets[j].ip["ip.dst"]))
+
+        packetDelay = TICK * j
+        finalPackets.push({
+            'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale,
+            'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
+            'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
+            'toZPosition': (to.position.split(',')[1] / 15)/data.elementsScale,
+            'duration': TICK,
+            'packetDelay': packetDelay,
+            'id': packets[j].id,
+            'ip': packets[j].ip,
+            'eth': packets[j].eth,
+            'arp': packets[j].arp,
+            'dataInfo': packets[j].dataInfo,
+            'data': packets[j].data,		    
+            'tcp': packets[j].tcp,
+	    'udp': packets[j].udp,
+	    'icmp': packets[j].icmp,
+	    'dns': packets[j].dns,
+	    'http': packets[j].http
+        })
+	
+	
+    } // for
+    
+    create_animations(finalPackets)
+
+}
+
+	    
 function animatePackets(packets, connectionsLinks, data){
     finalPackets = []
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
+
+
+
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
-            escena = document.querySelector('#escena');
             to = connectionsLinks.find(o => o.hwaddr.includes(packets[j].dst))
             if (from.to.includes(to.from)){ // hwaddr destino del paquete es vecino del nodo que estamos considerando (from)
                 packetDelay = TICK * j
@@ -1314,8 +1364,6 @@ function animatePackets(packets, connectionsLinks, data){
                 }
 	    }
         } else { // paquete de broadcast
-	    
-	    escena = document.querySelector('#escena');
 	    
             var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 	    
@@ -1405,6 +1453,11 @@ function animatePackets(packets, connectionsLinks, data){
     
     console.log("finalPackets:")
     console.log(finalPackets)
+
+    create_animations(finalPackets)
+}
+
+function create_animations(finalPackets){
     
     // --------- Create animations ----------
     escena = document.querySelector('#escena');
