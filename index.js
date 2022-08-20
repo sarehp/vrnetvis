@@ -7,7 +7,7 @@ last_packet_id = null  // id of last packet in animation. Set when packets are l
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
 var VIEW="APPLICATION+TRANSPORT"  // VIEW must be one oF VIEWS
-
+var PREVIOUS_VIEW=""
 
 
 var TICK = 2000 // 10000
@@ -318,11 +318,12 @@ AFRAME.registerComponent('packet', {
         let packet = this.el
         let packetParams = this.data
 
-        let i = 0;
-
+	
+        let global_seconds_counter = 0;
         function startAnimation() {
-            if (animationStatusIfStartButtonIsClicked == 'animation-pause') {
-                if (i == Math.ceil(packetParams.start/1000)) {
+	    console.log("startAnimation()")
+            if (animationState=="MOVING") {
+                if (global_seconds_counter == Math.ceil(packetParams.start/1000)) {
 		    
 		    // Find in which node is now the packet based on the position of the packet
 		    var nodeAnimation = nodeList[0]
@@ -868,12 +869,11 @@ AFRAME.registerComponent('packet', {
                     packet.addEventListener('animationcomplete', function () {
 			console.log("packet.id: " + packet.id)
 			console.log("last_packet_id: " + last_packet_id)			
+
 			if (packet.id == last_packet_id){
-			    console.log("Animation is finished")
-
-			    animationStatusIfStartButtonIsClicked = 'animation-pause'
-
-			    createNetwork(nkp_filename, elementsScale)
+			    console.log("Whole animation is finished")
+			    animationState = "FINISHED"
+			    PREVIOUS_VIEW=VIEW
 			}
 			
                         longitud = packet.children.length
@@ -885,34 +885,50 @@ AFRAME.registerComponent('packet', {
 			
                     });
                 }
-                i++;
+                global_seconds_counter++;
             }
-        }
+       }
 
+
+
+
+
+
+
+	packet.emit("animation-pause", null, false)
+	
         var startButton = document.querySelector('#startButton');
-        var packets = document.getElementsByClassName('packetClass');
+	var animationState = "INIT" // INIT, PAUSED, MOVING
+	
+        startButton.addEventListener('click', (event) => {
+	    console.log("click " + this.el.id)
+	    
 
-	var animationStatusIfStartButtonIsClicked = 'animation-start'
-
-        startButton.addEventListener('click', function () {
-            for (var a=0; a< packets.length; a++) {
-		packets[a].emit(animationStatusIfStartButtonIsClicked,null,false)
-            }
-
-            switch(animationStatusIfStartButtonIsClicked) {
-            case 'animation-start':
+            switch(animationState) {
+            case 'INIT':
+		animationState = "MOVING"
                 setInterval(startAnimation, 1000);
-                animationStatusIfStartButtonIsClicked = 'animation-pause'
                 break
-            case 'animation-resume':
-                animationStatusIfStartButtonIsClicked = 'animation-pause'
+            case 'MOVING':
+		console.log("click to pause on packet id " + packet.id)
+		packet.emit("animation-pause", null, false)
+		animationState = "PAUSED"
+                break;
+            case 'PAUSED':
+		console.log("click to move on packet id " + packet.id)
+		packet.emit("animation-resume", null, false)
+		animationState = "MOVING"
                 break
-            case 'animation-pause':
-                animationStatusIfStartButtonIsClicked = 'animation-resume'
-                break
+	    case 'FINISHED':
+		// Borrar paquetes
+		// ...
+		//
+		
+		if (PREVIOUS_VIEW == VIEW)
+		    createNetwork(nkp_filename, elementsScale)
+		break;
             }
         });
-
 	
     }
 });
