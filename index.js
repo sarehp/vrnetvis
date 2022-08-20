@@ -1,7 +1,13 @@
-last_packet_id=null
+//////////
+// GLOBALS
+nkp_filename   = null
+elementsScale  = null
+last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
+//////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="ALL"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION+TRANSPORT"  // VIEW must be one oF VIEWS
+
 
 
 var TICK = 2000 // 10000
@@ -114,114 +120,42 @@ AFRAME.registerComponent('network', {
     },
 
     init: function() {
-        nodeList = [];
+	finalConnectionsLinks=[]
 
-	// request netgui.nkp
+	
+        // nodeList = [];
+
+	// // request netgui.nkp
+
         data = this.data
-        file = data.filename
-        request = new XMLHttpRequest();
-        request.open('GET', file);
-        request.responseType = 'text';
-        request.send();
         scene = this.el
-        request.onload = function() {
-            response = request.response;
-            response.split('<nodes>')
-            nodes = response.split('position')
-
-            // Establecemos los diferentes nodos de la escena
-            setNodes(nodes, nodeList, data)
-
-
-	    // Request and process machineNames.json
-	    
-            // Asociamos a cada nodo su nombre de máquina
-            machineNamesFile = 'machineNames.json'
-            requestMachineNames = new XMLHttpRequest();
-            requestMachineNames.open('GET', machineNamesFile);
-            requestMachineNames.responseType = 'text';
-            requestMachineNames.send();
-            requestMachineNames.onload = function() {
-                response = requestMachineNames.response;
-                responseParse = JSON.parse(response);
-
-                for (const interface_index in responseParse.interfaces) {
-                    for (const currentNode in responseParse.interfaces[interface_index]) {
-                        node = nodeList.find(o => o.name === currentNode)
-			node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
-			node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
-			node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])						
-                    }
-                }
-
-		for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
-                    node = nodeList.find(o => o.name === machineName)
-		    node.routing_table = value.routing_table
-                }
+	
+	// Store in globals
+	nkp_filename = data.filename
+	elementsScale=data.elementsScale
+	
+	createNetwork(nkp_filename, elementsScale)
 
 
-		
-                // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in setNodes() !!
-                connections = nodesInfo[1].split('link')
-                connectionsLinks = []
-
-                finalConnectionsLinks = setConnectionsLinks(connections, connectionsLinks, nodeList, data)
-
-
-		// show routing tables
-		for (var k=0; k < nodeList.length; k++) {
-		    node = nodeList[k];
-		    
-		    if(!node.name.startsWith('hub')){
-			coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
-			node.routingTableText =
-			    createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
-
-		    }
-		}
-		
-
-		// Process packets
-                filePackets = 'new_file.json'
-                requestPackets = new XMLHttpRequest();
-                requestPackets.open('GET', filePackets);
-                requestPackets.responseType = 'text';
-                requestPackets.send();
-                requestPackets.onload = function() {
-                    response = requestPackets.response;
-                    responseParse = JSON.parse(response);
-		    
-                    packets = readPackets(responseParse)
-
-
-                    let startButton = document.createElement('a-sphere');
-
-                    startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
-                    startButton.setAttribute('color', 'orange');
-                    startButton.setAttribute('scale', '2 2 2');
-                    startButton.setAttribute('id', 'startButton');
-                    startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-                    scene.appendChild(startButton);
-
-                    let buttonText = document.createElement('a-entity');
-                    buttonText.setAttribute('html', '#start-button');
-                    buttonText.setAttribute('position', { x: -20 , y: 20, z: 10 });
-                    buttonText.setAttribute('scale', '30 30 30');
-                    buttonText.setAttribute('look-at', "[camera]");
-                    scene.appendChild(buttonText);
-
-		    if (isEndToEndVIEW())
-			animateEndToEndPackets(packets, finalConnectionsLinks, data)
-		    else
-			animatePackets(packets, finalConnectionsLinks, data)
-		    
-
-                }
-            }
-            
-
-            
-        }
+	
+	// Create player controls (startButton): start/play/pause/reload
+        let startButton = document.createElement('a-sphere');
+	
+        startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
+        startButton.setAttribute('color', 'orange');
+        startButton.setAttribute('scale', '2 2 2');
+        startButton.setAttribute('id', 'startButton');
+        startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+        scene.appendChild(startButton);
+	
+        let buttonText = document.createElement('a-entity');
+        buttonText.setAttribute('html', '#start-button');
+        buttonText.setAttribute('position', { x: -20 , y: 20, z: 10 });
+        buttonText.setAttribute('scale', '30 30 30');
+        buttonText.setAttribute('look-at', "[camera]");
+        scene.appendChild(buttonText);
+	
+	
     }
 });
 
@@ -936,8 +870,10 @@ AFRAME.registerComponent('packet', {
 			console.log("last_packet_id: " + last_packet_id)			
 			if (packet.id == last_packet_id){
 			    console.log("Animation is finished")
-			    animationStatusIfStartButtonIsClicked = 'animation-finished'
-			    
+
+			    animationStatusIfStartButtonIsClicked = 'animation-pause'
+
+			    createNetwork(nkp_filename, elementsScale)
 			}
 			
                         longitud = packet.children.length
@@ -974,39 +910,6 @@ AFRAME.registerComponent('packet', {
             case 'animation-pause':
                 animationStatusIfStartButtonIsClicked = 'animation-resume'
                 break
-	    case 'animation-finished':
-
-                filePackets = 'new_file.json'
-                requestPackets = new XMLHttpRequest();
-                requestPackets.open('GET', filePackets);
-                requestPackets.responseType = 'text';
-                requestPackets.send();
-                requestPackets.onload = function() {
-                    response = requestPackets.response;
-                    responseParse = JSON.parse(response);
-		    
-                    packets = readPackets(responseParse)
-
-
-		    if (isEndToEndVIEW()){
-			animateEndToEndPackets(packets, finalConnectionsLinks, data)
-			console.log("isEndToEndVIEW")
-		    }
-		    else{
-			animatePackets(packets, finalConnectionsLinks, data)
-			console.log("! isEndToEndVIEW")
-		    }
-		
-		
-		}
-                animationStatusIfStartButtonIsClicked = 'animation-pause'				
-		setInterval(startAnimation, 2000);		
-
-            for (var a=0; a< packets.length; a++) {
-		packets[a].emit(animationStatusIfStartButtonIsClicked,null,false)
-            }
-		
-		break
             }
         });
 
@@ -1014,8 +917,111 @@ AFRAME.registerComponent('packet', {
     }
 });
 
-    
 
+function createNetwork(filename, elementScale){
+    connectionsLinks=[]
+
+    nodeList = [];
+
+    
+    // request netgui.nkp
+    file = filename
+    request = new XMLHttpRequest();
+    request.open('GET', file);
+    request.responseType = 'text';
+    request.send();
+
+    request.onload = function() {
+        response = request.response;
+        response.split('<nodes>')
+        nodes = response.split('position')
+
+        // Establecemos los diferentes nodos de la escena
+        setNodes(nodes, nodeList, elementScale)
+
+
+	// Request and process machineNames.json
+	
+        // Asociamos a cada nodo su nombre de máquina
+        machineNamesFile = 'machineNames.json'
+        requestMachineNames = new XMLHttpRequest();
+        requestMachineNames.open('GET', machineNamesFile);
+        requestMachineNames.responseType = 'text';
+        requestMachineNames.send();
+        requestMachineNames.onload = function() {
+            response = requestMachineNames.response;
+            responseParse = JSON.parse(response);
+
+            for (const interface_index in responseParse.interfaces) {
+                for (const currentNode in responseParse.interfaces[interface_index]) {
+                    node = nodeList.find(o => o.name === currentNode)
+		    node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
+		    node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
+		    node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])						
+                }
+            }
+
+	    for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
+                node = nodeList.find(o => o.name === machineName)
+		node.routing_table = value.routing_table
+            }
+
+
+	    
+            // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in setNodes() !!
+            connections = nodesInfo[1].split('link')
+
+
+            finalConnectionsLinks = setConnectionsLinks(connections, connectionsLinks, nodeList, data)
+	    console.log("finalConnectionsLinks en createNetwork:")
+	    console.log(finalConnectionsLinks)		
+
+
+	    // show routing tables
+	    for (var k=0; k < nodeList.length; k++) {
+		node = nodeList[k];
+		
+		if(!node.name.startsWith('hub')){
+		    coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    node.routingTableText =
+			createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+
+		}
+	    }
+	    
+	    loadAndAnimatePackets();
+	}
+
+
+    }
+}
+    
+function loadAndAnimatePackets(){
+    filePackets = 'new_file.json'
+    requestPackets = new XMLHttpRequest();
+    requestPackets.open('GET', filePackets);
+    requestPackets.responseType = 'text';
+    requestPackets.send();
+    requestPackets.onload = function() {
+        response = requestPackets.response;
+        responseParse = JSON.parse(response);
+	
+        packets = readPackets(responseParse)
+	
+	
+	if (isEndToEndVIEW()){
+	    console.log("finalConnectionsLinks en loadAndAnimatePackets:")
+	    console.log(finalConnectionsLinks)	    
+	    
+	    animateEndToEndPackets(packets, finalConnectionsLinks, data)
+	    console.log("isEndToEndVIEW")
+	}
+	else{
+	    animatePackets(packets, finalConnectionsLinks, data)
+	    console.log("! isEndToEndVIEW")
+	}
+    }
+}
 
 function formatRoutingTable(routing_table){
     text = "<p>Destination  Mask Gateway Iface</p>";
@@ -1032,7 +1038,7 @@ function formatRoutingTable(routing_table){
     return text;
 }
 
-function setNodes(nodes, nodeList, data) {
+function setNodes(nodes, nodeList, elementsScale) {
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1053,23 +1059,23 @@ function setNodes(nodes, nodeList, data) {
         let newNodeElement = document.createElement('a-entity');
 
 	
-	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale }	
+	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
-            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
+            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
-            newNodeElement.setAttribute('scale', {x: 0.006/data.elementsScale, y: 0.006/data.elementsScale, z: 0.006/data.elementsScale});
+            newNodeElement.setAttribute('scale', {x: 0.006/elementsScale, y: 0.006/elementsScale, z: 0.006/elementsScale});
             newNodeElement.setAttribute('rotation', '0 -90 0');
         }else if(newNode.name.startsWith('hub')){
             newNodeElement.setAttribute('gltf-model', '#hub');
-            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
+            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
-            newNodeElement.setAttribute('scale', {x: 1/data.elementsScale, y: 1/data.elementsScale, z: 1/data.elementsScale});
+            newNodeElement.setAttribute('scale', {x: 1/elementsScale, y: 1/elementsScale, z: 1/elementsScale});
         }else if(newNode.name.startsWith('r')){
             newNodeElement.setAttribute('gltf-model', '#router');
-            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
+            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
-            newNodeElement.setAttribute('scale', {x: 0.008/data.elementsScale, y: 0.008/data.elementsScale, z: 0.008/data.elementsScale});
+            newNodeElement.setAttribute('scale', {x: 0.008/elementsScale, y: 0.008/elementsScale, z: 0.008/elementsScale});
         }
 
 	
@@ -1122,9 +1128,9 @@ function setNodes(nodes, nodeList, data) {
         htmltemplates.appendChild(newSectionTemplate);
 
         let newText = document.createElement('a-entity');
-        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/data.elementsScale, y: (2.5)/data.elementsScale + data.height, z: (newNode.position.split(',')[1] / 15)/data.elementsScale });
+        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: (2.5)/elementsScale + data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
-        newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
+        newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
 
         scene = document.querySelector('#escena');
@@ -1331,11 +1337,9 @@ function  readPackets(responseParse) {
 	// tcp and raw data encapsulated
         if(responseParse[j].tcp.length !== 0){
 	    protocols.push("APPLICATION+TRANSPORT")
-	    console.log("soy APPLICATION+TRANSPORT")
             newAnimation.tcp = responseParse[j].tcp;
 	    
 	    if(responseParse[j].tcp["tcp.len"] !== "0"){ // TCP segment with data => add data layer
-		console.log("soy APPLICATION")
 		protocols.push("APPLICATION");		
 		newAnimation.data = responseParse[j].tcp["tcp.payload"];
 	    }
