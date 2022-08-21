@@ -321,7 +321,8 @@ AFRAME.registerComponent('packet', {
 	
         let global_seconds_counter = 0;
         function startAnimation() {
-	    console.log("startAnimation()")
+	    console.log("startAnimation() in state " + animationState )
+	    
             if (animationState=="MOVING") {
                 if (global_seconds_counter == Math.ceil(packetParams.start/1000)) {
 		    
@@ -875,6 +876,13 @@ AFRAME.registerComponent('packet', {
 			    animationState = "FINISHED"
 			    PREVIOUS_VIEW=VIEW
 			}
+			else{
+			    animationState = "ZOMBIE"
+			    var startButton = document.querySelector('#startButton');
+			    startButton.removeEventListener('click', event_listener_function)
+			}
+
+			clearInterval(interval_id)
 			
                         longitud = packet.children.length
                         nodeFromAnimation.removeAttribute('animation');
@@ -899,15 +907,17 @@ AFRAME.registerComponent('packet', {
 	
         var startButton = document.querySelector('#startButton');
 	var animationState = "INIT" // INIT, PAUSED, MOVING
+	var interval_id
 	
-        startButton.addEventListener('click', (event) => {
-	    console.log("click " + this.el.id)
+
+	var event_listener_function = function() {
+	    console.log("click")
 	    
 
             switch(animationState) {
             case 'INIT':
 		animationState = "MOVING"
-                setInterval(startAnimation, 1000);
+                interval_id = setInterval(startAnimation, 1000);
                 break
             case 'MOVING':
 		console.log("click to pause on packet id " + packet.id)
@@ -923,12 +933,16 @@ AFRAME.registerComponent('packet', {
 		// Borrar paquetes
 		// ...
 		//
+		animationState = "ZOMBIE"
+		startButton.removeEventListener('click', event_listener_function)
 		
 		if (PREVIOUS_VIEW == VIEW)
 		    createNetwork(nkp_filename, elementsScale)
 		break;
             }
-        });
+        }
+	
+	startButton.addEventListener('click', event_listener_function);
 	
     }
 });
