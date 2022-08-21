@@ -1,5 +1,6 @@
 //////////
 // GLOBALS
+nodeList = []
 nkp_filename   = null
 elementsScale  = null
 last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
@@ -884,6 +885,7 @@ AFRAME.registerComponent('packet', {
 
 			clearInterval(interval_id)
 			
+			// Destroy packet element
                         longitud = packet.children.length
                         nodeFromAnimation.removeAttribute('animation');
                         for (var a=0; a < longitud; a++) {
@@ -937,6 +939,7 @@ AFRAME.registerComponent('packet', {
 		startButton.removeEventListener('click', event_listener_function)
 		
 		if (PREVIOUS_VIEW == VIEW)
+		    deleteNodes(nodeList)
 		    createNetwork(nkp_filename, elementsScale)
 		break;
             }
@@ -951,7 +954,7 @@ AFRAME.registerComponent('packet', {
 function createNetwork(filename, elementScale){
     connectionsLinks=[]
 
-    nodeList = [];
+
 
     
     // request netgui.nkp
@@ -966,8 +969,8 @@ function createNetwork(filename, elementScale){
         response.split('<nodes>')
         nodes = response.split('position')
 
-        // Establecemos los diferentes nodos de la escena
-        setNodes(nodes, nodeList, elementScale)
+        // Establecemos los diferentes nodos de la escena que quedan almacenados en nodeList
+        createNodes(nodes, nodeList, elementScale)
 
 
 	// Request and process machineNames.json
@@ -998,7 +1001,7 @@ function createNetwork(filename, elementScale){
 
 
 	    
-            // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in setNodes() !!
+            // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
             connections = nodesInfo[1].split('link')
 
 
@@ -1068,7 +1071,30 @@ function formatRoutingTable(routing_table){
     return text;
 }
 
-function setNodes(nodes, nodeList, elementsScale) {
+function deleteNodes(nodeList){
+    for (var i = 0; i < nodeList.length; i++){
+        scene = document.querySelector('#escena');
+	
+	node_a_entity = nodeList[i].node_a_entity 
+
+
+	if (! scene.contains(node_a_entity))
+	    // Not all nodes are in the scene
+	    continue
+	
+	// Destroy node
+        longitud = node_a_entity.children.length
+        node_a_entity.removeAttribute('animation');
+        for (var a=0; a < longitud; a++) {
+            node_a_entity.children[0].remove()
+        }
+
+        node_a_entity.parentNode.removeChild(node_a_entity);
+	
+    }
+}
+
+function createNodes(nodes, nodeList, elementsScale) {
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1079,15 +1105,13 @@ function setNodes(nodes, nodeList, elementsScale) {
 	    ipaddr:[],
 	    mask:[],
 	    routing_table:[],
-	    routingTableText:""
+	    routingTableText:"",
+	    node_a_entity:""
         }
 
-
-	nodeList.push(newNode)	    
-
-	
         let newNodeElement = document.createElement('a-entity');
-
+	newNode.node_a_entity = newNodeElement 
+	nodeList.push(newNode)	    
 	
 	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
@@ -1171,7 +1195,6 @@ function setNodes(nodes, nodeList, elementsScale) {
         
     }
 
-    return nodeList
 }
 
 function setConnectionsLinks(connections, connectionsLinks, nodeList, data){
