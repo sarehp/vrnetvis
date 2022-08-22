@@ -952,6 +952,7 @@ AFRAME.registerComponent('packet', {
 
 
 function createNetwork(filename, elementScale){
+    nodeList=[]
     connectionsLinks=[]
 
 
