@@ -476,7 +476,7 @@ AFRAME.registerComponent('packet', {
                         levels = Object.assign(levels,data);
                     }
                     
-                    if(levels.hasOwnProperty('eth')){
+                    if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW()){
                         index = Object.keys(levels).findIndex(item => item === 'eth')
 
                         let newEthBox = document.createElement('a-box');
@@ -515,7 +515,7 @@ AFRAME.registerComponent('packet', {
 			    
                         });
                     }
-                    if(levels.hasOwnProperty('ip')){
+                    if(levels.hasOwnProperty('ip') && 	!isEndToEndVIEW()){
                         index = Object.keys(levels).findIndex(item => item === 'ip')
 			let newIpBox = document.createElement('a-box');
                         newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
@@ -554,7 +554,7 @@ AFRAME.registerComponent('packet', {
                             
                         });
                     }
-                    if(levels.hasOwnProperty('arp')){
+                    if(levels.hasOwnProperty('arp') && 	!isEndToEndVIEW()){
                         index = Object.keys(levels).findIndex(item => item === 'arp')
                         let newArpBox = document.createElement('a-box');
                         newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
@@ -1073,9 +1073,9 @@ function formatRoutingTable(routing_table){
 }
 
 function deleteNodes(nodeList){
+    scene = document.querySelector('#escena');
+
     for (var i = 0; i < nodeList.length; i++){
-        scene = document.querySelector('#escena');
-	
 	node_a_entity = nodeList[i].node_a_entity 
 
 
@@ -1090,7 +1090,7 @@ function deleteNodes(nodeList){
             node_a_entity.children[0].remove()
         }
 
-        node_a_entity.parentNode.removeChild(node_a_entity);
+        scene.removeChild(node_a_entity);
 	
     }
 }
