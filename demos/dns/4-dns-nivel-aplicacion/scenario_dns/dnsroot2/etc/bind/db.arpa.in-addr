@@ -1,0 +1,15 @@
+$TTL 1d ; default ttl
+in-addr.arpa.           86400   IN      SOA     ROOT-SERVER.    root.ROOT-SERVER. (
+                        2009120201 ; serial
+                        8h ; refresh
+                        4h ; retry
+                        1000h ; expire
+                        20m ; negative cache ttl
+                        )
+
+in-addr.arpa. 	 86400	IN	NS	ROOT-SERVER.
+10.in-addr.arpa. 86400	IN	NS 	ROOT-SERVER.  
+11.in-addr.arpa. 86400	IN	NS 	dnscom.com.  
+12.in-addr.arpa. 86400	IN	NS 	dnsemp1.emp1.com.  
+13.in-addr.arpa. 86400	IN	NS 	dnsnet.net.  
+14.in-addr.arpa. 86400	IN	NS 	dnsemp2.emp2.net.  

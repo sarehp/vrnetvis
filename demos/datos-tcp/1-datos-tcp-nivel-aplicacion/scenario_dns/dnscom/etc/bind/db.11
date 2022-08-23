@@ -1,0 +1,12 @@
+$TTL	1d ; default ttl
+11.in-addr.arpa.	IN	SOA	dnscom.com. root.dnscom.com. (
+	 		2009041201	; Serial
+			8h		; Refresh
+			4h		; Retry
+			1000h		; Expire
+			20m )		; Negative Cache TTL
+;
+11.in-addr.arpa.	IN	NS	dnscom.com.
+10.0.0.11.in-addr.arpa.	IN	PTR	dnscom.com.
+2.0.0.11.in-addr.arpa.	IN	PTR	r2.com.
+1.0.0.11.in-addr.arpa.	IN	PTR	r1.com.

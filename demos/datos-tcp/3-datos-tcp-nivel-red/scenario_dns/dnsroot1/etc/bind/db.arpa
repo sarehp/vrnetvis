@@ -1,0 +1,14 @@
+$TTL 1d ; default ttl
+arpa.           86400   IN      SOA     ROOT-SERVER1.    root.ROOT-SERVER1. (
+                        2009120201 ; serial
+                        8h ; refresh
+                        4h ; retry
+                        1000h ; expire
+                        20m ; negative cache ttl
+                        )
+
+arpa. 	 		IN	NS	ROOT-SERVER1.
+arpa. 	 		IN	NS	ROOT-SERVER2.
+
+in-addr.arpa. 		IN	NS 	ROOT-SERVER1.  
+in-addr.arpa. 		IN	NS 	ROOT-SERVER2.  

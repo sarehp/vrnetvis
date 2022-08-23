@@ -1,0 +1,15 @@
+######################################################################
+
+auto lo
+iface lo inet loopback
+
+
+auto eth0
+iface eth0 inet static
+     hwaddress ether 00:1c:42:00:00:d2
+     address 11.0.0.10
+     netmask 255.255.255.0
+     gateway 11.0.0.2
+
+up route add -net 12.0.0.0 netmask 255.255.255.0 gw 11.0.0.1
+

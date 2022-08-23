@@ -1,0 +1,5 @@
+ifconfig eth0 hw ether 00:1b:63:00:00:20
+
+ifconfig eth0 200.8.0.10/24 up
+
+route add default gw 200.8.0.3

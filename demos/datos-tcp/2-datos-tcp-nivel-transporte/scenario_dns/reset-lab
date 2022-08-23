@@ -1,0 +1,25 @@
+#! /bin/bash
+
+cd `dirname $0`
+
+if [ "$1" == "" ]; then
+	echo resetting all devices
+	rm -f *.disk *.ready
+	for DIR in *.old
+	do
+		if [ -d ${DIR} ]; then
+			mv ${DIR} ${DIR%.old}
+		fi
+	done
+else
+	for i in $(seq 1 $#)
+	do
+		echo resetting $1
+		rm -f $1.disk $1.ready
+		if [ -d $1.old ]; then
+			mv $1.old $1
+		fi
+		shift
+	done
+fi
+

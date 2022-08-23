@@ -1,0 +1,12 @@
+$TTL	1d ; default ttl
+14.in-addr.arpa.	IN	SOA	dnsemp2.emp2.net.  root.dnsemp2.emp2.net. (
+			2009120901		; Serial
+			8h		; Refresh
+			4h		; Retry
+			1000h		; Expire
+			20m )		; Negative Cache TTL
+;
+14.in-addr.arpa.	IN	NS	dnsemp2.emp2.net.
+10.0.0.14		IN	PTR	dnsemp2.emp2.net.
+4.0.0.14		IN	PTR	r4.net.
+100.0.0.14		IN	PTR	pc2.emp2.net.	

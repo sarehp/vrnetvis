@@ -1,0 +1,13 @@
+$TTL	1d ; default ttl
+12.in-addr.arpa.	IN	SOA	dnsemp1.emp1.com. root.localhost. (
+			2009120901		; Serial
+			8h		; Refresh
+			4h		; Retry
+			1000h		; Expire
+			20m )		; Negative Cache TTL
+;
+
+12.in-addr.arpa.		IN	NS	dnsemp1.emp1.com.
+10.0.0.12.in-addr.arpa.		IN	PTR	dnsemp1.emp1.com.
+1.0.0.12.in-addr.arpa.		IN	PTR	r1.com.
+100.0.0.12.in-addr.arpa.	IN	PTR	pc1.emp1.com.

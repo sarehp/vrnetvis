@@ -1,0 +1,18 @@
+######################################################################
+
+auto lo
+iface lo inet loopback
+
+
+auto eth0
+iface eth0 inet static
+     hwaddress ether 00:1c:42:00:00:04
+     address 13.0.0.4
+     netmask 255.255.255.0
+     gateway 13.0.0.3
+
+auto eth1
+iface eth1 inet static
+     hwaddress ether 00:1c:42:00:01:04
+     address 14.0.0.4
+     netmask 255.255.255.0

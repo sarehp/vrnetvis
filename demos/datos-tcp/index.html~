@@ -1,0 +1,20 @@
+<h1>VRNetVis: demo datos TCP</h1>
+
+
+<p>pc1 establece conexi&oacute;n TCP con pc3 y le env&iacute;a un segmento con datos. </p>
+
+<ul>
+
+<li><a href="1-datos-tcp-nivel-aplicacion"></a>S&oacute;lo nivel de aplicaci&oacute;n: un segmento TCP con datos </li>
+
+<li><a href="2-datos-tcp-nivel-transporte"></a>Nivel de aplicaci&oacute;n y transporte. Se ve establecimiento de conexi&oacute;n TCP, segmanto con datos, ACKs y cierre de conexi&oacute;n</li>
+
+<li><a href="3-datos-tcp-nivel-red"></a>Nivel de aplicaci&oacute;n, transporte y Red. Se ven los routers y hubs y todos los datagramas IP (sin ARP)x </li>
+
+
+
+
+
+
+</ul>
+

@@ -1,0 +1,22 @@
+$TTL		1d	; default ttl
+.                       IN      SOA     ROOT-SERVER1.	root.ROOT-SERVER1. (
+                        		2009120901 ; serial
+                        		8h ; refresh
+                        		4h ; retry
+                        		1000h ; expire
+                        		20m ; negative cache ttl
+					)
+
+.    			IN	NS	ROOT-SERVER1.
+ROOT-SERVER1.		IN	A	9.0.0.10
+dnsroot1.		IN	A	9.0.0.10
+
+.    			IN	NS	ROOT-SERVER2.
+ROOT-SERVER2.		IN	A	9.0.0.20
+dnsroot2.		IN	A	9.0.0.20
+
+com.			IN 	NS	dnscom.com.
+dnscom.com.		IN 	A	11.0.0.10
+
+net.			IN	NS	dnsnet.net.
+dnsnet.net.		IN	A	13.0.0.10

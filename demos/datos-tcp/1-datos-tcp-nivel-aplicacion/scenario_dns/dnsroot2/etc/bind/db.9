@@ -1,0 +1,20 @@
+$TTL	1d ; default ttl
+9.in-addr.arpa.	IN	SOA	ROOT-SERVER1. root.ROOT-SERVER1. (
+	    		2009120201	; Serial
+			8h		; Refresh
+			4h		; Retry
+			1000h		; Expire
+			20m )		; Negative Cache TTL
+;
+
+9.in-addr.arpa.		IN	NS	ROOT-SERVER1.
+9.in-addr.arpa.		IN	NS	ROOT-SERVER2.
+
+10.0.0.9.in-addr.arpa.		IN	PTR	dnsroot1.
+10.0.0.9.in-addr.arpa.		IN	PTR	ROOT-SERVER1.
+
+20.0.0.9.in-addr.arpa.		IN	PTR	dnsroot2.
+20.0.0.9.in-addr.arpa.		IN	PTR	ROOT-SERVER2.
+
+2.0.0.9.in-addr.arpa.		IN	PTR	r2.com.
+3.0.0.9.in-addr.arpa.		IN	PTR	r3.net.
