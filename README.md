@@ -23,7 +23,7 @@ Normalmente sólo usamos un fichero que hemos mezclado con mergecap.
 Ver sección Generación de capturas y mezcla
 
 5. ```python3 unifycaps.py ```
-6. ```python -m SimpleHTTPServer 8888 . ```
+6. ```python -m SimpleHTTPServer 8888 . / python3 -m http.server 8888 ```
 7. Cargar en navegador ```localhost:8888```
 
 ## Generación de capturas y mezcla
