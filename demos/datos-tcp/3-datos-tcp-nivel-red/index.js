@@ -7,7 +7,7 @@ last_packet_id = null  // id of last packet in animation. Set when packets are l
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
+var VIEW="ALL"  // VIEW must be one oF VIEWS
 var PREVIOUS_VIEW=""
 
 
@@ -18,9 +18,9 @@ var COLORS = {dns:"goldenrod",
 	      dataInfo:"white",
 	      data:"white",
 	      tcp:"steelblue",
-	      udp:"olive",
+	      udp:"orchid",
 	      icmp:"red",
-	      ip:"lightgreen",
+	      ip:"LightGreen", // verde
 	      arp:"sandybrown",
 	      ethernet:"khaki"}
 
@@ -181,33 +181,47 @@ function hex_with_colons_to_ascii(str1)
 
 function dns_info (packetParams)
 {
+    color = getColor("dns")
+    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+                        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' +
+                        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
+                        'font-family: monospace; text-align: left; color: ' + color+ '">'
 
-    info = '<p>Nivel DNS</p>'
+    info = '<p>' + h1 +  'Nivel DNS' + ' </h1> </p>'
 
     // It's a pure query
     if (packetParams.dns["dns.count.add_rr"] == 0 && packetParams.dns["dns.count.answers"] == 0){
-	info += '<p>Queries:</p>'
+        query_type=""
+
+        if (packetParams.dns["dns.flags_tree"]["dns.flags.recdesired"] == "0")
+           query_type= "(iterative)"
+        else
+           query_type= "(recursive)"
+
+	info += '<p>' + h2 + 'Queries ' +  query_type + ': </h2></p>'
 
 	for (const [key, value] of Object.entries(packetParams.dns.Queries))
-	    info += '<p>Query: ' + key + '</p>';
+	    info += '<p>' + h3 + 'Query: ' + key + ' </h3> </p>';
     }
     
 
     if (packetParams.dns["dns.count.answers"] != 0){
-	info += '<p>Answers: </p>'	
+	info += '<p>' + h2 + 'Answers: <h2> </p>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Answers"]))
-    	    info += '<p>' + key + '</p>';
+    	    info += '<p>' + h3 + key + '</h3></p>';
     }
 
     if (packetParams.dns["dns.count.add_rr"] != 0){
 	
-	info += '<p>Authoritative nameservers: </p>'	
+	info += '<p>' + h2 + 'Authoritative nameservers: </h2></p>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Authoritative nameservers"]))
-    	    info += '<p>' + key + '</p>';
+    	    info += '<p>' + h3 + key + ' </h3></p>';
 	
-	info += '<p>Additional records: </p>'		
+	info += '<p>' + h2 + 'Additional records: </h2></p>'		
 	for (const [key, value] of Object.entries(packetParams.dns["Additional records"]))
-            info += '<p>' + key + '</p>';
+            info += '<p>' + h3 + key + '</h3></p>';
     }
 
     
@@ -239,42 +253,96 @@ function showRoutingTable(id, newInfoText, newBox){
 function showInfoText(protocol, packetParams, newInfoText, newBox){
 
     let infoText = ""
+    color = getColor(protocol)
+    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+                        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' + 
+                        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' +
+                        'font-family: monospace;  text-align: left; color: ' + color+ '">'
 
     switch (protocol){
     case 'dns':
 	infoText += dns_info(packetParams);
 	break;
-    case 'http':
-	infoText += ''//'<p>Nivel HTTP:</p><p>Puerto origen: ' + packetParams.http['http.srcport'] + '</p><p>Puerto destino: ' + packetParams.http['http.dstport'] + '</p>'
-	break;
-    case 'dataInfo':
-	infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-	break;
-    case 'data':
-	
-	if (packetParams.tcp != null)
-	    infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-	else if (packetParams.udp != null)
-	    infoText += '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
 
+    case 'http':
+	infoText += '<p>' + h2 + ' Nivel HTTP:</h2></p>' 
 	break;
+
+    case 'dataInfo':
+	infoText += '<p>' + h2 + 
+                     'DATOS:</h2></p>' + h3 + '<p>' + 
+                          'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' +
+                          'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</p></h3>'
+	break;
+
+    case 'data':
+	if (packetParams.tcp != null)
+	    infoText += '<p>' + h2 +
+                         'DATOS:</h2></p>' + h3 + '<p>' +
+                             'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' + 
+                             'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '</p></h3>'
+	else if (packetParams.udp != null)
+	    infoText += '<p>' + h2 + 
+                         'DATOS:</h2></p>' + h3 + '<p>' +
+                             'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '</p><p>' +  
+                             'Longitud de datos: ' + packetParams.udp['udp.length']              + '</p></h3>'
+	break;
+
     case 'tcp':
-	infoText += '<p>Nivel TCP:</p><p>Puerto origen: ' + packetParams.tcp['tcp.srcport'] + '</p><p>Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p>'
+	infoText += '<p>' + h2 + 
+                         'Nivel TCP:</h2></p>' + h3 + '<p>' +
+                              'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
+                              'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p></h3>'
 	break;
+
     case 'udp':
-	infoText += '<p>Nivel UDP:</p><p>Puerto origen: ' + packetParams.udp['udp.srcport'] + '</p><p>Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p>'
+	infoText += '<p>' + h2 + 
+                         'Nivel UDP:</h2></p>' + h3 + '<p>' + 
+                              'Puerto origen: '  + packetParams.udp['udp.srcport'] + '</p><p>' + 
+                              'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p></h3>'
 	break;
+
     case 'icmp':
-	infoText += '<p>Nivel ICMP:</p><p>Type: ' + packetParams.icmp['icmp.type'] + '</p><p>Code: ' + packetParams.icmp['icmp.code'] + '</p>'
+	infoText += '<p>' + h2 + 
+                         'Nivel ICMP:</h2></p>' + h3 + '<p>' +
+                              'Type: ' + packetParams.icmp['icmp.type'] + '</p><p>' +  
+                              'Code: ' + packetParams.icmp['icmp.code'] + '</p></h3>'
 	break;
+
     case 'ip':
-	infoText += '<p>Nivel IP:</p><p>Origen: ' + packetParams.ip['ip.src'] + '</p><p>Destino: ' + packetParams.ip['ip.dst'] + '</p><p>Version: ' + packetParams.ip['ip.version'] + '</p><p>Ttl: ' + packetParams.ip['ip.ttl'] + '</p>'
+	infoText += '<p>' + h2 + 
+                         'Nivel IP:</h2></p>' + h3 + '<p>' + 
+                              'Origen: '  + packetParams.ip['ip.src']  + '</p><p>' + 
+                              'Destino: ' + packetParams.ip['ip.dst']  + '</p><p>' + 
+                              'TTL: '     + packetParams.ip['ip.ttl']  + '</p></h3>'
 	break;
+
     case 'arp': 
-	infoText += '<p>Nivel ARP:</p><p>Origen: ' + packetParams.arp['arp.src.hw_mac'] + '</p><p>Destino: ' + packetParams.arp['arp.dst.hw_mac']  + '</p><p>Target: ' + packetParams.arp['arp.dst.proto_ipv4'] + '</p>'
+        operation=""
+
+
+        if (packetParams.arp['arp.opcode'] == "1")
+             operation="Solicitud"
+        else
+             operation="Respuesta"
+
+	infoText += '<p>' + h2 + 
+                        'Nivel ARP:</h2></p>' + h3 + '<p>' + 
+                              'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '</p><p>' + 
+                              'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '</p><p>' +  
+                              'Operación: ' + operation                              + '</p><p>' +
+                              'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
 	break;
+
     case 'ethernet':
-	infoText += '<p>Nivel Ethernet:</p><p>Origen: ' + packetParams.eth['eth.src'] + '</p><p>Destino: ' + packetParams.eth['eth.dst'] + '</p><p>Tipo: ' + packetParams.eth['eth.type'] + '</p>'
+	infoText += '<p>' + h2 + 
+                         'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
+                              'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
+                              'Destino: ' + packetParams.eth['eth.dst']  + '</p><p>' +  
+                              'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
+
 	break;
     }
     
@@ -282,8 +350,10 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     newInfoText.setAttribute('visible', true);
     newInfoText.removeAttribute('html');
     var textTemplate = document.getElementById(packetParams.id + '-template');
-    textTemplateContent = '<h1 style="padding: 0rem 1rem; font-size: 1rem; font-weight: 700; text-align: center; color: ' + getColor(protocol) + '">' + infoText + '</h1>'
+    textTemplateContent = infoText 
     textTemplate.innerHTML = textTemplateContent;
+    //eva 
+    textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
@@ -1058,16 +1128,23 @@ function loadAndAnimatePackets(){
 }
 
 function formatRoutingTable(routing_table){
-    text = "<p>Destination  Mask Gateway Iface</p>";
+    text = '<table style="border-spacing: 1rem; text-align: center">' +
+               '<tr><th>Destination</th>' +
+                    '<th>Mask</th>' +
+                    '<th> Gateway</th>' +
+                    '<th>Iface</th>' +
+                '</tr>'
     
     for (var i = 0; i < routing_table.length; i++){
-	text +=
-	    "<p>"+routing_table[i][0] + " "+
-	    routing_table[i][1] + " " +
-	    routing_table[i][2] + " " +
-	    routing_table[i][3] + 
-	    "</p>"
+	text += "<tr>" +
+                  "<td>" + routing_table[i][0] + "</td> " +
+             	  "<td>" + routing_table[i][1] + "</td> " +
+      	          "<td>" + routing_table[i][2] + "</td> " +
+	          "<td>" + routing_table[i][3] + "</td> " +
+	    "</tr>"
     }
+
+    text += "</table>"
 
     return text;
 }
@@ -1173,12 +1250,12 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 	scene.appendChild(newNodeElement);
 	
-
+        // Machine names
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
-        templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700;">' + newNode.name + '</h1>'
+        templateText = '<h1 style="padding: 0rem 1rem; margin:0; font-size: 3rem; font-weight: 700; font-family: monospace">' + newNode.name + '</h1>'
         newSectionTemplate.innerHTML = templateText;
-        newSectionTemplate.style = "display: inline-block; background: #CCCCCC; color: yellow; border-radius: 1em; padding: 1em; margin:0;"
+        newSectionTemplate.style = "display: inline-block; background: LightSlateGray; color: gold; border-radius: 1em; padding: 1em; margin:0;"
         newSectionTemplate.id = newNode.name + '-template'
         htmltemplates.appendChild(newSectionTemplate);
 
@@ -1301,9 +1378,9 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
-            templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400;">' + label_id + '</h1>'
+            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 2rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
-            newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
+            newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
             newSectionTemplate.id = id_text + "-template";
             htmltemplates.appendChild(newSectionTemplate);
 
@@ -1343,11 +1420,11 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
 
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400;">' + info + '</h1>'
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
-    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
     
+    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
     newSectionTemplate.id = id_text + "-template";
     htmltemplates.appendChild(newSectionTemplate);
 
