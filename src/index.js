@@ -1,13 +1,15 @@
 //////////
 // GLOBALS
 nodeList = []
+finalConnectionsLinks=[]
 nkp_filename   = null
 elementsScale  = null
 last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
+
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="ALL"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
 var PREVIOUS_VIEW=""
 
 
@@ -121,7 +123,7 @@ AFRAME.registerComponent('network', {
     },
 
     init: function() {
-	finalConnectionsLinks=[]
+
 
 	
         // nodeList = [];
@@ -1008,9 +1010,12 @@ AFRAME.registerComponent('packet', {
 		animationState = "ZOMBIE"
 		startButton.removeEventListener('click', event_listener_function)
 		
-		if (PREVIOUS_VIEW == VIEW)
+		if (PREVIOUS_VIEW == VIEW){
 		    deleteNodes(nodeList)
-		    createNetwork(nkp_filename, elementsScale)
+		    deleteLinks(finalConnectionsLinks)
+		}
+		
+		createNetwork(nkp_filename, elementsScale)
 		break;
             }
         }
@@ -1149,10 +1154,28 @@ function formatRoutingTable(routing_table){
     return text;
 }
 
+
+function deleteLinks(finalConnectionsLinks){
+    for (var i = 0; i < finalConnectionsLinks.length; i++){
+	for (var j=0; j < finalConnectionsLinks[i].lines.length; j++)
+	    scene.removeChild(finalConnectionsLinks[i].lines[j])
+
+	for (var j=0; j < finalConnectionsLinks[i].ipaddrs.length; j++)
+	    scene.removeChild(finalConnectionsLinks[i].ipaddrs[j])
+	
+    }
+
+    finalConnectionsLinks=[]
+
+}
+
+    
 function deleteNodes(nodeList){
     scene = document.querySelector('#escena');
 
     for (var i = 0; i < nodeList.length; i++){
+
+
 	node_a_entity = nodeList[i].node_a_entity 
 
 
@@ -1160,16 +1183,21 @@ function deleteNodes(nodeList){
 	    // Not all nodes are in the scene
 	    continue
 	
-	// Destroy node
-        longitud = node_a_entity.children.length
-        node_a_entity.removeAttribute('animation');
-        for (var a=0; a < longitud; a++) {
-            node_a_entity.children[0].remove()
-        }
+	console.log("deleting node: " + nodeList[i].name)	
 
+	// Destroy node's text
+	scene.removeChild(nodeList[i].text)
+
+	// Destroy node's routingTableText
+	if(!nodeList[i].name.startsWith('hub')){
+            scene.removeChild(nodeList[i].routingTableText)
+	}
+
+	// Destroy node
         scene.removeChild(node_a_entity);
-	
     }
+
+    nodeList=[]
 }
 
 function createNodes(nodes, nodeList, elementsScale) {
@@ -1184,6 +1212,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 	    mask:[],
 	    routing_table:[],
 	    routingTableText:"",
+	    text:"",
 	    node_a_entity:""
         }
 
@@ -1265,6 +1294,8 @@ function createNodes(nodes, nodeList, elementsScale) {
         newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
 
+	newNode.text=newText
+	
         scene = document.querySelector('#escena');
         scene.appendChild(newText);
 
@@ -1309,7 +1340,9 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
             position: nodeList[k].position,
             hwaddr: nodeList[k].hwaddr,
 	    ipaddr: nodeList[k].ipaddr,
-	    mask: nodeList[k].mask
+	    mask: nodeList[k].mask,
+	    lines: [],
+	    ipaddrs: []
         }
         connectionsLinksStandard.push(connectionLink)
     }
@@ -1367,6 +1400,8 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
             scene.appendChild(newLine);
 
+	    connectionsLinksStandard[k].lines.push(newLine)
+
 
 	    // Labels for IP addresses on the link
             nodeFrom = connectionsLinksStandard.find(o => o.from === connectionsLinksStandard[k].from)
@@ -1407,6 +1442,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             scene = document.querySelector('#escena');
 
             scene.appendChild(newText);
+	    connectionsLinksStandard[k].ipaddrs.push(newText)	    
 
         }
     }

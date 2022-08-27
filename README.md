@@ -10,7 +10,13 @@ por Jesús M. González Barahona
 - Eva M. Castro Barbero-
 - Pedro de las Heras Quirós
 
-## Instrucciones
+## Installed demos
+
+[Demos for Oculus Quest](https://sarehp.github.io/sarehp/vrnetvis/demos)
+
+TBD [Demos for Desktop]() 
+
+## How to launch the code in src
 
 1. ```$ ln -f -s scenario_NAME/machineNames.json .```
 2. ```$ ln -f -s scenario_NAME/netgui.nkp .```
@@ -31,3 +37,6 @@ Ver sección Generación de capturas y mezcla
 2. Capturamos en un máquina por dominio de broadcast, minimizando el número total de máquinas en las que capturamos. De este modo reducimos la posibilidad de paquetes desordenados.
 3. mergecap de todas las capturas
 4. generación de json de la captura fusionada 
+
+
+
