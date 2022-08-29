@@ -1,0 +1,13 @@
+[
+    {
+	"view": "ALL",
+	"text":"All with ARP",
+	"color": "blue"
+    },
+    
+    {
+	"view": "APPLICATION+TRANSPORT+NETWORK",
+	"text": "All minus ARP",
+	"color": "green"
+    }
+]

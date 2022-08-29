@@ -9,9 +9,12 @@ var last_packet_id = null  // id of last packet in animation. Set when packets a
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="APPLICATION"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
 var PREVIOUS_VIEW=""
 
+
+// First element in array will be the bottommost option in the view selector
+var VIEWS_MENU=""
 
 var TICK = 2000 // 10000
 var DURATION = 1000 // 5000
@@ -117,6 +120,45 @@ AFRAME.registerComponent('inmersiveMode', {
 });
 
 
+// Creates a box for each menu option in VIEWS_MENU
+function createViewSelector() {
+    console.log("VIEWS_MENU: ")
+    console.log(VIEWS_MENU)
+
+    for (var i = 0; i < VIEWS_MENU.length; i++) {
+
+        let viewSelectorApp = document.createElement('a-box');
+        viewSelectorApp.setAttribute('position', {x: -10, y: 2 + 2*i, z: 10 });
+        viewSelectorApp.setAttribute('color', VIEWS_MENU[i].color);
+        viewSelectorApp.setAttribute('scale', '2 2 2');
+        viewSelectorApp.setAttribute('id', 'viewSelectorApp');
+        viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+
+
+	function eventHandler(newView){
+	    PREVIOUS_VIEW=VIEW;
+	    VIEW=newView
+	    console.log ("new view: " + newView)
+	}
+
+	console.log("adding listener with " + VIEWS_MENU[i].view)
+        viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i].view));
+					 
+        scene.appendChild(viewSelectorApp);
+
+	// add text to menu
+        let text = document.createElement('a-text');
+        text.setAttribute('value', VIEWS_MENU[i].text)
+        text.setAttribute('scale', '2 2 2');
+        text.setAttribute('position', {x: -9, y: 2 + 2*i, z: 10 });
+
+	scene.appendChild(text)
+	
+    }
+
+}
+
 AFRAME.registerComponent('network', {
 
 
@@ -157,36 +199,7 @@ AFRAME.registerComponent('network', {
 
 
 
-	// Create view selector
-        let viewSelectorApp = document.createElement('a-box');
-        viewSelectorApp.setAttribute('position', {x: -40, y: 2 + 20, z: 10 });
-        viewSelectorApp.setAttribute('color', 'green');
-        viewSelectorApp.setAttribute('scale', '2 2 2');
-        viewSelectorApp.setAttribute('id', 'viewSelectorApp');
-        viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
-        viewSelectorApp.addEventListener('click', function () {
-	    PREVIOUS_VIEW=VIEW;
-	    VIEW="APPLICATION";
-        });
-	
-        scene.appendChild(viewSelectorApp);
-
-	
-        let viewSelectorNet = document.createElement('a-box');
-        viewSelectorNet.setAttribute('position', {x: -40, y: 2, z: 10 });
-        viewSelectorNet.setAttribute('color', 'blue');
-        viewSelectorNet.setAttribute('scale', '2 2 2');
-        viewSelectorNet.setAttribute('id', 'viewSelectorNet');
-        viewSelectorNet.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-
-        viewSelectorNet.addEventListener('click', function () {
-	    PREVIOUS_VIEW=VIEW;
-	    VIEW="APPLICATION+TRANSPORT+NETWORK";
-        });
-	
-        scene.appendChild(viewSelectorNet);
-	
 
 
 
@@ -1100,6 +1113,20 @@ function createNetwork(filename, elementScale){
         createNodes(nodes, nodeList, elementScale)
 
 
+        // Request and process menu file
+        viewsMenuFile = 'viewsMenu.json'
+        requestViewsMenuFile = new XMLHttpRequest();
+        requestViewsMenuFile.open('GET', viewsMenuFile);
+        requestViewsMenuFile.responseType = 'text';
+        requestViewsMenuFile.send();
+        requestViewsMenuFile.onload = function() {
+            response = requestViewsMenuFile.response;
+            VIEWS_MENU = JSON.parse(response);
+	    createViewSelector()	    
+	}
+
+	
+	
 	// Request and process machineNames.json
 	
         // Asociamos a cada nodo su nombre de máquina
