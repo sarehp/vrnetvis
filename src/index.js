@@ -1,15 +1,15 @@
 //////////
 // GLOBALS
-nodeList = []
-finalConnectionsLinks=[]
-nkp_filename   = null
-elementsScale  = null
-last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
+var nodeList = []
+var finalConnectionsLinks=[]
+var nkp_filename   = null
+var elementsScale  = null
+var last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
 
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION"  // VIEW must be one oF VIEWS
 var PREVIOUS_VIEW=""
 
 
@@ -118,13 +118,29 @@ AFRAME.registerComponent('inmersiveMode', {
 
 
 AFRAME.registerComponent('network', {
+
+
     schema: {
         filename: {type: 'string', default: ''},
     },
 
+
+    remove: function() {
+	deleteNodes(nodeList)
+	deleteLinks(finalConnectionsLinks)
+
+	nodeList.length=0
+	finalConnectionsLinks.length=0
+	
+
+	scene.removeAttribute("startButton")
+	scene.removeAttribute("buttonText")	
+	    
+	console.log("network removed");
+    },
+    
     init: function() {
-
-
+	console.log("init network")
 	
         // nodeList = [];
 
@@ -138,6 +154,40 @@ AFRAME.registerComponent('network', {
 	elementsScale=data.elementsScale
 	
 	createNetwork(nkp_filename, elementsScale)
+
+
+
+	// Create view selector
+        let viewSelectorApp = document.createElement('a-box');
+        viewSelectorApp.setAttribute('position', {x: -40, y: 2 + 20, z: 10 });
+        viewSelectorApp.setAttribute('color', 'green');
+        viewSelectorApp.setAttribute('scale', '2 2 2');
+        viewSelectorApp.setAttribute('id', 'viewSelectorApp');
+        viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+        viewSelectorApp.addEventListener('click', function () {
+	    PREVIOUS_VIEW=VIEW;
+	    VIEW="APPLICATION";
+        });
+	
+        scene.appendChild(viewSelectorApp);
+
+	
+        let viewSelectorNet = document.createElement('a-box');
+        viewSelectorNet.setAttribute('position', {x: -40, y: 2, z: 10 });
+        viewSelectorNet.setAttribute('color', 'blue');
+        viewSelectorNet.setAttribute('scale', '2 2 2');
+        viewSelectorNet.setAttribute('id', 'viewSelectorNet');
+        viewSelectorNet.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+        viewSelectorNet.addEventListener('click', function () {
+	    PREVIOUS_VIEW=VIEW;
+	    VIEW="APPLICATION+TRANSPORT+NETWORK";
+        });
+	
+        scene.appendChild(viewSelectorNet);
+	
+
 
 
 	
@@ -155,6 +205,7 @@ AFRAME.registerComponent('network', {
         buttonText.setAttribute('html', '#start-button');
         buttonText.setAttribute('position', { x: -20 , y: 20, z: 10 });
         buttonText.setAttribute('scale', '30 30 30');
+        buttonText.setAttribute('id', 'buttonText');
         buttonText.setAttribute('look-at', "[camera]");
         scene.appendChild(buttonText);
 	
@@ -1010,12 +1061,11 @@ AFRAME.registerComponent('packet', {
 		animationState = "ZOMBIE"
 		startButton.removeEventListener('click', event_listener_function)
 		
-		if (PREVIOUS_VIEW == VIEW){
-		    deleteNodes(nodeList)
-		    deleteLinks(finalConnectionsLinks)
-		}
+
+		scene.removeAttribute("network")
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
 		
-		createNetwork(nkp_filename, elementsScale)
+		
 		break;
             }
         }
@@ -1027,8 +1077,9 @@ AFRAME.registerComponent('packet', {
 
 
 function createNetwork(filename, elementScale){
-    nodeList=[]
-    connectionsLinks=[]
+    // initialize global variables
+    nodeList.length = 0
+    finalConnectionsLinks.length = 0
 
 
 
@@ -1081,7 +1132,7 @@ function createNetwork(filename, elementScale){
             connections = nodesInfo[1].split('link')
 
 
-            finalConnectionsLinks = setConnectionsLinks(connections, connectionsLinks, nodeList, data)
+            finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
 	    console.log("finalConnectionsLinks en createNetwork:")
 	    console.log(finalConnectionsLinks)		
 
@@ -1098,16 +1149,16 @@ function createNetwork(filename, elementScale){
 		}
 	    }
 	    
-	    loadAndAnimatePackets();
+	    loadAndAnimatePackets(finalConnectionsLinks);
 	}
 
 
     }
 }
     
-function loadAndAnimatePackets(){
-    filePackets = 'new_file.json'
-    requestPackets = new XMLHttpRequest();
+function loadAndAnimatePackets(finalConnectionsLinks){
+    var filePackets = 'new_file.json'
+    var requestPackets = new XMLHttpRequest();
     requestPackets.open('GET', filePackets);
     requestPackets.responseType = 'text';
     requestPackets.send();
@@ -1115,7 +1166,7 @@ function loadAndAnimatePackets(){
         response = requestPackets.response;
         responseParse = JSON.parse(response);
 	
-        packets = readPackets(responseParse)
+        var packets = readPackets(responseParse)
 	
 	
 	if (isEndToEndVIEW()){
@@ -1165,7 +1216,7 @@ function deleteLinks(finalConnectionsLinks){
 	
     }
 
-    finalConnectionsLinks=[]
+    finalConnectionsLinks.length=0
 
 }
 
@@ -1173,11 +1224,10 @@ function deleteLinks(finalConnectionsLinks){
 function deleteNodes(nodeList){
     scene = document.querySelector('#escena');
 
+    
     for (var i = 0; i < nodeList.length; i++){
-
-
+	
 	node_a_entity = nodeList[i].node_a_entity 
-
 
 	if (! scene.contains(node_a_entity))
 	    // Not all nodes are in the scene
@@ -1197,10 +1247,13 @@ function deleteNodes(nodeList){
         scene.removeChild(node_a_entity);
     }
 
-    nodeList=[]
+    // reset nodeList
+    nodeList.length=0
 }
 
+
 function createNodes(nodes, nodeList, elementsScale) {
+
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1306,7 +1359,9 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 }
 
-function setConnectionsLinks(connections, connectionsLinks, nodeList, data){
+function setConnectionsLinks(connections, nodeList, data){
+    var connectionsLinks = []
+    
     for (var i = 1; i < connections.length; i++) {
         if (i % 2 == 1) {
             connectionLink = {
@@ -1321,7 +1376,7 @@ function setConnectionsLinks(connections, connectionsLinks, nodeList, data){
 
 
 function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
-    connectionsLinksStandard = []
+    var connectionsLinksStandard = []
 
 
     for (var k = 0; k < nodeList.length; k++) {
@@ -1489,10 +1544,10 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
 function  readPackets(responseParse) {
     var seen_packets = [];
     
-    packets = [];
+    var packets = [];
     
     for (var j = 0; j < responseParse.length; j++) {
-	protocols=[];
+	var protocols = []
 
 	newAnimation = {
             src: responseParse[j].src,
@@ -1581,7 +1636,7 @@ function  readPackets(responseParse) {
 
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
-    finalPackets = []
+    var finalPackets = []
     console.log("animateEndToEndPackets")
 
     for (var j = 0; j < packets.length; j++) {
@@ -1621,7 +1676,7 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
 
 function animatePackets(packets, connectionsLinks, data){
-    finalPackets = []
+    var finalPackets = []
 
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
