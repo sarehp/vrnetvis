@@ -74,6 +74,8 @@ with open('caps.json', 'r') as file:
                         dictionary['dns'] = packet['_source']['layers']['dns']
                     elif layer == 'http':
                         dictionary['http'] = packet['_source']['layers']['http']
+                    elif layer == 'data-text-lines':
+                        dictionary['data-text-lines'] = packet['_source']['layers']['data-text-lines']
                     elif layer == 'data':
                         dictionary['data'] = packet['_source']['layers']['data']
                     elif layer == 'dataInfo':

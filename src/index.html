@@ -40,6 +40,10 @@
         <a-entity id="escena" cursor="rayOrigin:mouse" selector>
         </a-entity>
 
+	<a-entity id="controller" position="-20 2 10" color="orange"  scale="2 2 2" sound="on: click; src: #playPause; volume: 5" controller>
+	</a-entity>
+
+	
         <a-camera position="0 10 45"></a-camera>
 
     </a-scene>
@@ -53,7 +57,7 @@
             <h1>Modo navegador</h1>
         </section>
 
-        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="start-button">
+        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
             <h1><center>INSTRUCCIONES</center></h1>
             <br>
             <h2>1. Pulse la esfera para iniciar la animación de los paquetes</h2>
