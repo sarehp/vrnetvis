@@ -1,15 +1,26 @@
 //////////
 // GLOBALS
-nodeList = []
-nkp_filename   = null
-elementsScale  = null
-last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
+var nodeList = []
+var finalConnectionsLinks=[]
+var finalPackets = []
+var next_packet = 0
+var flying = []
+
+var nkp_filename   = null
+var elementsScale  = null
+var last_packet_id = null  // id of last packet in animation. Set when packets are loaded.
+
+var animationState = "INIT" // INIT, PAUSED, MOVING
+
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="ALL"  // VIEW must be one oF VIEWS
+var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
 var PREVIOUS_VIEW=""
 
+
+// First element in array will be the bottommost option in the view selector
+var VIEWS_MENU=""
 
 var TICK = 2000 // 10000
 var DURATION = 1000 // 5000
@@ -74,7 +85,10 @@ AFRAME.registerComponent('selector', {
             inmersiveText.parentNode.removeChild(inmersiveText);
             inmersiveElement.parentNode.removeChild(inmersiveElement);
             desktopElement.parentNode.removeChild(desktopElement);
+
             scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+//	    scene.setAttribute('controller', {position: {x: -20, y: 2, z: 10 }, color: 'orange', scale: "2 2 2", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+
         });
 
         let desktopText = document.createElement('a-entity');
@@ -110,19 +124,85 @@ AFRAME.registerComponent('inmersiveMode', {
         ambientLight.setAttribute('position', '0 30 0');
         scene.appendChild(ambientLight);
 
+
+	
+        // startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
+        // startButton.setAttribute('color', 'orange');
+        // startButton.setAttribute('scale', '2 2 2');
+        // startButton.setAttribute('id', 'startButton');
+        // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+//	scene.setAttribute('controller', {position: {x: -20, y: 2, z: 10 }, color: 'orange', scale: "2 2 2", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
         scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+
+
     }
 });
 
 
+// Creates a box for each menu option in VIEWS_MENU
+function createViewSelector() {
+    console.log("VIEWS_MENU: ")
+    console.log(VIEWS_MENU)
+
+    for (var i = 0; i < VIEWS_MENU.length; i++) {
+
+        let viewSelectorApp = document.createElement('a-box');
+        viewSelectorApp.setAttribute('position', {x: -10, y: 2 + 2*i, z: 10 });
+        viewSelectorApp.setAttribute('color', VIEWS_MENU[i].color);
+        viewSelectorApp.setAttribute('scale', '2 2 2');
+        viewSelectorApp.setAttribute('id', 'viewSelectorApp');
+        viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+
+
+	function eventHandler(newView){
+	    PREVIOUS_VIEW=VIEW;
+	    VIEW=newView
+	    console.log ("new view: " + newView)
+	}
+
+	console.log("adding listener with " + VIEWS_MENU[i].view)
+        viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i].view));
+	
+        scene.appendChild(viewSelectorApp);
+
+	// add text to menu
+        let text = document.createElement('a-text');
+        text.setAttribute('value', VIEWS_MENU[i].text)
+        text.setAttribute('scale', '2 2 2');
+        text.setAttribute('position', {x: -9, y: 2 + 2*i, z: 10 });
+
+	scene.appendChild(text)
+	
+    }
+
+}
+
 AFRAME.registerComponent('network', {
+
+
     schema: {
         filename: {type: 'string', default: ''},
     },
 
-    init: function() {
-	finalConnectionsLinks=[]
 
+    remove: function() {
+	deleteNodes(nodeList)
+	deleteLinks(finalConnectionsLinks)
+
+	nodeList.length=0
+	finalConnectionsLinks.length=0
+
+	finalPackets.length=0
+	flying.length=0
+	
+
+	console.log("network removed");
+    },
+    
+    init: function() {
+	console.log("init network")
 	
         // nodeList = [];
 
@@ -138,24 +218,27 @@ AFRAME.registerComponent('network', {
 	createNetwork(nkp_filename, elementsScale)
 
 
+
+
+
 	
-	// Create player controls (startButton): start/play/pause/reload
-        let startButton = document.createElement('a-sphere');
+	// // Create player controls (startButton): start/play/pause/reload
+        // let startButton = document.createElement('a-sphere');
 	
-        startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
-        startButton.setAttribute('color', 'orange');
-        startButton.setAttribute('scale', '2 2 2');
-        startButton.setAttribute('id', 'startButton');
-        startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-        scene.appendChild(startButton);
+        // startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
+        // startButton.setAttribute('color', 'orange');
+        // startButton.setAttribute('scale', '2 2 2');
+        // startButton.setAttribute('id', 'startButton');
+        // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+        // scene.appendChild(startButton);
 	
-        let buttonText = document.createElement('a-entity');
-        buttonText.setAttribute('html', '#start-button');
-        buttonText.setAttribute('position', { x: -20 , y: 20, z: 10 });
-        buttonText.setAttribute('scale', '30 30 30');
-        buttonText.setAttribute('look-at', "[camera]");
-        scene.appendChild(buttonText);
-	
+        let infoPanel = document.createElement('a-entity');
+        infoPanel.setAttribute('html', '#info-panel');
+        infoPanel.setAttribute('position', { x: -20 , y: 20, z: 10 });
+        infoPanel.setAttribute('scale', '30 30 30');
+        infoPanel.setAttribute('id', 'infoPanel');
+        infoPanel.setAttribute('look-at', "[camera]");
+        scene.appendChild(infoPanel);
 	
     }
 });
@@ -183,11 +266,11 @@ function dns_info (packetParams)
 {
     color = getColor("dns")
     let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
-                        'font-family: monospace; text-align: left; color: ' + color + '">'
+        'font-family: monospace; text-align: left; color: ' + color + '">'
     let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' +
-                        'font-family: monospace; text-align: left; color: ' + color + '">'
+        'font-family: monospace; text-align: left; color: ' + color + '">'
     let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
-                        'font-family: monospace; text-align: left; color: ' + color+ '">'
+        'font-family: monospace; text-align: left; color: ' + color+ '">'
 
     info = '<p>' + h1 +  'Nivel DNS' + ' </h1> </p>'
 
@@ -196,9 +279,9 @@ function dns_info (packetParams)
         query_type=""
 
         if (packetParams.dns["dns.flags_tree"]["dns.flags.recdesired"] == "0")
-           query_type= "(iterative)"
+            query_type= "(iterative)"
         else
-           query_type= "(recursive)"
+            query_type= "(recursive)"
 
 	info += '<p>' + h2 + 'Queries ' +  query_type + ': </h2></p>'
 
@@ -255,11 +338,11 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     let infoText = ""
     color = getColor(protocol)
     let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
-                        'font-family: monospace; text-align: left; color: ' + color + '">'
+        'font-family: monospace; text-align: left; color: ' + color + '">'
     let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' + 
-                        'font-family: monospace; text-align: left; color: ' + color + '">'
+        'font-family: monospace; text-align: left; color: ' + color + '">'
     let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' +
-                        'font-family: monospace;  text-align: left; color: ' + color+ '">'
+        'font-family: monospace;  text-align: left; color: ' + color+ '">'
 
     switch (protocol){
     case 'dns':
@@ -272,51 +355,51 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 
     case 'dataInfo':
 	infoText += '<p>' + h2 + 
-                     'DATOS:</h2></p>' + h3 + '<p>' + 
-                          'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' +
-                          'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</p></h3>'
+            'DATOS:</h2></p>' + h3 + '<p>' + 
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' +
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</p></h3>'
 	break;
 
     case 'data':
 	if (packetParams.tcp != null)
 	    infoText += '<p>' + h2 +
-                         'DATOS:</h2></p>' + h3 + '<p>' +
-                             'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' + 
-                             'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '</p></h3>'
+            'DATOS:</h2></p>' + h3 + '<p>' +
+            'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' + 
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '</p></h3>'
 	else if (packetParams.udp != null)
 	    infoText += '<p>' + h2 + 
-                         'DATOS:</h2></p>' + h3 + '<p>' +
-                             'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '</p><p>' +  
-                             'Longitud de datos: ' + packetParams.udp['udp.length']              + '</p></h3>'
+            'DATOS:</h2></p>' + h3 + '<p>' +
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '</p><p>' +  
+            'Longitud de datos: ' + packetParams.udp['udp.length']              + '</p></h3>'
 	break;
 
     case 'tcp':
 	infoText += '<p>' + h2 + 
-                         'Nivel TCP:</h2></p>' + h3 + '<p>' +
-                              'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
-                              'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p></h3>'
+            'Nivel TCP:</h2></p>' + h3 + '<p>' +
+            'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
+            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p></h3>'
 	break;
 
     case 'udp':
 	infoText += '<p>' + h2 + 
-                         'Nivel UDP:</h2></p>' + h3 + '<p>' + 
-                              'Puerto origen: '  + packetParams.udp['udp.srcport'] + '</p><p>' + 
-                              'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p></h3>'
+            'Nivel UDP:</h2></p>' + h3 + '<p>' + 
+            'Puerto origen: '  + packetParams.udp['udp.srcport'] + '</p><p>' + 
+            'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p></h3>'
 	break;
 
     case 'icmp':
 	infoText += '<p>' + h2 + 
-                         'Nivel ICMP:</h2></p>' + h3 + '<p>' +
-                              'Type: ' + packetParams.icmp['icmp.type'] + '</p><p>' +  
-                              'Code: ' + packetParams.icmp['icmp.code'] + '</p></h3>'
+            'Nivel ICMP:</h2></p>' + h3 + '<p>' +
+            'Type: ' + packetParams.icmp['icmp.type'] + '</p><p>' +  
+            'Code: ' + packetParams.icmp['icmp.code'] + '</p></h3>'
 	break;
 
     case 'ip':
 	infoText += '<p>' + h2 + 
-                         'Nivel IP:</h2></p>' + h3 + '<p>' + 
-                              'Origen: '  + packetParams.ip['ip.src']  + '</p><p>' + 
-                              'Destino: ' + packetParams.ip['ip.dst']  + '</p><p>' + 
-                              'TTL: '     + packetParams.ip['ip.ttl']  + '</p></h3>'
+            'Nivel IP:</h2></p>' + h3 + '<p>' + 
+            'Origen: '  + packetParams.ip['ip.src']  + '</p><p>' + 
+            'Destino: ' + packetParams.ip['ip.dst']  + '</p><p>' + 
+            'TTL: '     + packetParams.ip['ip.ttl']  + '</p></h3>'
 	break;
 
     case 'arp': 
@@ -324,24 +407,24 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 
 
         if (packetParams.arp['arp.opcode'] == "1")
-             operation="Solicitud"
+            operation="Solicitud"
         else
-             operation="Respuesta"
+            operation="Respuesta"
 
 	infoText += '<p>' + h2 + 
-                        'Nivel ARP:</h2></p>' + h3 + '<p>' + 
-                              'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '</p><p>' + 
-                              'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '</p><p>' +  
-                              'Operación: ' + operation                              + '</p><p>' +
-                              'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
+            'Nivel ARP:</h2></p>' + h3 + '<p>' + 
+            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '</p><p>' + 
+            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '</p><p>' +  
+            'Operación: ' + operation                              + '</p><p>' +
+            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
 	break;
 
     case 'ethernet':
 	infoText += '<p>' + h2 + 
-                         'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
-                              'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
-                              'Destino: ' + packetParams.eth['eth.dst']  + '</p><p>' +  
-                              'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
+            'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
+            'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
+            'Destino: ' + packetParams.eth['eth.dst']  + '</p><p>' +  
+            'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
 
 	break;
     }
@@ -385,645 +468,769 @@ AFRAME.registerComponent('packet', {
         dns:{default: null},
         icmp:{default: null},		
     },
-    init: function () {
+
+    startAnimation: function () {
         let packet = this.el
         let packetParams = this.data
 
+	console.log("startAnimation() in state " + animationState )
 	
-        let global_seconds_counter = 0;
-        function startAnimation() {
-	    console.log("startAnimation() in state " + animationState )
+	// Find in which node is now the packet based on the position of the packet
+	var nodeAnimation = nodeList[0]
+	packetXPosition = packetParams.xPosition * 15 * packetParams.elementsScale
+	packetZPosition = packetParams.zPosition * 15 * packetParams.elementsScale
+   	nodeXPosition = nodeList[0].position.split(',')[0]
+   	nodeZPosition = nodeList[0].position.split(',')[1]		    
+	var minDistance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
+
+	for (var k=1; k < nodeList.length; k++) {
+   	    nodeXPosition = nodeList[k].position.split(',')[0]
+   	    nodeZPosition = nodeList[k].position.split(',')[1]		    
+	    var distance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
+
+	    if (distance < minDistance) {
+		nodeAnimation=nodeList[k]
+		minDistance = distance
+	    }
+	}
+	
+	// Animation of a node when a packet arrives to it
+        var nodeFromAnimation = document.getElementById(nodeAnimation.name);
+
+        if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
+            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        }else if(nodeAnimation.name.startsWith('hub')){
+            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        }else if(nodeAnimation.name.startsWith('r')){
+            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        }
+        
+        packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
+
+
+	let topmost_protocol = "";
+	if(packetParams.dns){
+	    topmost_protocol = "dns"
+	}else if(packetParams.http){
+	    topmost_protocol = "http"
+	}else if(packetParams.dataInfo){
+	    topmost_protocol = "dataInfo"                        
+	}else if(packetParams.data){
+	    topmost_protocol = "data"                        
+	}else if(packetParams.tcp){
+	    topmost_protocol = "tcp"                        
+	}else if(packetParams.udp){
+	    topmost_protocol = "udp"                        
+	}else if(packetParams.icmp){
+	    topmost_protocol = "icmp"                        
+	}else if(packetParams.ip){
+	    topmost_protocol = "ip"                        
+	}else if(packetParams.arp){
+	    topmost_protocol = "arp"                        
+	}else if(packetParams.eth){
+	    topmost_protocol = "ethernet"                        
+        }
+
+	let packetColor = getColor(topmost_protocol);
+	
+        packet.setAttribute('material', 'color', packetColor);
+        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
+        packet.setAttribute('class', packetParams.class);
+        packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
+        packet.setAttribute('id', packetParams.id);
+
+        var packet_move = document.getElementById(packetParams.id);
+
+        let levels = {}
+        let isClosedInfo = false
+        let actualInfoShown = topmost_protocol;
+
+        var htmltemplates = document.getElementById("htmltemplates");
+        var newSectionTemplate = document.createElement("section");
+        newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 1em; margin:0;"
+        newSectionTemplate.id = packetParams.id + '-template'
+        htmltemplates.appendChild(newSectionTemplate);
+
+        let newInfoText = document.createElement('a-entity');
+        
+        newInfoText.setAttribute('position', { x: 5 , y: 3, z: 0 });
+        newInfoText.setAttribute('look-at', "[camera]");
+        newInfoText.setAttribute('visible', false);
+        newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
+        newInfoText.setAttribute('isPoster', true); 
+
+        packet.appendChild(newInfoText);
+
+
+	
+        if(packetParams.eth){
+            const ethInfo = {
+                eth: packetParams.eth
+            }
+            levels = Object.assign(levels,ethInfo);
+        }
+        if(packetParams.ip){
+            const ipInfo = {
+                ip: packetParams.ip
+            }
+            levels = Object.assign(levels,ipInfo);
+        }
+        if(packetParams.arp){
+            const arpInfo = {
+                arp: packetParams.arp
+            }
+            levels = Object.assign(levels,arpInfo);
+        }
+        if(packetParams.icmp){
+            const icmpInfo = {
+                icmp: packetParams.icmpInfo
+            }
+            levels = Object.assign(levels,icmpInfo);
+        }
+        if(packetParams.tcp){
+            const tcpInfo = {
+                tcp: packetParams.tcpInfo
+            }
+            levels = Object.assign(levels,tcpInfo);
+        }
+        if(packetParams.udp){
+            const udpInfo = {
+                udp: packetParams.udpInfo
+            }
+            levels = Object.assign(levels,udpInfo);
+        }
+        if(packetParams.http){
+            const httpInfo = {
+                http: packetParams.httpInfo
+            }
+            levels = Object.assign(levels,httpInfo);
+        }
+        if(packetParams.dns){
+            const dnsInfo = {
+                dns: packetParams.dns
+            }
+            levels = Object.assign(levels,dnsInfo);
+        }
+        if(packetParams.dataInfo){
+            const dataInfo = {
+                dataInfo: packetParams.dataInfo
+            }
+            levels = Object.assign(levels,dataInfo);
+        }
+        if(packetParams.data){
+            const data = {
+                data: packetParams.data
+            }
+            levels = Object.assign(levels,data);
+        }
+        
+        if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW()){
+            index = Object.keys(levels).findIndex(item => item === 'eth')
+
+            let newEthBox = document.createElement('a-box');
+            newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
+            newEthBox.setAttribute('color', getColor("ethernet"));
+            newEthBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newEthBox);
+
+	    if (topmost_protocol == "ethernet")
+		showInfoText("ethernet", packetParams, newInfoText, newEthBox)
 	    
-            if (animationState=="MOVING") {
-                if (global_seconds_counter == Math.ceil(packetParams.start/1000)) {
-		    
-		    // Find in which node is now the packet based on the position of the packet
-		    var nodeAnimation = nodeList[0]
-		    packetXPosition = packetParams.xPosition * 15 * packetParams.elementsScale
-		    packetZPosition = packetParams.zPosition * 15 * packetParams.elementsScale
-   		    nodeXPosition = nodeList[0].position.split(',')[0]
-   		    nodeZPosition = nodeList[0].position.split(',')[1]		    
-		    var minDistance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
 
-		    for (var k=1; k < nodeList.length; k++) {
-   			nodeXPosition = nodeList[k].position.split(',')[0]
-   			nodeZPosition = nodeList[k].position.split(',')[1]		    
-			var distance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
-
-			if (distance < minDistance) {
-			    nodeAnimation=nodeList[k]
-			    minDistance = distance
-			}
-		    }
-		    
-		    // Animation of a node when a packet arrives to it
-                    var nodeFromAnimation = document.getElementById(nodeAnimation.name);
-
-                    if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
-                        nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-                    }else if(nodeAnimation.name.startsWith('hub')){
-                        nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-                    }else if(nodeAnimation.name.startsWith('r')){
-                        nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-                    }
-                    
-                    packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
-
-
-		    let topmost_protocol = "";
-		    if(packetParams.dns){
-			topmost_protocol = "dns"
-		    }else if(packetParams.http){
-			topmost_protocol = "http"
-		    }else if(packetParams.dataInfo){
-			topmost_protocol = "dataInfo"                        
-		    }else if(packetParams.data){
-			topmost_protocol = "data"                        
-		    }else if(packetParams.tcp){
-			topmost_protocol = "tcp"                        
-		    }else if(packetParams.udp){
-			topmost_protocol = "udp"                        
-		    }else if(packetParams.icmp){
-			topmost_protocol = "icmp"                        
-		    }else if(packetParams.ip){
-			topmost_protocol = "ip"                        
-		    }else if(packetParams.arp){
-			topmost_protocol = "arp"                        
-		    }else if(packetParams.eth){
-			topmost_protocol = "ethernet"                        
-                    }
-
-		    let packetColor = getColor(topmost_protocol);
-		    
-                    packet.setAttribute('material', 'color', packetColor);
-                    packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
-                    packet.setAttribute('class', packetParams.class);
-                    packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
-                    packet.setAttribute('id', packetParams.id);
-
-                    var packet_move = document.getElementById(packetParams.id);
-
-                    let levels = {}
-                    let isClosedInfo = false
-                    let actualInfoShown = topmost_protocol;
-
-                    var htmltemplates = document.getElementById("htmltemplates");
-                    var newSectionTemplate = document.createElement("section");
-                    newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 1em; margin:0;"
-                    newSectionTemplate.id = packetParams.id + '-template'
-                    htmltemplates.appendChild(newSectionTemplate);
-
-                    let newInfoText = document.createElement('a-entity');
-                    
-                    newInfoText.setAttribute('position', { x: 5 , y: 3, z: 0 });
-                    newInfoText.setAttribute('look-at', "[camera]");
+	    
+            newEthBox.addEventListener('mouseenter', function () {
+                newEthBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newEthBox.addEventListener('mouseleave', function () {
+                newEthBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newEthBox.removeAttribute('animation');
+                newEthBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+            });
+            newEthBox.addEventListener('click', function () {
+                if(isClosedInfo == false && actualInfoShown == "ethernet"){
+		    isClosedInfo = true
+                    actualInfoShown = ''
                     newInfoText.setAttribute('visible', false);
-                    newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
-                    newInfoText.setAttribute('isPoster', true); 
-
-                    packet.appendChild(newInfoText);
-
-
-		    
-                    if(packetParams.eth){
-                        const ethInfo = {
-                            eth: packetParams.eth
-                        }
-                        levels = Object.assign(levels,ethInfo);
-                    }
-                    if(packetParams.ip){
-                        const ipInfo = {
-                            ip: packetParams.ip
-                        }
-                        levels = Object.assign(levels,ipInfo);
-                    }
-                    if(packetParams.arp){
-                        const arpInfo = {
-                            arp: packetParams.arp
-                        }
-                        levels = Object.assign(levels,arpInfo);
-                    }
-                    if(packetParams.icmp){
-                        const icmpInfo = {
-                            icmp: packetParams.icmpInfo
-                        }
-                        levels = Object.assign(levels,icmpInfo);
-                    }
-                    if(packetParams.tcp){
-                        const tcpInfo = {
-                            tcp: packetParams.tcpInfo
-                        }
-                        levels = Object.assign(levels,tcpInfo);
-                    }
-                    if(packetParams.udp){
-                        const udpInfo = {
-                            udp: packetParams.udpInfo
-                        }
-                        levels = Object.assign(levels,udpInfo);
-                    }
-                    if(packetParams.http){
-                        const httpInfo = {
-                            http: packetParams.httpInfo
-                        }
-                        levels = Object.assign(levels,httpInfo);
-                    }
-                    if(packetParams.dns){
-                        const dnsInfo = {
-                            dns: packetParams.dns
-                        }
-                        levels = Object.assign(levels,dnsInfo);
-                    }
-                    if(packetParams.dataInfo){
-                        const dataInfo = {
-                            dataInfo: packetParams.dataInfo
-                        }
-                        levels = Object.assign(levels,dataInfo);
-                    }
-                    if(packetParams.data){
-                        const data = {
-                            data: packetParams.data
-                        }
-                        levels = Object.assign(levels,data);
-                    }
-                    
-                    if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW()){
-                        index = Object.keys(levels).findIndex(item => item === 'eth')
-
-                        let newEthBox = document.createElement('a-box');
-                        newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
-                        newEthBox.setAttribute('color', getColor("ethernet"));
-                        newEthBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newEthBox);
-
-			if (topmost_protocol == "ethernet")
-			    showInfoText("ethernet", packetParams, newInfoText, newEthBox)
-			
-
-			
-                        newEthBox.addEventListener('mouseenter', function () {
-                            newEthBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newEthBox.addEventListener('mouseleave', function () {
-                            newEthBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newEthBox.removeAttribute('animation');
-                            newEthBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
-                        });
-                        newEthBox.addEventListener('click', function () {
-                            if(isClosedInfo == false && actualInfoShown == "ethernet"){
-				isClosedInfo = true
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newEthBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else{
-                                isClosedInfo = false
-				actualInfoShown = "ethernet"
-				showInfoText("ethernet", packetParams, newInfoText, newEthBox);
-                            }
-			    
-                        });
-                    }
-                    if(levels.hasOwnProperty('ip') && 	!isEndToEndVIEW()){
-                        index = Object.keys(levels).findIndex(item => item === 'ip')
-			let newIpBox = document.createElement('a-box');
-                        newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newIpBox.setAttribute('color', getColor("ip"));
-                        newIpBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newIpBox);
-
-			if (topmost_protocol == "ip")
-			    showInfoText("ip", packetParams, newInfoText, newIpBox)
-			
-			
-                        newIpBox.addEventListener('mouseenter', function () {
-                            newIpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newIpBox.addEventListener('mouseleave', function () {
-                            newIpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newIpBox.removeAttribute('animation');
-                            newIpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newIpBox.addEventListener('click', function () {
-
-
-                            if(isClosedInfo == false && actualInfoShown == 'ip'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newIpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else{
-                                isClosedInfo = false
-				actualInfoShown = "ip"
-				showInfoText("ip", packetParams, newInfoText, newIpBox);
-
-                            }
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('arp') && 	!isEndToEndVIEW()){
-                        index = Object.keys(levels).findIndex(item => item === 'arp')
-                        let newArpBox = document.createElement('a-box');
-                        newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newArpBox.setAttribute('color', getColor("arp"));
-                        newArpBox.setAttribute('visible', true); // pheras
-                        packet.appendChild(newArpBox);
-
-			if (topmost_protocol == "arp")
-			    showInfoText("arp", packetParams, newInfoText, newArpBox)
-
-			
-                        newArpBox.addEventListener('mouseenter', function () {
-                            newArpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newArpBox.addEventListener('mouseleave', function () {
-                            newArpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newArpBox.removeAttribute('animation');
-                            newArpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newArpBox.addEventListener('click', function () {
-
-
-                            if(isClosedInfo == true){
-                                isClosedInfo = false
-                                actualInfoShown = 'arp'
-				showInfoText("arp", packetParams, newInfoText, newArpBox);
-                            }else if(isClosedInfo == false && actualInfoShown == 'arp'){
-				isClosedInfo = true
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newArpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else if(isClosedInfo == false){
-				actualInfoShown = "arp"
-				showInfoText("arp", packetParams, newInfoText, newArpBox);
-                            }
-
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('tcp')){
-                        index = Object.keys(levels).findIndex(item => item === 'tcp')
-                        let newTcpBox = document.createElement('a-box');
-                        newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newTcpBox.setAttribute('color', getColor("tcp"));
-                        newTcpBox.setAttribute('visible', true); // pheras
-                        packet.appendChild(newTcpBox);
-
-			if (topmost_protocol == "tcp")
-			    showInfoText("tcp", packetParams, newInfoText, newTcpBox)
-			
-                        newTcpBox.addEventListener('mouseenter', function () {
-                            newTcpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newTcpBox.addEventListener('mouseleave', function () {
-                            newTcpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newTcpBox.removeAttribute('animation');
-                            newTcpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newTcpBox.addEventListener('click', function () {
-
-                            if(isClosedInfo == false && actualInfoShown == 'tcp'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newTcpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else {
-                                isClosedInfo = false
-				actualInfoShown = "tcp"
-				showInfoText("tcp", packetParams, newInfoText, newTcpBox);				    
-				
-                            }
-
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('udp')){
-                        index = Object.keys(levels).findIndex(item => item === 'udp')
-                        let newUdpBox = document.createElement('a-box');
-                        newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newUdpBox.setAttribute('color', getColor("udp"));
-                        newUdpBox.setAttribute('visible', true); // pheras
-                        packet.appendChild(newUdpBox);
-
-			if (topmost_protocol == "udp")
-			    showInfoText("udp", packetParams, newInfoText, newUdpBox)
-
-                        newUdpBox.addEventListener('mouseenter', function () {
-                            newUdpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newUdpBox.addEventListener('mouseleave', function () {
-                            newUdpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newUdpBox.removeAttribute('animation');
-                            newUdpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newUdpBox.addEventListener('click', function () {
-
-
-                            if(isClosedInfo == false && actualInfoShown == 'udp'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newUdpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else{
-                                isClosedInfo = false
-                                actualInfoShown = 'udp'
-				showInfoText("udp", packetParams, newInfoText, newUdpBox);
-                            }
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('dns')){
-                        index = Object.keys(levels).findIndex(item => item === 'dns')
-                        let newDnsBox = document.createElement('a-box');
-                        newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newDnsBox.setAttribute('color', getColor("dns"));
-                        newDnsBox.setAttribute('visible', true); // pheras
-                        packet.appendChild(newDnsBox);
-
-			if (topmost_protocol == "dns")
-			    showInfoText("dns", packetParams, newInfoText, newDnsBox)
-			
-                        newDnsBox.addEventListener('mouseenter', function () {
-                            newDnsBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newDnsBox.addEventListener('mouseleave', function () {
-                            newDnsBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newDnsBox.removeAttribute('animation');
-                            newDnsBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newDnsBox.addEventListener('click', function () {
-
-                            if(isClosedInfo == false && actualInfoShown == 'dns'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newDnsBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else {
-                                isClosedInfo = false
-                                actualInfoShown = 'dns';
-				showInfoText("dns", packetParams, newInfoText, newDnsBox);				    
-                            }
-
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('http')){
-                        index = Object.keys(levels).findIndex(item => item === 'http')
-                        let newHttpBox = document.createElement('a-box');
-                        newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newHttpBox.setAttribute('color', getColor("http"));
-                        newHttpBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newHttpBox);
-
-			if (topmost_protocol == "http")
-			    showInfoText("http", packetParams, newInfoText, newHttpBox)
-			
-                        newHttpBox.addEventListener('mouseenter', function () {
-                            newHttpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newHttpBox.addEventListener('mouseleave', function () {
-                            newHttpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newHttpBox.removeAttribute('animation');
-                            newHttpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newHttpBox.addEventListener('click', function () {
-
-
-                            if(isClosedInfo == false && actualInfoShown == 'http'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newHttpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else {
-                                isClosedInfo = false
-                                actualInfoShown = 'http';
-				showInfoText("http", packetParams, newInfoText, newHttpBox);				    				    
-                            }
-                            
-                        });
-                    }
-                    if(levels.hasOwnProperty('icmp')){
-                        index = Object.keys(levels).findIndex(item => item === 'icmp')
-                        let newIcmpBox = document.createElement('a-box');
-                        newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-                        newIcmpBox.setAttribute('color', getColor("icmp"));
-                        newIcmpBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newIcmpBox);
-
-			if (topmost_protocol == "icmp")
-			    showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
-			
-                        newIcmpBox.addEventListener('mouseenter', function () {
-                            newIcmpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newIcmpBox.addEventListener('mouseleave', function () {
-                            newIcmpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newIcmpBox.removeAttribute('animation');
-                            newIcmpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newIcmpBox.addEventListener('click', function () {
-                            if(isClosedInfo == false && actualInfoShown == 'icmp'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newIcmpBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else {
-                                isClosedInfo = false
-                                actualInfoShown = 'icmp'
-				showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                          }
-                            
-                        });
-                    }
-		    
-		    // TCP data
-                    if(levels.hasOwnProperty('dataInfo')){
-                        index = Object.keys(levels).findIndex(item => item === 'dataInfo')
-                        let newDataBox = document.createElement('a-box');
-                        newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newDataBox.setAttribute('color', getColor("dataInfo"));
-                        newDataBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newDataBox);
-
-			if (topmost_protocol == "dataInfo")
-			    showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
-			
-                        newDataBox.addEventListener('mouseenter', function () {
-                            newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newDataBox.addEventListener('mouseleave', function () {
-                            newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newDataBox.removeAttribute('animation');
-                            newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newDataBox.addEventListener('click', function () {
-
-			    if(isClosedInfo == false && actualInfoShown == 'dataInfo'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newDataBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else {
-                                isClosedInfo = false;
-                                actualInfoShown = 'dataInfo';
-				showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                              }
-                        });
-                    }
-
-		    // TCP or UDP data
-                    if(levels.hasOwnProperty('data')){
-                        index = Object.keys(levels).findIndex(item => item === 'data')
-                        let newDataBox = document.createElement('a-box');
-                        newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-                        newDataBox.setAttribute('color', getColor("data"));
-                        newDataBox.setAttribute('visible', true); // pheras
-
-                        packet.appendChild(newDataBox);
-
-
-			if (topmost_protocol == "data")
-			    showInfoText("data", packetParams, newInfoText, newDataBox)
-
-			
-                        newDataBox.addEventListener('mouseenter', function () {
-                            newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-                        });
-                        newDataBox.addEventListener('mouseleave', function () {
-                            newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                            newDataBox.removeAttribute('animation');
-                            newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-                        });
-                        newDataBox.addEventListener('click', function () {
-			    if (levels.hasOwnProperty('udp'))
-                                infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
-			    else if (levels.hasOwnProperty('tcp'))
-                                infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-			    
-
-                            if(isClosedInfo == false && actualInfoShown == 'data'){
-                                actualInfoShown = ''
-                                newInfoText.setAttribute('visible', false);
-                                newDataBox.removeAttribute('sound');
-                                newInfoText.removeAttribute('html');
-                                newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                            }else{
-                                isClosedInfo = false
-                                actualInfoShown = 'data'
-				showInfoText("data", packetParams, newInfoText, newDataBox);				    
-                            }
-
-                        });
-                    }
-		    
-
-                    packet_move.setAttribute('animation', {
-                        property: 'position',
-                        to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
-                        dur: packetParams.duration,
-                        easing: 'linear',
-                        pauseEvents:'animation-pause', 
-                        resumeEvents:'animation-resume'
-                    });
-		    
-                    packet.addEventListener('animationcomplete', function () {
-			console.log("packet.id: " + packet.id)
-			console.log("last_packet_id: " + last_packet_id)			
-
-			if (packet.id == last_packet_id){
-			    console.log("Whole animation is finished")
-			    animationState = "FINISHED"
-			    PREVIOUS_VIEW=VIEW
-			}
-			else{
-			    animationState = "ZOMBIE"
-			    var startButton = document.querySelector('#startButton');
-			    startButton.removeEventListener('click', event_listener_function)
-			}
-
-			clearInterval(interval_id)
-			
-			// Destroy packet element
-                        longitud = packet.children.length
-                        nodeFromAnimation.removeAttribute('animation');
-                        for (var a=0; a < longitud; a++) {
-                            packet.children[0].remove()
-                        }
-                        packet.parentNode.removeChild(packet);
-			
-                    });
+                    newEthBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else{
+                    isClosedInfo = false
+		    actualInfoShown = "ethernet"
+		    showInfoText("ethernet", packetParams, newInfoText, newEthBox);
                 }
-                global_seconds_counter++;
-            }
-       }
-
-
-
-
-
-
-
-	packet.emit("animation-pause", null, false)
-	
-        var startButton = document.querySelector('#startButton');
-	var animationState = "INIT" // INIT, PAUSED, MOVING
-	var interval_id
-	
-
-	var event_listener_function = function() {
-	    console.log("click")
-	    
-
-            switch(animationState) {
-            case 'INIT':
-		animationState = "MOVING"
-                interval_id = setInterval(startAnimation, 1000);
-                break
-            case 'MOVING':
-		console.log("click to pause on packet id " + packet.id)
-		packet.emit("animation-pause", null, false)
-		animationState = "PAUSED"
-                break;
-            case 'PAUSED':
-		console.log("click to move on packet id " + packet.id)
-		packet.emit("animation-resume", null, false)
-		animationState = "MOVING"
-                break
-	    case 'FINISHED':
-		// Borrar paquetes
-		// ...
-		//
-		animationState = "ZOMBIE"
-		startButton.removeEventListener('click', event_listener_function)
 		
-		if (PREVIOUS_VIEW == VIEW)
-		    deleteNodes(nodeList)
-		    createNetwork(nkp_filename, elementsScale)
-		break;
-            }
+            });
+        }
+        if(levels.hasOwnProperty('ip') && 	!isEndToEndVIEW()){
+            index = Object.keys(levels).findIndex(item => item === 'ip')
+	    let newIpBox = document.createElement('a-box');
+            newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newIpBox.setAttribute('color', getColor("ip"));
+            newIpBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newIpBox);
+
+	    if (topmost_protocol == "ip")
+		showInfoText("ip", packetParams, newInfoText, newIpBox)
+	    
+	    
+            newIpBox.addEventListener('mouseenter', function () {
+                newIpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newIpBox.addEventListener('mouseleave', function () {
+                newIpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newIpBox.removeAttribute('animation');
+                newIpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newIpBox.addEventListener('click', function () {
+
+
+                if(isClosedInfo == false && actualInfoShown == 'ip'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newIpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else{
+                    isClosedInfo = false
+		    actualInfoShown = "ip"
+		    showInfoText("ip", packetParams, newInfoText, newIpBox);
+
+                }
+                
+            });
+        }
+        if(levels.hasOwnProperty('arp') && 	!isEndToEndVIEW()){
+            index = Object.keys(levels).findIndex(item => item === 'arp')
+            let newArpBox = document.createElement('a-box');
+            newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+            newArpBox.setAttribute('color', getColor("arp"));
+            newArpBox.setAttribute('visible', true); // pheras
+            packet.appendChild(newArpBox);
+
+	    if (topmost_protocol == "arp")
+		showInfoText("arp", packetParams, newInfoText, newArpBox)
+
+	    
+            newArpBox.addEventListener('mouseenter', function () {
+                newArpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newArpBox.addEventListener('mouseleave', function () {
+                newArpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newArpBox.removeAttribute('animation');
+                newArpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newArpBox.addEventListener('click', function () {
+
+
+                if(isClosedInfo == true){
+                    isClosedInfo = false
+                    actualInfoShown = 'arp'
+		    showInfoText("arp", packetParams, newInfoText, newArpBox);
+                }else if(isClosedInfo == false && actualInfoShown == 'arp'){
+		    isClosedInfo = true
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newArpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else if(isClosedInfo == false){
+		    actualInfoShown = "arp"
+		    showInfoText("arp", packetParams, newInfoText, newArpBox);
+                }
+
+                
+            });
+        }
+        if(levels.hasOwnProperty('tcp')){
+            index = Object.keys(levels).findIndex(item => item === 'tcp')
+            let newTcpBox = document.createElement('a-box');
+            newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newTcpBox.setAttribute('color', getColor("tcp"));
+            newTcpBox.setAttribute('visible', true); // pheras
+            packet.appendChild(newTcpBox);
+
+	    if (topmost_protocol == "tcp")
+		showInfoText("tcp", packetParams, newInfoText, newTcpBox)
+	    
+            newTcpBox.addEventListener('mouseenter', function () {
+                newTcpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newTcpBox.addEventListener('mouseleave', function () {
+                newTcpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newTcpBox.removeAttribute('animation');
+                newTcpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newTcpBox.addEventListener('click', function () {
+
+                if(isClosedInfo == false && actualInfoShown == 'tcp'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newTcpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else {
+                    isClosedInfo = false
+		    actualInfoShown = "tcp"
+		    showInfoText("tcp", packetParams, newInfoText, newTcpBox);				    
+		    
+                }
+
+                
+            });
+        }
+        if(levels.hasOwnProperty('udp')){
+            index = Object.keys(levels).findIndex(item => item === 'udp')
+            let newUdpBox = document.createElement('a-box');
+            newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newUdpBox.setAttribute('color', getColor("udp"));
+            newUdpBox.setAttribute('visible', true); // pheras
+            packet.appendChild(newUdpBox);
+
+	    if (topmost_protocol == "udp")
+		showInfoText("udp", packetParams, newInfoText, newUdpBox)
+
+            newUdpBox.addEventListener('mouseenter', function () {
+                newUdpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newUdpBox.addEventListener('mouseleave', function () {
+                newUdpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newUdpBox.removeAttribute('animation');
+                newUdpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newUdpBox.addEventListener('click', function () {
+
+
+                if(isClosedInfo == false && actualInfoShown == 'udp'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newUdpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else{
+                    isClosedInfo = false
+                    actualInfoShown = 'udp'
+		    showInfoText("udp", packetParams, newInfoText, newUdpBox);
+                }
+                
+            });
+        }
+        if(levels.hasOwnProperty('dns')){
+            index = Object.keys(levels).findIndex(item => item === 'dns')
+            let newDnsBox = document.createElement('a-box');
+            newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newDnsBox.setAttribute('color', getColor("dns"));
+            newDnsBox.setAttribute('visible', true); // pheras
+            packet.appendChild(newDnsBox);
+
+	    if (topmost_protocol == "dns")
+		showInfoText("dns", packetParams, newInfoText, newDnsBox)
+	    
+            newDnsBox.addEventListener('mouseenter', function () {
+                newDnsBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newDnsBox.addEventListener('mouseleave', function () {
+                newDnsBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newDnsBox.removeAttribute('animation');
+                newDnsBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newDnsBox.addEventListener('click', function () {
+
+                if(isClosedInfo == false && actualInfoShown == 'dns'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newDnsBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else {
+                    isClosedInfo = false
+                    actualInfoShown = 'dns';
+		    showInfoText("dns", packetParams, newInfoText, newDnsBox);				    
+                }
+
+                
+            });
+        }
+        if(levels.hasOwnProperty('http')){
+            index = Object.keys(levels).findIndex(item => item === 'http')
+            let newHttpBox = document.createElement('a-box');
+            newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newHttpBox.setAttribute('color', getColor("http"));
+            newHttpBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newHttpBox);
+
+	    if (topmost_protocol == "http")
+		showInfoText("http", packetParams, newInfoText, newHttpBox)
+	    
+            newHttpBox.addEventListener('mouseenter', function () {
+                newHttpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newHttpBox.addEventListener('mouseleave', function () {
+                newHttpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newHttpBox.removeAttribute('animation');
+                newHttpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newHttpBox.addEventListener('click', function () {
+
+
+                if(isClosedInfo == false && actualInfoShown == 'http'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newHttpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else {
+                    isClosedInfo = false
+                    actualInfoShown = 'http';
+		    showInfoText("http", packetParams, newInfoText, newHttpBox);				    				    
+                }
+                
+            });
+        }
+        if(levels.hasOwnProperty('icmp')){
+            index = Object.keys(levels).findIndex(item => item === 'icmp')
+            let newIcmpBox = document.createElement('a-box');
+            newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+            newIcmpBox.setAttribute('color', getColor("icmp"));
+            newIcmpBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newIcmpBox);
+
+	    if (topmost_protocol == "icmp")
+		showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
+	    
+            newIcmpBox.addEventListener('mouseenter', function () {
+                newIcmpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newIcmpBox.addEventListener('mouseleave', function () {
+                newIcmpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newIcmpBox.removeAttribute('animation');
+                newIcmpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newIcmpBox.addEventListener('click', function () {
+                if(isClosedInfo == false && actualInfoShown == 'icmp'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newIcmpBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else {
+                    isClosedInfo = false
+                    actualInfoShown = 'icmp'
+		    showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                          }
+                
+            });
         }
 	
-	startButton.addEventListener('click', event_listener_function);
+	// TCP data
+        if(levels.hasOwnProperty('dataInfo')){
+            index = Object.keys(levels).findIndex(item => item === 'dataInfo')
+            let newDataBox = document.createElement('a-box');
+            newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+            newDataBox.setAttribute('color', getColor("dataInfo"));
+            newDataBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newDataBox);
+
+	    if (topmost_protocol == "dataInfo")
+		showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
+	    
+            newDataBox.addEventListener('mouseenter', function () {
+                newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newDataBox.addEventListener('mouseleave', function () {
+                newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newDataBox.removeAttribute('animation');
+                newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newDataBox.addEventListener('click', function () {
+
+		if(isClosedInfo == false && actualInfoShown == 'dataInfo'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newDataBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else {
+                    isClosedInfo = false;
+                    actualInfoShown = 'dataInfo';
+		    showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                              }
+            });
+        }
+
+	// TCP or UDP data
+        if(levels.hasOwnProperty('data')){
+            index = Object.keys(levels).findIndex(item => item === 'data')
+            let newDataBox = document.createElement('a-box');
+            newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+            newDataBox.setAttribute('color', getColor("data"));
+            newDataBox.setAttribute('visible', true); // pheras
+
+            packet.appendChild(newDataBox);
+
+
+	    if (topmost_protocol == "data")
+		showInfoText("data", packetParams, newInfoText, newDataBox)
+
+	    
+            newDataBox.addEventListener('mouseenter', function () {
+                newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+            });
+            newDataBox.addEventListener('mouseleave', function () {
+                newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newDataBox.removeAttribute('animation');
+                newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
+            });
+            newDataBox.addEventListener('click', function () {
+		if (levels.hasOwnProperty('udp'))
+                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
+		else if (levels.hasOwnProperty('tcp'))
+                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
+		
+
+                if(isClosedInfo == false && actualInfoShown == 'data'){
+                    actualInfoShown = ''
+                    newInfoText.setAttribute('visible', false);
+                    newDataBox.removeAttribute('sound');
+                    newInfoText.removeAttribute('html');
+                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                }else{
+                    isClosedInfo = false
+                    actualInfoShown = 'data'
+		    showInfoText("data", packetParams, newInfoText, newDataBox);				    
+                }
+
+            });
+        }
 	
-    }
+
+        packet_move.setAttribute('animation', {
+            property: 'position',
+            to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
+            dur: packetParams.duration,
+            easing: 'linear',
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume'
+        });
+	
+        packet.addEventListener('animationcomplete', function () {
+	    // Destroy packet element
+            longitud = packet.children.length
+            nodeFromAnimation.removeAttribute('animation');
+            for (var a=0; a < longitud; a++) {
+                packet.children[0].remove()
+            }
+            packet.parentNode.removeChild(packet);
+	    
+        });
+    },			 
+
+
+init: function () {
+    let packet = this.el
+    let packetParams = this.data
+
+    
+
+    // packet.emit("animation-pause", null, false)
+    
+    // var startButton = document.querySelector('#startButton');
+    // var animationState = "INIT" // INIT, PAUSED, MOVING
+    // var interval_id
+    
+
+    // var event_listener_function = function() {
+    //     console.log("click")
+    
+
+    //     switch(animationState) {
+    //     case 'INIT':
+    // 	animationState = "MOVING"
+    //         interval_id = setInterval(startAnimation, 1000);
+    //         break
+    //     case 'MOVING':
+    // 	console.log("click to pause on packet id " + packet.id)
+    // 	packet.emit("animation-pause", null, false)
+    // 	animationState = "PAUSED"
+    //         break;
+    //     case 'PAUSED':
+    // 	console.log("click to move on packet id " + packet.id)
+    // 	packet.emit("animation-resume", null, false)
+    // 	animationState = "MOVING"
+    //         break
+    //     case 'FINISHED':
+    // 	// Borrar paquetes
+    // 	// ...
+    // 	//
+    // 	animationState = "ZOMBIE"
+    // 	startButton.removeEventListener('click', event_listener_function)
+    
+
+    // 	scene.removeAttribute("network")
+    // 	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
+    
+    
+    // 	break;
+    //     }
+    // }
+    
+    // startButton.addEventListener('click', event_listener_function);
+    
+}
 });
 
 
+
+
+CURRENT_TIME=0
+
+
+// function do_animate()
+// {
+//     if (animationState == "PAUSED")
+// 	return
+
+//     console.log("do_animate: " + CURRENT_TIME)
+
+//     flying.length = 0    
+
+//     while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
+// 	//	var newPacket = document.querySelector("#"+String(next_packet)).components.packet;
+// 	let newPacket = finalPackets[next_packet].newPacket.components.packet
+// 	newPacket.startAnimation()
+// 	next_packet += 1
+// 	flying.push(finalPackets[next_packet].newPacket)	
+//     }
+
+//     if (next_packet == finalPackets.length){
+// 	console.log("FINISHED ANIMATION")
+	
+// 	animationState = "INIT"
+// 	clearInterval(interval_id)
+//     }
+
+//     CURRENT_TIME += 500
+
+// }
+
+var interval_id = 0
+
+AFRAME.registerComponent('controller', {
+
+    schema: {
+        PERIOD: {type: 'int', default: '500'},
+    },
+
+    do_animate: function()
+    {
+	next_packet < finalPackets.length
+	if (animationState == "PAUSED")
+	    return
+	
+	console.log("do_animate: " + CURRENT_TIME)
+	console.log("flying.length: " + flying.length)	
+	// flying.length = 0    
+	
+	while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
+	    //	var newPacket = document.querySelector("#"+String(next_packet)).components.packet;
+	    let newPacket = finalPackets[next_packet].newPacket.components.packet
+	    newPacket.startAnimation()
+	    flying.push(finalPackets[next_packet].newPacket)
+	    next_packet += 1
+	}
+	
+	if (next_packet == finalPackets.length){
+	    console.log("FINISHED ANIMATION")
+	    
+	    animationState = "INIT"
+	    clearInterval(interval_id)
+	}
+	
+	CURRENT_TIME += 500
+	
+    },
+    
+    
+    init: function() {
+	console.log("init controller")
+
+
+	
+	let sphere = document.createElement('a-sphere');	
+        sphere.setAttribute('position', {x: -2, y: 2, z: 10 });
+        sphere.setAttribute('color', 'orange');
+        sphere.setAttribute('scale', '2 2 2');
+        sphere.setAttribute('id', 'startButton');
+        sphere.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+	this.el.appendChild(sphere);
+
+	let PERIOD=this.data.PERIOD
+	let do_animate=this.do_animate
+	
+	function event_listener_function(event) {
+	    console.log("controller click")
+	    
+            switch(animationState) {
+            case 'INIT':
+		scene.removeAttribute("network")
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+
+		
+		next_packet = 0
+
+		CURRENT_TIME=0
+		
+		animationState = "MOVING"
+
+		
+		
+		interval_id = setInterval(do_animate, PERIOD)
+		
+		break
+
+            case 'MOVING':
+		animationState = "PAUSED"
+		
+		// Enviar a los paquetes en vuelo animation-pause
+		console.log("PAUSED: Packets flying: ")
+		for (const packet of flying){
+		    packet.emit("animation-pause", null, false)
+		}
+		
+		break;
+		
+            case 'PAUSED':
+		animationState = "MOVING"
+		
+		// Enviar a los paquetes en vuelo animation-resume
+		console.log("RESUMED: Packets flying: ")
+		for (const packet of flying){
+		    packet.emit("animation-resume", null, false)		
+		}
+		
+		
+		break
+            }
+	}
+	
+
+
+	this.el.addEventListener('click', event_listener_function)
+		
+    }
+    
+});
+			 
+
+
 function createNetwork(filename, elementScale){
-    nodeList=[]
-    connectionsLinks=[]
+    // initialize global variables
+    nodeList.length = 0
+    finalConnectionsLinks.length = 0
 
 
 
@@ -1044,6 +1251,20 @@ function createNetwork(filename, elementScale){
         createNodes(nodes, nodeList, elementScale)
 
 
+        // Request and process menu file
+        viewsMenuFile = 'viewsMenu.json'
+        requestViewsMenuFile = new XMLHttpRequest();
+        requestViewsMenuFile.open('GET', viewsMenuFile);
+        requestViewsMenuFile.responseType = 'text';
+        requestViewsMenuFile.send();
+        requestViewsMenuFile.onload = function() {
+            response = requestViewsMenuFile.response;
+            VIEWS_MENU = JSON.parse(response);
+	    createViewSelector()	    
+	}
+
+	
+	
 	// Request and process machineNames.json
 	
         // Asociamos a cada nodo su nombre de máquina
@@ -1076,7 +1297,7 @@ function createNetwork(filename, elementScale){
             connections = nodesInfo[1].split('link')
 
 
-            finalConnectionsLinks = setConnectionsLinks(connections, connectionsLinks, nodeList, data)
+            finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
 	    console.log("finalConnectionsLinks en createNetwork:")
 	    console.log(finalConnectionsLinks)		
 
@@ -1093,16 +1314,16 @@ function createNetwork(filename, elementScale){
 		}
 	    }
 	    
-	    loadAndAnimatePackets();
+	    loadAndAnimatePackets(finalConnectionsLinks);
 	}
 
 
     }
 }
-    
-function loadAndAnimatePackets(){
-    filePackets = 'new_file.json'
-    requestPackets = new XMLHttpRequest();
+
+function loadAndAnimatePackets(finalConnectionsLinks){
+    var filePackets = 'new_file.json'
+    var requestPackets = new XMLHttpRequest();
     requestPackets.open('GET', filePackets);
     requestPackets.responseType = 'text';
     requestPackets.send();
@@ -1110,7 +1331,7 @@ function loadAndAnimatePackets(){
         response = requestPackets.response;
         responseParse = JSON.parse(response);
 	
-        packets = readPackets(responseParse)
+        var packets = readPackets(responseParse)
 	
 	
 	if (isEndToEndVIEW()){
@@ -1129,18 +1350,18 @@ function loadAndAnimatePackets(){
 
 function formatRoutingTable(routing_table){
     text = '<table style="border-spacing: 1rem; text-align: center">' +
-               '<tr><th>Destination</th>' +
-                    '<th>Mask</th>' +
-                    '<th> Gateway</th>' +
-                    '<th>Iface</th>' +
-                '</tr>'
+        '<tr><th>Destination</th>' +
+        '<th>Mask</th>' +
+        '<th> Gateway</th>' +
+        '<th>Iface</th>' +
+        '</tr>'
     
     for (var i = 0; i < routing_table.length; i++){
 	text += "<tr>" +
-                  "<td>" + routing_table[i][0] + "</td> " +
-             	  "<td>" + routing_table[i][1] + "</td> " +
-      	          "<td>" + routing_table[i][2] + "</td> " +
-	          "<td>" + routing_table[i][3] + "</td> " +
+            "<td>" + routing_table[i][0] + "</td> " +
+            "<td>" + routing_table[i][1] + "</td> " +
+      	    "<td>" + routing_table[i][2] + "</td> " +
+	    "<td>" + routing_table[i][3] + "</td> " +
 	    "</tr>"
     }
 
@@ -1149,30 +1370,55 @@ function formatRoutingTable(routing_table){
     return text;
 }
 
+
+function deleteLinks(finalConnectionsLinks){
+    for (var i = 0; i < finalConnectionsLinks.length; i++){
+	for (var j=0; j < finalConnectionsLinks[i].lines.length; j++)
+	    scene.removeChild(finalConnectionsLinks[i].lines[j])
+
+	for (var j=0; j < finalConnectionsLinks[i].ipaddrs.length; j++)
+	    scene.removeChild(finalConnectionsLinks[i].ipaddrs[j])
+	
+    }
+
+    finalConnectionsLinks.length=0
+
+}
+
+
 function deleteNodes(nodeList){
     scene = document.querySelector('#escena');
 
+    
     for (var i = 0; i < nodeList.length; i++){
+	
 	node_a_entity = nodeList[i].node_a_entity 
-
 
 	if (! scene.contains(node_a_entity))
 	    // Not all nodes are in the scene
 	    continue
 	
-	// Destroy node
-        longitud = node_a_entity.children.length
-        node_a_entity.removeAttribute('animation');
-        for (var a=0; a < longitud; a++) {
-            node_a_entity.children[0].remove()
-        }
+	console.log("deleting node: " + nodeList[i].name)	
 
+	// Destroy node's text
+	scene.removeChild(nodeList[i].text)
+
+	// Destroy node's routingTableText
+	if(!nodeList[i].name.startsWith('hub')){
+            scene.removeChild(nodeList[i].routingTableText)
+	}
+
+	// Destroy node
         scene.removeChild(node_a_entity);
-	
     }
+
+    // reset nodeList
+    nodeList.length=0
 }
 
+
 function createNodes(nodes, nodeList, elementsScale) {
+
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1184,6 +1430,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 	    mask:[],
 	    routing_table:[],
 	    routingTableText:"",
+	    text:"",
 	    node_a_entity:""
         }
 
@@ -1265,6 +1512,8 @@ function createNodes(nodes, nodeList, elementsScale) {
         newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
 
+	newNode.text=newText
+	
         scene = document.querySelector('#escena');
         scene.appendChild(newText);
 
@@ -1275,7 +1524,9 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 }
 
-function setConnectionsLinks(connections, connectionsLinks, nodeList, data){
+function setConnectionsLinks(connections, nodeList, data){
+    var connectionsLinks = []
+    
     for (var i = 1; i < connections.length; i++) {
         if (i % 2 == 1) {
             connectionLink = {
@@ -1290,7 +1541,7 @@ function setConnectionsLinks(connections, connectionsLinks, nodeList, data){
 
 
 function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
-    connectionsLinksStandard = []
+    var connectionsLinksStandard = []
 
 
     for (var k = 0; k < nodeList.length; k++) {
@@ -1309,7 +1560,9 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
             position: nodeList[k].position,
             hwaddr: nodeList[k].hwaddr,
 	    ipaddr: nodeList[k].ipaddr,
-	    mask: nodeList[k].mask
+	    mask: nodeList[k].mask,
+	    lines: [],
+	    ipaddrs: []
         }
         connectionsLinksStandard.push(connectionLink)
     }
@@ -1367,6 +1620,8 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
             scene.appendChild(newLine);
 
+	    connectionsLinksStandard[k].lines.push(newLine)
+
 
 	    // Labels for IP addresses on the link
             nodeFrom = connectionsLinksStandard.find(o => o.from === connectionsLinksStandard[k].from)
@@ -1407,6 +1662,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             scene = document.querySelector('#escena');
 
             scene.appendChild(newText);
+	    connectionsLinksStandard[k].ipaddrs.push(newText)	    
 
         }
     }
@@ -1453,10 +1709,10 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
 function  readPackets(responseParse) {
     var seen_packets = [];
     
-    packets = [];
+    var packets = [];
     
     for (var j = 0; j < responseParse.length; j++) {
-	protocols=[];
+	var protocols = []
 
 	newAnimation = {
             src: responseParse[j].src,
@@ -1545,7 +1801,7 @@ function  readPackets(responseParse) {
 
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
-    finalPackets = []
+    //    var finalPackets = []
     console.log("animateEndToEndPackets")
 
     for (var j = 0; j < packets.length; j++) {
@@ -1585,12 +1841,10 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
 
 function animatePackets(packets, connectionsLinks, data){
-    finalPackets = []
+    //    var finalPackets = []
 
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
-
-
 
 
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
@@ -1824,6 +2078,9 @@ function create_animations(finalPackets){
         }
 	
         escena.appendChild(newPacket);
+
+	finalPackets[currentPacket].newPacket = newPacket
     }
 }
+
 

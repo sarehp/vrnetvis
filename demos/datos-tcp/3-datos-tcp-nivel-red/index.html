@@ -40,13 +40,12 @@
         <a-entity id="escena" cursor="rayOrigin:mouse" selector>
         </a-entity>
 
+	<a-entity id="controller" position="-20 2 10" color="orange"  scale="2 2 2" sound="on: click; src: #playPause; volume: 5" controller>
+	</a-entity>
 
-        <a-entity movement-controls="fly: true" position="0 10 45">
-            <a-entity camera position="0 1.6 0" look-controls></a-entity>
-            <a-entity cursor="rayOrigin:mouse"></a-entity>
-            <a-entity laser-controls="hand: right"></a-entity>
-        </a-entity>
 	
+        <a-camera position="0 10 45"></a-camera>
+
     </a-scene>
 
 
@@ -58,7 +57,7 @@
             <h1>Modo navegador</h1>
         </section>
 
-        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="start-button">
+        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
             <h1><center>INSTRUCCIONES</center></h1>
             <br>
             <h2>1. Pulse la esfera para iniciar la animación de los paquetes</h2>
@@ -82,7 +81,7 @@
                <li><h2><section style="color: goldenrod; padding: 5">Oro viejo: DNS</section></h2>
                <li><h2><section style="color: gold; padding: 5">Oro: HTTP</section></h2>	    	    
             </ul>
-            <h2>4. Pulse en cualquier nivel para ver su información desplegada</h2>
+            <h2>5. Pulse en cualquier nivel para ver su información desplegada</h2>
             <br>
             <h2>¡¡ Siéntase libre y navegue por la escena !!</h2>
         </section>
