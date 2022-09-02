@@ -10,7 +10,12 @@
     <script src="//cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
     <script src="index.js"></script>
     <script type="text/javascript" src="index.json"></script>
-	<script src="build/aframe-html.js"></script>
+    <script src="build/aframe-html.js"></script>
+
+
+    <script type="text/javascript">
+      AFRAME.ASSETS_PATH = "./assets";
+    </script>    
 </head>
 
 <body>
@@ -30,6 +35,7 @@
             <a-asset-item id="hub" src="hub/scene.gltf"></a-asset-item>
             <a-asset-item id="table" src="table/scene.gltf"></a-asset-item>
             <a-asset-item id="button" src="start_button/scene.gltf"></a-asset-item>
+            <a-asset-item id="play_button" src="playback_buttons/scene.gltf"></a-asset-item>
         </a-assets>
 
         <a-cylinder id="ground" src="#groundTexture" radius="300" height="0.1"></a-cylinder>
@@ -38,52 +44,46 @@
         <a-sky id="background" src="#skyTexture" theta-length="90" radius="300"></a-sky>
 
         <a-entity id="escena" cursor="rayOrigin:mouse" selector>
-        </a-entity>
-
-	<a-entity id="controller" position="-20 2 10" color="orange"  scale="2 2 2" sound="on: click; src: #playPause; volume: 5" controller>
 	</a-entity>
 
-	
+      
         <a-camera position="0 10 45"></a-camera>
+
 
     </a-scene>
 
 
+
+
         <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="inmersive-mode">
-            <h1>Modo inmersivo</h1>
+            <h1>See with VR glasses</h1>
         </section>
 
         <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="web-mode">
-            <h1>Modo navegador</h1>
+            <h1>See in Web browser</h1>
         </section>
 
         <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
-            <h1><center>INSTRUCCIONES</center></h1>
+            <h1><center>INSTRUCTIONS</center></h1>
             <br>
-            <h2>1. Pulse la esfera para iniciar la animación de los paquetes</h2>
+            <h2>1. Click on the Play/Pause button to start / pause </h2>
             <br>
-            <h2>2. Puede pulsar indefinidamente la esfera para </h2>
-            <h2>pausar y reaunudar el movimiento de los paquetes</h2>
+            <h2>3. Click on a node to see its routing table</h2>
             <br>
-            <h2>3. Pulse en los nodos para desplegar la tabla </h2>
-            <h2> de encaminamiento</h2>
-            <br>
-            <h2>4. Los mensajes muestran la información de cada protocolo </h2>
-            <h2> según el color, pulsando en cada nivel se modifica lo mostrado: </h2>
+            <h2>3. Click on a header of a message to see/hide its fields: </h2>
             <ul>
-               <li><h2><section style="color: khaki; padding: 5">Amarillo: Ethernet</section></h2>
-               <li><h2><section style="color: sandybrown; padding: 5">Naranja: ARP</section></h2>
-               <li><h2><section style="color: LightGreen; padding: 5">Verde: IP</section></h2>
-               <li><h2><section style="color: red; padding: 5">Rojo: ICMP</section></h2>
-               <li><h2><section style="color: steelblue; padding: 5">Azul: TCP</section></h2>
-               <li><h2><section style="color: white; padding: 5">Blanco: Datos sobre TCP o UDP</section></h2>
-               <li><h2><section style="color: orchid; padding: 5">Rosa: UDP</section></h2>
-               <li><h2><section style="color: goldenrod; padding: 5">Oro viejo: DNS</section></h2>
-               <li><h2><section style="color: gold; padding: 5">Oro: HTTP</section></h2>	    	    
+               <li><h2><section style="color: khaki; padding: 5">Yellos: Ethernet</section></h2>
+               <li><h2><section style="color: sandybrown; padding: 5">Orange: ARP</section></h2>
+               <li><h2><section style="color: LightGreen; padding: 5">Green: IP</section></h2>
+               <li><h2><section style="color: red; padding: 5">Red: ICMP</section></h2>
+               <li><h2><section style="color: steelblue; padding: 5">Blue: TCP</section></h2>
+               <li><h2><section style="color: white; padding: 5">White: Data over TCP o UDP</section></h2>
+               <li><h2><section style="color: orchid; padding: 5">Pink: UDP</section></h2>
+               <li><h2><section style="color: goldenrod; padding: 5">Old gold: DNS</section></h2>
+               <li><h2><section style="color: gold; padding: 5">Gold: HTTP</section></h2>	    	    
             </ul>
-            <h2>5. Pulse en cualquier nivel para ver su información desplegada</h2>
-            <br>
-            <h2>¡¡ Siéntase libre y navegue por la escena !!</h2>
+            <h2> Move closer to an element to see it better. </h2>
+	    <h3>If you don't have VR glasses use arrow keys and click+drag with mouse.  </h3>
         </section>
 
         <div id="htmltemplates">

@@ -15,7 +15,7 @@ var animationState = "INIT" // INIT, PAUSED, MOVING
 //////////
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
-var VIEW="APPLICATION+TRANSPORT+NETWORK"  // VIEW must be one oF VIEWS
+var VIEW=""
 var PREVIOUS_VIEW=""
 
 
@@ -86,8 +86,8 @@ AFRAME.registerComponent('selector', {
             inmersiveElement.parentNode.removeChild(inmersiveElement);
             desktopElement.parentNode.removeChild(desktopElement);
 
-            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
-//	    scene.setAttribute('controller', {position: {x: -20, y: 2, z: 10 }, color: 'orange', scale: "2 2 2", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+//            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
         });
 
@@ -132,8 +132,8 @@ AFRAME.registerComponent('inmersiveMode', {
         // startButton.setAttribute('id', 'startButton');
         // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
-//	scene.setAttribute('controller', {position: {x: -20, y: 2, z: 10 }, color: 'orange', scale: "2 2 2", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
-        scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+//        scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
 
 
     }
@@ -145,36 +145,89 @@ function createViewSelector() {
     console.log("VIEWS_MENU: ")
     console.log(VIEWS_MENU)
 
+
+    
     for (var i = 0; i < VIEWS_MENU.length; i++) {
 
         let viewSelectorApp = document.createElement('a-box');
-        viewSelectorApp.setAttribute('position', {x: -10, y: 2 + 2*i, z: 10 });
-        viewSelectorApp.setAttribute('color', VIEWS_MENU[i].color);
+	VIEWS_MENU[i].box = viewSelectorApp
+	
+        viewSelectorApp.setAttribute('position', {x: 20, y: 15 + 2*i, z: 20 });
+        viewSelectorApp.setAttribute('color', "gray");
         viewSelectorApp.setAttribute('scale', '2 2 2');
-        viewSelectorApp.setAttribute('id', 'viewSelectorApp');
+        viewSelectorApp.setAttribute('id', 'viewSelectorApp'+i);
         viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
+        viewSelectorApp.addEventListener('mouseenter', function () {
+	    if (animationState !== "INIT")
+		return;
+	    
+	    viewSelectorApp.setAttribute('scale', {x: 1.8, y: 1.8, z: 1.8});
+        });
+        viewSelectorApp.addEventListener('mouseleave', function () {
+	    if (animationState !== "INIT")
+		return;
+	    viewSelectorApp.setAttribute('scale', {x: 2, y: 2, z: 2})
+	    viewSelectorApp.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+	    
+        });
 
 
 	function eventHandler(newView){
+	    if (animationState != "INIT")
+		return;
+	    
 	    PREVIOUS_VIEW=VIEW;
-	    VIEW=newView
+	    VIEW=newView.view;
+
+	    for (var i=0; i<VIEWS_MENU.length; i++){
+		VIEWS_MENU[i].box.setAttribute("color", "gray")
+		VIEWS_MENU[i].text.setAttribute('color', "gray")
+		VIEWS_MENU[i].text.setAttribute('scale', '4 4 4');		
+	    }
+	    
+	    newView.box.setAttribute('color', newView.color);
+
+	    newView.text.setAttribute('color', newView.color);	    
+	    newView.text.setAttribute('scale', '5 5 5');		
+	    
 	    console.log ("new view: " + newView)
 	}
 
 	console.log("adding listener with " + VIEWS_MENU[i].view)
-        viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i].view));
+        viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i]));
 	
         scene.appendChild(viewSelectorApp);
 
 	// add text to menu
         let text = document.createElement('a-text');
         text.setAttribute('value', VIEWS_MENU[i].text)
-        text.setAttribute('scale', '2 2 2');
-        text.setAttribute('position', {x: -9, y: 2 + 2*i, z: 10 });
+        text.setAttribute('scale', '4 4 4');
+        text.setAttribute('position', {x: 22, y: 15 + 2*i, z: 20 });
+	text.setAttribute("color", "gray")	
+	VIEWS_MENU[i].text = text
 
-	scene.appendChild(text)
 	
+	scene.appendChild(text)
+
+
+	// Header text
+	let viewText = document.createElement('a-text');
+	viewText.setAttribute('value', "Select network view")
+	viewText.setAttribute('scale', '5 5 5');
+	viewText.setAttribute('position', {x: 20, y: 0.2 + 15 + 2*VIEWS_MENU.length, z: 21 });
+	viewText.setAttribute("color", "white")	
+	scene.appendChild(viewText)
+	
+	
+    }
+
+    // Choose the latest as current view
+    if (VIEW==""){
+	VIEW = VIEWS_MENU[VIEWS_MENU.length-1].view
+        VIEWS_MENU[VIEWS_MENU.length-1].box.setAttribute('color', VIEWS_MENU[VIEWS_MENU.length-1].color);
+        VIEWS_MENU[VIEWS_MENU.length-1].text.setAttribute('color', VIEWS_MENU[VIEWS_MENU.length-1].color);
+	VIEWS_MENU[VIEWS_MENU.length-1].text.setAttribute('scale', '5 5 5');	
     }
 
 }
@@ -203,6 +256,9 @@ AFRAME.registerComponent('network', {
     
     init: function() {
 	console.log("init network")
+
+
+
 	
         // nodeList = [];
 
@@ -231,14 +287,10 @@ AFRAME.registerComponent('network', {
         // startButton.setAttribute('id', 'startButton');
         // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
         // scene.appendChild(startButton);
+
+
 	
-        let infoPanel = document.createElement('a-entity');
-        infoPanel.setAttribute('html', '#info-panel');
-        infoPanel.setAttribute('position', { x: -20 , y: 20, z: 10 });
-        infoPanel.setAttribute('scale', '30 30 30');
-        infoPanel.setAttribute('id', 'infoPanel');
-        infoPanel.setAttribute('look-at', "[camera]");
-        scene.appendChild(infoPanel);
+	
 	
     }
 });
@@ -1145,10 +1197,13 @@ AFRAME.registerComponent('controller', {
 	if (next_packet == finalPackets.length){
 	    console.log("FINISHED ANIMATION")
 	    
-	    animationState = "INIT"
+	    animationState = "INIT";
 	    clearInterval(interval_id)
-	}
-	
+	    playButton.removeAttribute('gltf-model')
+	    playButton.setAttribute('gltf-model','#play_button');
+
+	}	    
+
 	CURRENT_TIME += 500
 	
     },
@@ -1156,21 +1211,12 @@ AFRAME.registerComponent('controller', {
     
     init: function() {
 	console.log("init controller")
-
-
-	
-	let sphere = document.createElement('a-sphere');	
-        sphere.setAttribute('position', {x: -2, y: 2, z: 10 });
-        sphere.setAttribute('color', 'orange');
-        sphere.setAttribute('scale', '2 2 2');
-        sphere.setAttribute('id', 'startButton');
-        sphere.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-
-	this.el.appendChild(sphere);
-
+	  
+    
 	let PERIOD=this.data.PERIOD
 	let do_animate=this.do_animate
-	
+
+    
 	function event_listener_function(event) {
 	    console.log("controller click")
 	    
@@ -1179,10 +1225,11 @@ AFRAME.registerComponent('controller', {
 		scene.removeAttribute("network")
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
 
+		playButton.setAttribute('color', 'gray')
 		
 		next_packet = 0
 
-		CURRENT_TIME=0
+		CURRENT_TIME = 0
 		
 		animationState = "MOVING"
 
@@ -1194,6 +1241,9 @@ AFRAME.registerComponent('controller', {
 
             case 'MOVING':
 		animationState = "PAUSED"
+
+		playButton.setAttribute('color', 'gray')
+
 		
 		// Enviar a los paquetes en vuelo animation-pause
 		console.log("PAUSED: Packets flying: ")
@@ -1205,7 +1255,11 @@ AFRAME.registerComponent('controller', {
 		
             case 'PAUSED':
 		animationState = "MOVING"
-		
+
+		playButton.setAttribute('color', 'gray')
+
+
+
 		// Enviar a los paquetes en vuelo animation-resume
 		console.log("RESUMED: Packets flying: ")
 		for (const packet of flying){
@@ -1216,11 +1270,65 @@ AFRAME.registerComponent('controller', {
 		break
             }
 	}
+
+
+	// play button
+	playButton = document.createElement('a-entity');
+        playButton.setAttribute('gltf-model', '#play_button');
+        playButton.setAttribute('position', {x: 10, y: 16, z: 20 });
+        playButton.setAttribute('color', 'orange');
+        playButton.setAttribute('scale', '4 4 4');
+        playButton.setAttribute('id', 'startButton');
+        playButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+        playButton.addEventListener('mouseenter', function () {
+		playButton.setAttribute('scale', {x: 3.5, y: 3.5, z: 3.5});
+        });
+        playButton.addEventListener('mouseleave', function () {
+		playButton.setAttribute('scale', {x: 4, y: 4, z: 4})
+		playButton.removeAttribute('animation');
+		playButton.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+        });
+
+	scene.appendChild(playButton);
+
+	playButton.addEventListener('click', event_listener_function)
+
+	// Header text
+	let viewText = document.createElement('a-text');
+	viewText.setAttribute('value', "Play / Pause")
+	viewText.setAttribute('scale', '5 5 5');
+	viewText.setAttribute('position', {x: 7, y: 20, z: 20 });
+	viewText.setAttribute("color", "white")	
+	scene.appendChild(viewText)
+
+
+
+
+
+        // Request and process views menu file
+        viewsMenuFile = 'viewsMenu.json'
+        requestViewsMenuFile = new XMLHttpRequest();
+        requestViewsMenuFile.open('GET', viewsMenuFile);
+        requestViewsMenuFile.responseType = 'text';
+        requestViewsMenuFile.send();
+
+        requestViewsMenuFile.onload = function() {
+            response = requestViewsMenuFile.response;
+            VIEWS_MENU = JSON.parse(response);
+	    createViewSelector()	    
+	}
+
+
+        let infoPanel = document.createElement('a-entity');
+        infoPanel.setAttribute('html', '#info-panel');
+        infoPanel.setAttribute('position', { x: -20 , y: 20, z: 10 });
+        infoPanel.setAttribute('scale', '30 30 30');
+        infoPanel.setAttribute('id', 'infoPanel');
+        infoPanel.setAttribute('look-at', "[camera]");
+        scene.appendChild(infoPanel);
 	
-
-
-	this.el.addEventListener('click', event_listener_function)
-		
+	
     }
     
 });
@@ -1251,20 +1359,6 @@ function createNetwork(filename, elementScale){
         createNodes(nodes, nodeList, elementScale)
 
 
-        // Request and process menu file
-        viewsMenuFile = 'viewsMenu.json'
-        requestViewsMenuFile = new XMLHttpRequest();
-        requestViewsMenuFile.open('GET', viewsMenuFile);
-        requestViewsMenuFile.responseType = 'text';
-        requestViewsMenuFile.send();
-        requestViewsMenuFile.onload = function() {
-            response = requestViewsMenuFile.response;
-            VIEWS_MENU = JSON.parse(response);
-	    createViewSelector()	    
-	}
-
-	
-	
 	// Request and process machineNames.json
 	
         // Asociamos a cada nodo su nombre de máquina

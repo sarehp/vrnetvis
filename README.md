@@ -12,9 +12,8 @@ por Jesús M. González Barahona
 
 ## Installed demos
 
-[Demos for Oculus Quest](https://sarehp.github.io/sarehp/vrnetvis/demos)
+[Demos (viewable in desktop)](https://sarehp.github.io/sarehp/vrnetvis/demos)
 
-TBD [Demos for Desktop]() 
 
 ## How to launch the code in src
 
