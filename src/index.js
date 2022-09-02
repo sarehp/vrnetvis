@@ -1768,30 +1768,30 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
 function shiftCoords (from, to, elementsScale){
     coordinates = {};
     coordinates.x = from.x;
-    coordinates.z = from.z;   
+    coordinates.z = from.z;
 
-    SHIFT = 30 
-    shift_x = SHIFT / (15 * elementsScale);
-    shift_z = SHIFT / (15 * elementsScale);
+    slope = Math.abs(to.z - from.z) / Math.abs(to.x - from.x)
+
     
+
+    
+    shift_x = 0.2* Math.abs(to.x-from.x) 
+
     if (to.x > from.x && to.z > from.z){
 	coordinates.x += shift_x;
-	coordinates.z += shift_z;    
     }
     else if (to.x > from.x && to.z < from.z){
 	coordinates.x += shift_x;
-	coordinates.z -= shift_z;    
     }
     else if (to.x < from.x && to.z > from.z){
 	coordinates.x -= shift_x;
-	coordinates.z += shift_z;    
     }
     else if (to.x < from.x && to.z < from.z){
 	coordinates.x -= shift_x;
-	coordinates.z -= shift_z;    
     }
 
-
+    coordinates.z = from.z + (coordinates.x - from.x) * (to.z - from.z) / (to.x - from.x) 
+    
     return coordinates;
 }
 
@@ -1818,6 +1818,8 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    
 	    var label_id = connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j];
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
+
+	    console.log ("pintando ipaddr: " + id_text)
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
@@ -1833,7 +1835,8 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
 		data.elementsScale
 	    )
-	    
+
+	    console.log("pintando ipaddr en coords: x=" + coordinates.x + "  y=" + data.height * 1.5 + "  z="+ coordinates.z)
             let newText = document.createElement('a-entity');
             newText.setAttribute('position', {
 		x: coordinates.x,
