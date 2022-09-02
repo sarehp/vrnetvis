@@ -1,13 +1,13 @@
 [
     {
 	"view": "ALL",
-	"text":"All with ARP",
+	"text":"hop-by-hop with ARP",
 	"color": "green"
     },
     
     {
 	"view": "APPLICATION+TRANSPORT+NETWORK",
-	"text": "All minus ARP",
+	"text": "hop-by-hop without ARP",
 	"color": "green"
     }
 ]
