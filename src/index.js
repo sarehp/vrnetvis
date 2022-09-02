@@ -140,6 +140,28 @@ AFRAME.registerComponent('inmersiveMode', {
 });
 
 
+
+function showViews()
+{
+	    for (var i=0; i<VIEWS_MENU.length; i++){
+		VIEWS_MENU[i].box.setAttribute("visible", "true")
+		VIEWS_MENU[i].text.setAttribute("visible", "true")		
+	    }
+
+}
+
+function hideViews()
+{
+    for (var i=0; i<VIEWS_MENU.length; i++){
+	if (VIEW != VIEWS_MENU[i].view){
+	    VIEWS_MENU[i].text.setAttribute("visible", "false")
+	    VIEWS_MENU[i].box.setAttribute("visible", "false")
+	}
+    }
+    
+}
+
+
 // Creates a box for each menu option in VIEWS_MENU
 function createViewSelector() {
     console.log("VIEWS_MENU: ")
@@ -149,12 +171,12 @@ function createViewSelector() {
     
     for (var i = 0; i < VIEWS_MENU.length; i++) {
 
-        let viewSelectorApp = document.createElement('a-box');
+        let viewSelectorApp = document.createElement('a-sphere');
 	VIEWS_MENU[i].box = viewSelectorApp
 	
         viewSelectorApp.setAttribute('position', {x: 20, y: 15 + 2*i, z: 20 });
         viewSelectorApp.setAttribute('color', "gray");
-        viewSelectorApp.setAttribute('scale', '2 2 2');
+        viewSelectorApp.setAttribute('scale', '1.2 1.2 1.2');
         viewSelectorApp.setAttribute('id', 'viewSelectorApp'+i);
         viewSelectorApp.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
@@ -162,12 +184,12 @@ function createViewSelector() {
 	    if (animationState !== "INIT")
 		return;
 	    
-	    viewSelectorApp.setAttribute('scale', {x: 1.8, y: 1.8, z: 1.8});
+	    viewSelectorApp.setAttribute('scale', {x: 1.5, y: 1.5, z: 1.5});
         });
         viewSelectorApp.addEventListener('mouseleave', function () {
 	    if (animationState !== "INIT")
 		return;
-	    viewSelectorApp.setAttribute('scale', {x: 2, y: 2, z: 2})
+	    viewSelectorApp.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2})
 	    viewSelectorApp.setAttribute('rotation', {x: 0, y: 0, z: 0 });
 	    
         });
@@ -213,7 +235,7 @@ function createViewSelector() {
 
 	// Header text
 	let viewText = document.createElement('a-text');
-	viewText.setAttribute('value', "Select network view")
+	viewText.setAttribute('value', "Layers")
 	viewText.setAttribute('scale', '5 5 5');
 	viewText.setAttribute('position', {x: 20, y: 0.2 + 15 + 2*VIEWS_MENU.length, z: 21 });
 	viewText.setAttribute("color", "white")	
@@ -241,6 +263,25 @@ AFRAME.registerComponent('network', {
 
 
     remove: function() {
+	clearInterval(interval_id)
+
+	for (packet of flying)
+	    packet.emit("animation-pause", null, false)
+
+
+
+	
+	for (var i=0; i<finalPackets.length; i++){
+	    packet= finalPackets[i].newPacket
+            longitud = packet.children.length
+	    
+            for (var a=0; a < longitud; a++) {
+                packet.children[0].remove()
+            }
+	    if (packet.parentNode)
+		packet.parentNode.removeChild(packet);
+	}
+
 	deleteNodes(nodeList)
 	deleteLinks(finalConnectionsLinks)
 
@@ -1198,6 +1239,7 @@ AFRAME.registerComponent('controller', {
 	    console.log("FINISHED ANIMATION")
 	    
 	    animationState = "INIT";
+	    showViews()
 	    clearInterval(interval_id)
 	    playButton.removeAttribute('gltf-model')
 	    playButton.setAttribute('gltf-model','#play_button');
@@ -1222,6 +1264,8 @@ AFRAME.registerComponent('controller', {
 	    
             switch(animationState) {
             case 'INIT':
+		hideViews()
+		
 		scene.removeAttribute("network")
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
 
@@ -1275,26 +1319,31 @@ AFRAME.registerComponent('controller', {
 	// play button
 	playButton = document.createElement('a-entity');
         playButton.setAttribute('gltf-model', '#play_button');
+	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
         playButton.setAttribute('position', {x: 10, y: 16, z: 20 });
         playButton.setAttribute('color', 'orange');
-        playButton.setAttribute('scale', '4 4 4');
+        playButton.setAttribute('scale', '4.5 4.5 4.5');
         playButton.setAttribute('id', 'startButton');
         playButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
         playButton.addEventListener('mouseenter', function () {
-		playButton.setAttribute('scale', {x: 3.5, y: 3.5, z: 3.5});
+	    playButton.setAttribute('scale', {x: 5, y: 5, z: 5});
+	    playButton.setAttribute('rotation', {x: -10, y: 0, z: 0 });	    
         });
         playButton.addEventListener('mouseleave', function () {
-		playButton.setAttribute('scale', {x: 4, y: 4, z: 4})
-		playButton.removeAttribute('animation');
-		playButton.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+	    playButton.setAttribute('scale', {x: 4.5, y: 4.5, z: 4.5})
+	    playButton.removeAttribute('animation');
+	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
         });
 
 	scene.appendChild(playButton);
 
 	playButton.addEventListener('click', event_listener_function)
 
-	// Header text
+
+
+	
+	// Header text for PlayPause button
 	let viewText = document.createElement('a-text');
 	viewText.setAttribute('value', "Play / Pause")
 	viewText.setAttribute('scale', '5 5 5');
@@ -1304,8 +1353,46 @@ AFRAME.registerComponent('controller', {
 
 
 
+	// reset button
+	resetButton = document.createElement('a-entity');
+        resetButton.setAttribute('gltf-model', '#reset_button');
+	resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });
+        resetButton.setAttribute('position', {x: 0, y: 16, z: 20 });
+        resetButton.setAttribute('color', 'orange');
+        resetButton.setAttribute('scale', '3.5 3.5 3.5');
+        resetButton.setAttribute('id', 'startButton');
+        resetButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
+
+        resetButton.addEventListener('mouseenter', function () {
+	    resetButton.setAttribute('scale', {x: 4, y: 4, z: 4});
+	    resetButton.setAttribute('rotation', {x: 80, y: 0, z: 0 });	    
+        });
+        resetButton.addEventListener('mouseleave', function () {
+	    resetButton.setAttribute('scale', {x: 3.5, y: 3.5, z: 3.5})
+	    resetButton.removeAttribute('animation');
+	    resetButton.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+	    resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });	    
+        });
+
+	scene.appendChild(resetButton);
+
+	function reset(){
+	    animationState="INIT"
+	    showViews()
+     	    scene.removeAttribute("network")
+	}
+	resetButton.addEventListener('click', reset)
+
+	// Header text for Reset button
+	viewText = document.createElement('a-text');
+	viewText.setAttribute('value', "Reset")
+	viewText.setAttribute('scale', '5 5 5');
+	viewText.setAttribute('position', {x: -1.5, y: 20, z: 20 });
+	viewText.setAttribute("color", "white")	
+	scene.appendChild(viewText)
 
 
+	
         // Request and process views menu file
         viewsMenuFile = 'viewsMenu.json'
         requestViewsMenuFile = new XMLHttpRequest();
