@@ -50,7 +50,7 @@ if (typeof AFRAME === 'undefined') {
 
 AFRAME.registerComponent('selector', {
     init: function() {
-        scene = this.el
+        let scene = this.el
 
 	// Header text
 	let viewText = document.createElement('a-text');
@@ -60,6 +60,19 @@ AFRAME.registerComponent('selector', {
 	viewText.setAttribute("color", "white")	
 	scene.appendChild(viewText)
 
+        let inmersiveText = document.createElement('a-entity');
+        inmersiveText.setAttribute('html', '#inmersive-mode');
+        inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
+        inmersiveText.setAttribute('scale', '30 30 30');
+        inmersiveText.setAttribute('look-at', "[camera]");
+        scene.appendChild(inmersiveText);
+
+        let desktopText = document.createElement('a-entity');
+        desktopText.setAttribute('html', '#web-mode');
+        desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
+        desktopText.setAttribute('scale', '30 30 30');
+        desktopText.setAttribute('look-at', "[camera]");
+        scene.appendChild(desktopText);
 
 	
         let inmersiveElement = document.createElement('a-entity');
@@ -77,13 +90,6 @@ AFRAME.registerComponent('selector', {
 
         });
 
-        let inmersiveText = document.createElement('a-entity');
-        inmersiveText.setAttribute('html', '#inmersive-mode');
-        inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
-        inmersiveText.setAttribute('scale', '30 30 30');
-        inmersiveText.setAttribute('look-at', "[camera]");
-        scene.appendChild(inmersiveText);
-
         let desktopElement = document.createElement('a-entity');
 
         desktopElement.setAttribute('gltf-model', '#desktop');
@@ -100,6 +106,10 @@ AFRAME.registerComponent('selector', {
 	    movementControls = document.querySelector('#movementControls')
 	    movementControls.parentNode.removeChild(movementControls)
 
+	    // Add camera
+	    let camera = document.createElement('a-camera')
+	    camera.setAttribute('position', {x: 0, y: 10, z: 45})
+	    scene.appendChild(camera)
 	    
 	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
@@ -107,12 +117,6 @@ AFRAME.registerComponent('selector', {
 
         });
 
-        let desktopText = document.createElement('a-entity');
-        desktopText.setAttribute('html', '#web-mode');
-        desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
-        desktopText.setAttribute('scale', '30 30 30');
-        desktopText.setAttribute('look-at', "[camera]");
-        scene.appendChild(desktopText);
 
     }
 });
@@ -234,7 +238,7 @@ function createViewSelector() {
 
 
 	    scene.removeAttribute("network")
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	    
 	    
 	    console.log ("new view: " + newView)
@@ -1187,7 +1191,7 @@ init: function () {
     
 
     // 	scene.removeAttribute("network")
-    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
+    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})		    
     
     
     // 	break;
@@ -1291,7 +1295,7 @@ AFRAME.registerComponent('controller', {
 		hideViews()
 		
 		scene.removeAttribute("network")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 
 		playButton.setAttribute('color', 'gray')
 		
@@ -1404,7 +1408,7 @@ AFRAME.registerComponent('controller', {
 	    animationState="INIT"
 	    showViews()
      	    scene.removeAttribute("network")
-            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'});
 	}
 	resetButton.addEventListener('click', reset)
 
