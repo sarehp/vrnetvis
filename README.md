@@ -12,7 +12,7 @@ por Jesús M. González Barahona
 
 ## Installed demos
 
-[Demos (viewable in desktop)](https://sarehp.github.io/sarehp/vrnetvis/demos)
+[Demos (viewable in desktop)](https://sarehp.github.io/vrnetvis/demos)
 
 
 ## How to launch the code in src
