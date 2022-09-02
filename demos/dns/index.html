@@ -36,6 +36,7 @@
             <a-asset-item id="table" src="table/scene.gltf"></a-asset-item>
             <a-asset-item id="button" src="start_button/scene.gltf"></a-asset-item>
             <a-asset-item id="play_button" src="playback_buttons/scene.gltf"></a-asset-item>
+            <a-asset-item id="reset_button" src="reset_button/scene.gltf"></a-asset-item>	    
         </a-assets>
 
         <a-cylinder id="ground" src="#groundTexture" radius="300" height="0.1"></a-cylinder>
@@ -66,18 +67,22 @@
         <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
             <h1><center>INSTRUCTIONS</center></h1>
             <br>
-            <h2>1. Click on the Play/Pause button to start / pause </h2>
+            <h2>Click on the Play/Pause button to play / pause </h2>
             <br>
-            <h2>3. Click on a node to see its routing table</h2>
+            <h2>Select layers to be displayed in the Layers menu</h2>
             <br>
-            <h2>3. Click on a header of a message to see/hide its fields: </h2>
+            <h2>Click on the reset button to stop and reset </h2>
+	    <br>
+	    <h2>Click on a host or router to see its routing table</h2>
+	    <br>
+	    <h2>Click on a header of a message to see/hide its fields: </h2>
             <ul>
-               <li><h2><section style="color: khaki; padding: 5">Yellos: Ethernet</section></h2>
+               <li><h2><section style="color: khaki; padding: 5">Yellow: Ethernet</section></h2>
                <li><h2><section style="color: sandybrown; padding: 5">Orange: ARP</section></h2>
                <li><h2><section style="color: LightGreen; padding: 5">Green: IP</section></h2>
                <li><h2><section style="color: red; padding: 5">Red: ICMP</section></h2>
                <li><h2><section style="color: steelblue; padding: 5">Blue: TCP</section></h2>
-               <li><h2><section style="color: white; padding: 5">White: Data over TCP o UDP</section></h2>
+               <li><h2><section style="color: white; padding: 5">White: Data over TCP or UDP</section></h2>
                <li><h2><section style="color: orchid; padding: 5">Pink: UDP</section></h2>
                <li><h2><section style="color: goldenrod; padding: 5">Old gold: DNS</section></h2>
                <li><h2><section style="color: gold; padding: 5">Gold: HTTP</section></h2>	    	    
