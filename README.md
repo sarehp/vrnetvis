@@ -1,9 +1,8 @@
 # Virtual Reality Network Visualization
 
-- Modificaciones al código del TFG de Ignacio Cruz de la Haza, tutelado
-por Jesús M. González Barahona
+- Based on the [code of Ignacio Cruz de la Hazai](https://github.com/nachocru/TFG)
 
-- Ver CHANGES.md
+- See CHANGES.md
 
 ## Authors
 
@@ -21,21 +20,22 @@ por Jesús M. González Barahona
 2. ```$ ln -f -s scenario_NAME/netgui.nkp .```
 3. ```$ ln -f -s scenario_NAME/caps.json .```
 4. ```ln -f -s scenario_NAME/shared/*.json . ```
-Enlazar todos los ficheros listados en caps.json.
+Link all files in caps.json.
 
-Normalmente sólo usamos un fichero que hemos mezclado con mergecap.
+Usually we use only one capture file obtained by merging with mergecap.
 
-Ver sección Generación de capturas y mezcla
+See section Generation of captures and merge
 
 5. ```python3 unifycaps.py ```
 6. ```python -m SimpleHTTPServer 8888 . / python3 -m http.server 8888 ```
 7. Cargar en navegador ```localhost:8888```
 
-## Generación de capturas y mezcla
-1. Arrancamos en kathara el escenario
-2. Capturamos en un máquina por dominio de broadcast, minimizando el número total de máquinas en las que capturamos. De este modo reducimos la posibilidad de paquetes desordenados.
-3. mergecap de todas las capturas
-4. generación de json de la captura fusionada 
+## Generation of captures and merge
+1. Launch kathara scenario. Configure clock synchonization with:
+```sudo docker run --rm --privileged kathara/quagga hwclock -s```
+2. Capture in one interface per broadcast domain, minimizing total number of captures. 
+3. mergecap all caps
+4. generate json from wireshark
 
 
 
