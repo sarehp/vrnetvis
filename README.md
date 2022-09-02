@@ -1,6 +1,6 @@
 # Virtual Reality Network Visualization
 
-- Based on the [code of Ignacio Cruz de la Hazai](https://github.com/nachocru/TFG)
+- Based on the [code of Ignacio Cruz de la Haza](https://github.com/nachocru/TFG)
 
 - See CHANGES.md
 
@@ -11,7 +11,7 @@
 
 ## Installed demos
 
-[Demos (viewable in desktop)](https://sarehp.github.io/vrnetvis/demos)
+[Demos](https://sarehp.github.io/vrnetvis/demos)
 
 
 ## How to launch the code in src

@@ -52,6 +52,16 @@ AFRAME.registerComponent('selector', {
     init: function() {
         scene = this.el
 
+	// Header text
+	let viewText = document.createElement('a-text');
+	viewText.setAttribute('value', "VRNetVis")
+	viewText.setAttribute('scale', '7 7 7');
+	viewText.setAttribute('position', {x: -4, y: 27, z: 21 });
+	viewText.setAttribute("color", "white")	
+	scene.appendChild(viewText)
+
+
+	
         let inmersiveElement = document.createElement('a-entity');
 
         inmersiveElement.setAttribute('gltf-model', '#inmersive');
@@ -86,6 +96,11 @@ AFRAME.registerComponent('selector', {
             inmersiveElement.parentNode.removeChild(inmersiveElement);
             desktopElement.parentNode.removeChild(desktopElement);
 
+	    // Remove AR movement-controls
+	    movementControls = document.querySelector('#movementControls')
+	    movementControls.parentNode.removeChild(movementControls)
+
+	    
 	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
             scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
@@ -136,6 +151,9 @@ AFRAME.registerComponent('inmersiveMode', {
 	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
         scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
 
+
+
+	
 
     }
 });
