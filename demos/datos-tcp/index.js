@@ -1364,6 +1364,7 @@ AFRAME.registerComponent('controller', {
 	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
         });
 
+	let scene = document.querySelector("#escena")
 	scene.appendChild(playButton);
 
 	playButton.addEventListener('click', event_listener_function)
