@@ -1,5 +1,7 @@
 //////////
 // GLOBALS
+var viewing_mode = ""
+
 var nodeList = []
 var finalConnectionsLinks=[]
 var finalPackets = []
@@ -82,7 +84,9 @@ AFRAME.registerComponent('selector', {
         inmersiveElement.setAttribute('scale', '10 10 10');
         scene.appendChild(inmersiveElement);
         inmersiveElement.addEventListener('click', function () {
-            desktopText.parentNode.removeChild(desktopText);
+	    viewing_mode = "vr"
+
+	    desktopText.parentNode.removeChild(desktopText);
             inmersiveText.parentNode.removeChild(inmersiveText);
             desktopElement.parentNode.removeChild(desktopElement);
             inmersiveElement.parentNode.removeChild(inmersiveElement);
@@ -97,7 +101,9 @@ AFRAME.registerComponent('selector', {
         desktopElement.setAttribute('rotation', '0 -90 0');
         scene.appendChild(desktopElement);
         desktopElement.addEventListener('click', function () {
-            desktopText.parentNode.removeChild(desktopText);
+	    viewing_mode = "desktop"
+
+	    desktopText.parentNode.removeChild(desktopText);
             inmersiveText.parentNode.removeChild(inmersiveText);
             inmersiveElement.parentNode.removeChild(inmersiveElement);
             desktopElement.parentNode.removeChild(desktopElement);
@@ -152,8 +158,15 @@ AFRAME.registerComponent('inmersiveMode', {
         // startButton.setAttribute('id', 'startButton');
         // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
-	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
-        scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+
+	if (viewing_mode == "vr"){
+	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	}
+	else { // "desktop"
+	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+	}
 
 
 
@@ -238,7 +251,13 @@ function createViewSelector() {
 
 
 	    scene.removeAttribute("network")
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    if (viewing_mode == "vr")
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    else // "desktop"
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+
+
+
 	    
 	    
 	    console.log ("new view: " + newView)
@@ -1191,7 +1210,10 @@ init: function () {
     
 
     // 	scene.removeAttribute("network")
-    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})		    
+    if (viewing_mode == "vr")
+	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+    else
+	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
     
     
     // 	break;
@@ -1295,8 +1317,11 @@ AFRAME.registerComponent('controller', {
 		hideViews()
 		
 		scene.removeAttribute("network")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-
+		if (viewing_mode == "vr")
+		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+		else // "desktop"
+		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+		
 		playButton.setAttribute('color', 'gray')
 		
 		next_packet = 0
@@ -1409,7 +1434,10 @@ AFRAME.registerComponent('controller', {
 	    animationState="INIT"
 	    showViews()
      	    scene.removeAttribute("network")
-            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'});
+	    if (viewing_mode == "vr")
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    else
+		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
 	}
 	resetButton.addEventListener('click', reset)
 
@@ -1863,7 +1891,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             let newText = document.createElement('a-entity');
             newText.setAttribute('position', {
 		x: coordinates.x,
-		y: data.height * 1.5,
+		y: data.height * 1.4,
 		z: coordinates.z
 	    });
 
