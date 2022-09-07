@@ -117,7 +117,7 @@ AFRAME.registerComponent('selector', {
 	    camera.setAttribute('position', {x: 0, y: 10, z: 45})
 	    scene.appendChild(camera)
 	    
-	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
             scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
 
@@ -150,20 +150,10 @@ AFRAME.registerComponent('inmersiveMode', {
         ambientLight.setAttribute('position', '0 30 0');
         scene.appendChild(ambientLight);
 
-
-	if (viewing_mode == "vr"){
-	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
-	}
-	else { // "desktop"
-	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
-	}
-
-
-
 	
-
+	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+ 	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	
     }
 });
 
@@ -191,7 +181,7 @@ function hideViews()
 
 
 // Creates a box for each menu option in VIEWS_MENU
-function createViewSelector() {
+function createViewSelector(position) {
     console.log("VIEWS_MENU: ")
     console.log(VIEWS_MENU)
 
@@ -201,8 +191,11 @@ function createViewSelector() {
 
         let viewSelectorApp = document.createElement('a-sphere');
 	VIEWS_MENU[i].box = viewSelectorApp
-	
-        viewSelectorApp.setAttribute('position', {x: 20, y: 15 + 2*i, z: 20 });
+
+
+	let pos = Object.assign({}, position);
+	pos.y += 2*i
+        viewSelectorApp.setAttribute('position', pos);	
         viewSelectorApp.setAttribute('color', "gray");
         viewSelectorApp.setAttribute('scale', '1.2 1.2 1.2');
         viewSelectorApp.setAttribute('id', 'viewSelectorApp'+i);
@@ -264,7 +257,12 @@ function createViewSelector() {
         let text = document.createElement('a-text');
         text.setAttribute('value', VIEWS_MENU[i].text)
         text.setAttribute('scale', '4 4 4');
-        text.setAttribute('position', {x: 22, y: 15 + 2*i, z: 20 });
+
+	pos = Object.assign({}, position);
+	pos.y += 2*i
+	pos.x += 2
+	//        text.setAttribute('position', {x: 22, y: 15 + 2*i, z: 20 });
+        text.setAttribute('position', pos)
 	text.setAttribute("color", "gray")	
 	VIEWS_MENU[i].text = text
 
@@ -276,7 +274,10 @@ function createViewSelector() {
 	let viewText = document.createElement('a-text');
 	viewText.setAttribute('value', "Layers")
 	viewText.setAttribute('scale', '5 5 5');
-	viewText.setAttribute('position', {x: 20, y: 0.2 + 15 + 2*VIEWS_MENU.length, z: 21 });
+
+	pos = Object.assign({}, position);
+	pos.y += 0.2 + 2*VIEWS_MENU.length
+	viewText.setAttribute('position', pos)
 	viewText.setAttribute("color", "white")	
 	scene.appendChild(viewText)
 	
@@ -1170,6 +1171,7 @@ AFRAME.registerComponent('controller', {
 
     schema: {
         PERIOD: {type: 'int', default: '500'},
+	position: {type: 'vec3'}
     },
 
     do_animate: function()
@@ -1265,7 +1267,9 @@ AFRAME.registerComponent('controller', {
 	playButton = document.createElement('a-entity');
         playButton.setAttribute('gltf-model', '#play_button');
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
-        playButton.setAttribute('position', {x: 10, y: 16, z: 20 });
+	let position = Object.assign({}, this.data.position)
+	position.x = position.x + 35
+        playButton.setAttribute('position', position);
         playButton.setAttribute('color', 'orange');
         playButton.setAttribute('scale', '4.5 4.5 4.5');
         playButton.setAttribute('id', 'startButton');
@@ -1293,7 +1297,9 @@ AFRAME.registerComponent('controller', {
 	let viewText = document.createElement('a-text');
 	viewText.setAttribute('value', "Play / Pause")
 	viewText.setAttribute('scale', '5 5 5');
-	viewText.setAttribute('position', {x: 7, y: 20, z: 20 });
+	position.y += 3
+	position.x -= 3
+	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
 	scene.appendChild(viewText)
 
@@ -1303,7 +1309,9 @@ AFRAME.registerComponent('controller', {
 	resetButton = document.createElement('a-entity');
         resetButton.setAttribute('gltf-model', '#reset_button');
 	resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });
-        resetButton.setAttribute('position', {x: 0, y: 16, z: 20 });
+	position = Object.assign({}, this.data.position)
+	position.x += 10
+        resetButton.setAttribute('position', position);
         resetButton.setAttribute('color', 'orange');
         resetButton.setAttribute('scale', '3.5 3.5 3.5');
         resetButton.setAttribute('id', 'startButton');
@@ -1337,7 +1345,9 @@ AFRAME.registerComponent('controller', {
 	viewText = document.createElement('a-text');
 	viewText.setAttribute('value', "Reset")
 	viewText.setAttribute('scale', '5 5 5');
-	viewText.setAttribute('position', {x: -1.5, y: 20, z: 20 });
+	position.x -= 1.5
+	position.y += 3
+	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
 	scene.appendChild(viewText)
 
@@ -1350,16 +1360,24 @@ AFRAME.registerComponent('controller', {
         requestViewsMenuFile.responseType = 'text';
         requestViewsMenuFile.send();
 
+	//	let pos = {x: 20, y: 15, z: 20 }
+	position = Object.assign({}, this.data.position)
+	position.x += 20
+	position.y -= 1
+	
+	let f = createViewSelector.bind(null, position)
         requestViewsMenuFile.onload = function() {
             response = requestViewsMenuFile.response;
             VIEWS_MENU = JSON.parse(response);
-	    createViewSelector()	    
+	    f();
 	}
 
 
         let infoPanel = document.createElement('a-entity');
         infoPanel.setAttribute('html', '#info-panel');
-        infoPanel.setAttribute('position', { x: -20 , y: 20, z: 10 });
+	position = Object.assign({}, this.data.position)
+	position.x -= 20
+        infoPanel.setAttribute('position', position);
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
         infoPanel.setAttribute('look-at', "[camera]");
