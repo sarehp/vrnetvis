@@ -151,14 +151,6 @@ AFRAME.registerComponent('inmersiveMode', {
         scene.appendChild(ambientLight);
 
 
-	
-        // startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
-        // startButton.setAttribute('color', 'orange');
-        // startButton.setAttribute('scale', '2 2 2');
-        // startButton.setAttribute('id', 'startButton');
-        // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-
-
 	if (viewing_mode == "vr"){
 	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -20, y: 2, z: 10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
@@ -344,14 +336,8 @@ AFRAME.registerComponent('network', {
     
     init: function() {
 	console.log("init network")
-
-
-
 	
-        // nodeList = [];
-
 	// // request netgui.nkp
-
         data = this.data
         scene = this.el
 	
@@ -361,25 +347,6 @@ AFRAME.registerComponent('network', {
 	
 	createNetwork(nkp_filename, elementsScale)
 
-
-
-
-
-	
-	// // Create player controls (startButton): start/play/pause/reload
-        // let startButton = document.createElement('a-sphere');
-	
-        // startButton.setAttribute('position', {x: -20, y: 2, z: 10 });
-        // startButton.setAttribute('color', 'orange');
-        // startButton.setAttribute('scale', '2 2 2');
-        // startButton.setAttribute('id', 'startButton');
-        // startButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-        // scene.appendChild(startButton);
-
-
-	
-	
-	
     }
 });
 
@@ -1157,6 +1124,15 @@ AFRAME.registerComponent('packet', {
         });
 	
         packet.addEventListener('animationcomplete', function () {
+
+	    if (packet.id == finalPackets.length -1) {
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+		clearInterval(interval_id)
+	    }
+	    
+
 	    // Destroy packet element
             longitud = packet.children.length
             nodeFromAnimation.removeAttribute('animation');
@@ -1169,96 +1145,25 @@ AFRAME.registerComponent('packet', {
     },			 
 
 
-init: function () {
-    let packet = this.el
-    let packetParams = this.data
-
-    
-
-    // packet.emit("animation-pause", null, false)
-    
-    // var startButton = document.querySelector('#startButton');
-    // var animationState = "INIT" // INIT, PAUSED, MOVING
-    // var interval_id
-    
-
-    // var event_listener_function = function() {
-    //     console.log("click")
-    
-
-    //     switch(animationState) {
-    //     case 'INIT':
-    // 	animationState = "MOVING"
-    //         interval_id = setInterval(startAnimation, 1000);
-    //         break
-    //     case 'MOVING':
-    // 	console.log("click to pause on packet id " + packet.id)
-    // 	packet.emit("animation-pause", null, false)
-    // 	animationState = "PAUSED"
-    //         break;
-    //     case 'PAUSED':
-    // 	console.log("click to move on packet id " + packet.id)
-    // 	packet.emit("animation-resume", null, false)
-    // 	animationState = "MOVING"
-    //         break
-    //     case 'FINISHED':
-    // 	// Borrar paquetes
-    // 	// ...
-    // 	//
-    // 	animationState = "ZOMBIE"
-    // 	startButton.removeEventListener('click', event_listener_function)
-    
-
-    // 	scene.removeAttribute("network")
-    if (viewing_mode == "vr")
-	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-    else
-	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
-    
-    
-    // 	break;
-    //     }
-    // }
-    
-    // startButton.addEventListener('click', event_listener_function);
-    
-}
+    init: function () {
+	let packet = this.el
+	let packetParams = this.data
+	
+	
+	// 	scene.removeAttribute("network")
+	if (viewing_mode == "vr")
+	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	else
+	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
+	
+	
+    }
 });
 
 
 
 
 CURRENT_TIME=0
-
-
-// function do_animate()
-// {
-//     if (animationState == "PAUSED")
-// 	return
-
-//     console.log("do_animate: " + CURRENT_TIME)
-
-//     flying.length = 0    
-
-//     while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
-// 	//	var newPacket = document.querySelector("#"+String(next_packet)).components.packet;
-// 	let newPacket = finalPackets[next_packet].newPacket.components.packet
-// 	newPacket.startAnimation()
-// 	next_packet += 1
-// 	flying.push(finalPackets[next_packet].newPacket)	
-//     }
-
-//     if (next_packet == finalPackets.length){
-// 	console.log("FINISHED ANIMATION")
-	
-// 	animationState = "INIT"
-// 	clearInterval(interval_id)
-//     }
-
-//     CURRENT_TIME += 500
-
-// }
-
 var interval_id = 0
 
 AFRAME.registerComponent('controller', {
@@ -1275,27 +1180,14 @@ AFRAME.registerComponent('controller', {
 	
 	console.log("do_animate: " + CURRENT_TIME)
 	console.log("flying.length: " + flying.length)	
-	// flying.length = 0    
 	
 	while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
-	    //	var newPacket = document.querySelector("#"+String(next_packet)).components.packet;
 	    let newPacket = finalPackets[next_packet].newPacket.components.packet
 	    newPacket.startAnimation()
 	    flying.push(finalPackets[next_packet].newPacket)
 	    next_packet += 1
 	}
 	
-	if (next_packet == finalPackets.length){
-	    console.log("FINISHED ANIMATION")
-	    
-	    animationState = "INIT";
-	    showViews()
-	    clearInterval(interval_id)
-	    playButton.removeAttribute('gltf-model')
-	    playButton.setAttribute('gltf-model','#play_button');
-
-	}	    
-
 	CURRENT_TIME += 500
 	
     },
