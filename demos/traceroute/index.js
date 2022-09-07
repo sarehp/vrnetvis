@@ -738,7 +738,7 @@ AFRAME.registerComponent('packet', {
             let newEthBox = document.createElement('a-box');
             newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
             newEthBox.setAttribute('color', getColor("ethernet"));
-            newEthBox.setAttribute('visible', true); // pheras
+            newEthBox.setAttribute('visible', true); 
 
             packet.appendChild(newEthBox);
 
@@ -776,7 +776,7 @@ AFRAME.registerComponent('packet', {
 	    let newIpBox = document.createElement('a-box');
             newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newIpBox.setAttribute('color', getColor("ip"));
-            newIpBox.setAttribute('visible', true); // pheras
+            newIpBox.setAttribute('visible', true); 
 
             packet.appendChild(newIpBox);
 
@@ -815,7 +815,7 @@ AFRAME.registerComponent('packet', {
             let newArpBox = document.createElement('a-box');
             newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newArpBox.setAttribute('color', getColor("arp"));
-            newArpBox.setAttribute('visible', true); // pheras
+            newArpBox.setAttribute('visible', true);
             packet.appendChild(newArpBox);
 
 	    if (topmost_protocol == "arp")
@@ -857,7 +857,7 @@ AFRAME.registerComponent('packet', {
             let newTcpBox = document.createElement('a-box');
             newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newTcpBox.setAttribute('color', getColor("tcp"));
-            newTcpBox.setAttribute('visible', true); // pheras
+            newTcpBox.setAttribute('visible', true); 
             packet.appendChild(newTcpBox);
 
 	    if (topmost_protocol == "tcp")
@@ -894,7 +894,7 @@ AFRAME.registerComponent('packet', {
             let newUdpBox = document.createElement('a-box');
             newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newUdpBox.setAttribute('color', getColor("udp"));
-            newUdpBox.setAttribute('visible', true); // pheras
+            newUdpBox.setAttribute('visible', true);
             packet.appendChild(newUdpBox);
 
 	    if (topmost_protocol == "udp")
@@ -930,7 +930,7 @@ AFRAME.registerComponent('packet', {
             let newDnsBox = document.createElement('a-box');
             newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newDnsBox.setAttribute('color', getColor("dns"));
-            newDnsBox.setAttribute('visible', true); // pheras
+            newDnsBox.setAttribute('visible', true); 
             packet.appendChild(newDnsBox);
 
 	    if (topmost_protocol == "dns")
@@ -966,7 +966,7 @@ AFRAME.registerComponent('packet', {
             let newHttpBox = document.createElement('a-box');
             newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newHttpBox.setAttribute('color', getColor("http"));
-            newHttpBox.setAttribute('visible', true); // pheras
+            newHttpBox.setAttribute('visible', true); 
 
             packet.appendChild(newHttpBox);
 
@@ -1003,7 +1003,7 @@ AFRAME.registerComponent('packet', {
             let newIcmpBox = document.createElement('a-box');
             newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newIcmpBox.setAttribute('color', getColor("icmp"));
-            newIcmpBox.setAttribute('visible', true); // pheras
+            newIcmpBox.setAttribute('visible', true); 
 
             packet.appendChild(newIcmpBox);
 
@@ -1039,7 +1039,7 @@ AFRAME.registerComponent('packet', {
             let newDataBox = document.createElement('a-box');
             newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newDataBox.setAttribute('color', getColor("dataInfo"));
-            newDataBox.setAttribute('visible', true); // pheras
+            newDataBox.setAttribute('visible', true); 
 
             packet.appendChild(newDataBox);
 
@@ -1075,7 +1075,7 @@ AFRAME.registerComponent('packet', {
             let newDataBox = document.createElement('a-box');
             newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newDataBox.setAttribute('color', getColor("data"));
-            newDataBox.setAttribute('visible', true); // pheras
+            newDataBox.setAttribute('visible', true); 
 
             packet.appendChild(newDataBox);
 
@@ -1360,11 +1360,9 @@ AFRAME.registerComponent('controller', {
         requestViewsMenuFile.responseType = 'text';
         requestViewsMenuFile.send();
 
-	//	let pos = {x: 20, y: 15, z: 20 }
 	position = Object.assign({}, this.data.position)
-	position.x += 20
+	position.x += 15
 	position.y -= 1
-	
 	let f = createViewSelector.bind(null, position)
         requestViewsMenuFile.onload = function() {
             response = requestViewsMenuFile.response;
@@ -1797,13 +1795,21 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 		data.elementsScale
 	    )
 
-	    console.log("pintando ipaddr en coords: x=" + coordinates.x + "  y=" + data.height * 1.5 + "  z="+ coordinates.z)
             let newText = document.createElement('a-entity');
-            newText.setAttribute('position', {
-		x: coordinates.x,
-		y: data.height * 1.4,
-		z: coordinates.z
-	    });
+
+	    if (viewing_mode == "vr")
+		newText.setAttribute('position', {
+		    x: coordinates.x,
+		    y: data.height * 1.02,
+		    z: coordinates.z
+		});
+	    else // viewing_mode == "desktop"
+		newText.setAttribute('position', {
+		    x: coordinates.x,
+		    y: data.height * 1.4,
+		    z: coordinates.z
+		});
+		
 
 
 	    console.log("id_text: " + id_text);
