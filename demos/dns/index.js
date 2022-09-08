@@ -45,6 +45,7 @@ function isEndToEndVIEW() {
 
 
 
+
 /* global AFRAME */
 if (typeof AFRAME === 'undefined') {
     throw new Error('Component attempted to register before AFRAME was available.');
@@ -1775,14 +1776,16 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    if (nodeFrom.from.startsWith("hub"))
 		continue;
 	    
-	    var label_id = connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j];
+	    label_id = "<p>" + connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "</p>";
+
+	    label_id += "<p>" + connectionsLinksStandard[k].hwaddr[j] + "</p>"
+
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
-	    console.log ("pintando ipaddr: " + id_text)
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
-            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 2rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
+            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 1.2rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
             newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
             newSectionTemplate.id = id_text + "-template";
@@ -1800,13 +1803,13 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    if (viewing_mode == "vr")
 		newText.setAttribute('position', {
 		    x: coordinates.x,
-		    y: data.height * 1.02,
+		    y: data.height * 1.01,
 		    z: coordinates.z
 		});
 	    else // viewing_mode == "desktop"
 		newText.setAttribute('position', {
 		    x: coordinates.x,
-		    y: data.height * 1.4,
+		    y: data.height * 0.5,
 		    z: coordinates.z
 		});
 		
