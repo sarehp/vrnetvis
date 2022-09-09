@@ -1118,20 +1118,30 @@ AFRAME.registerComponent('packet', {
         }
 	
 
-
-        packet_move.setAttribute('animation', {
-            property: 'position',
-            to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
-            dur: packetParams.duration,
+        packet_move.setAttribute('animation__out_of_node', {
+            property: 'scale',
+            from: "0 0 0",
+	    to: "1 1 1",
+            dur: packetParams.duration/2,
             easing: 'linear',
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume'
         });
 
-        packet_move.setAttribute('animation__node', {
+        packet_move.setAttribute('animation__link', {
+            property: 'position',
+            to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
+            dur: packetParams.duration,
+            easing: 'linear',
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    startEvents: "linkAnim"
+        });
+	
+        packet_move.setAttribute('animation__into_node', {
             property: 'scale',
             to: "0 0 0",
-            dur: packetParams.duration,
+            dur: packetParams.duration/2,
             easing: 'linear',
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -1148,12 +1158,16 @@ AFRAME.registerComponent('packet', {
 	    }
 
 
-	    if (event.detail.name == "animation") {
+	    if (event.detail.name == "animation__out_of_node") {
+		this.emit('linkAnim', null, false)
+	    }
+
+	    if (event.detail.name == "animation__link") {
 		this.emit('nodeAnim', null, false)
 	    }
 
 
-	    if (event.detail.name == "animation__node"){
+	    if (event.detail.name == "animation__into_node"){
 		// Destroy packet element
 		longitud = packet.children.length
 		nodeFromAnimation.removeAttribute('animation');
