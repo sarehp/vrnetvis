@@ -1430,7 +1430,8 @@ function createNetwork(filename, elementScale){
                     node = nodeList.find(o => o.name === currentNode)
 		    node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
 		    node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
-		    node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])						
+		    node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
+		    node.iface.push("eth" + interface_index)
                 }
             }
 
@@ -1576,6 +1577,7 @@ function createNodes(nodes, nodeList, elementsScale) {
             hwaddr: [],
 	    ipaddr:[],
 	    mask:[],
+	    iface:[],
 	    routing_table:[],
 	    routingTableText:"",
 	    text:"",
@@ -1709,6 +1711,7 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
             hwaddr: nodeList[k].hwaddr,
 	    ipaddr: nodeList[k].ipaddr,
 	    mask: nodeList[k].mask,
+	    iface: nodeList[k].iface,	    
 	    lines: [],
 	    ipaddrs: []
         }
@@ -1776,9 +1779,11 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    if (nodeFrom.from.startsWith("hub"))
 		continue;
 	    
-	    label_id = "<p>" + connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "</p>";
+	    label_id = "<p>" + connectionsLinksStandard[k].iface[j] + ": "
+	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "</p>";
+	    label_id += "<p>" + "      " + connectionsLinksStandard[k].hwaddr[j] + "</p>"
 
-	    label_id += "<p>" + connectionsLinksStandard[k].hwaddr[j] + "</p>"
+	    
 
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
