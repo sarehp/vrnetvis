@@ -117,9 +117,11 @@ AFRAME.registerComponent('selector', {
 	    let camera = document.createElement('a-camera')
 	    camera.setAttribute('position', {x: 0, y: 10, z: 45})
 	    scene.appendChild(camera)
-	    
+
+	    // Add controller
 	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
+	    // Add network
             scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
 
         });
@@ -304,7 +306,7 @@ AFRAME.registerComponent('network', {
 
 
     remove: function() {
-	clearInterval(interval_id)
+//	clearInterval(interval_id)
 
 	for (packet of flying)
 	    packet.emit("animation-pause", null, false)
@@ -1116,6 +1118,7 @@ AFRAME.registerComponent('packet', {
         }
 	
 
+
         packet_move.setAttribute('animation', {
             property: 'position',
             to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
@@ -1124,25 +1127,46 @@ AFRAME.registerComponent('packet', {
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume'
         });
-	
-        packet.addEventListener('animationcomplete', function () {
 
+        packet_move.setAttribute('animation__node', {
+            property: 'scale',
+            to: "0 0 0",
+            dur: packetParams.duration,
+            easing: 'linear',
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    startEvents: 'nodeAnim'	    
+        });
+
+	
+        packet.addEventListener('animationcomplete', function (event) {
 	    if (packet.id == finalPackets.length -1) {
 		// Animation is finished, clean up
 		animationState = "INIT";
 		showViews()
-		clearInterval(interval_id)
+//		clearInterval(interval_id)
 	    }
-	    
 
-	    // Destroy packet element
-            longitud = packet.children.length
-            nodeFromAnimation.removeAttribute('animation');
-            for (var a=0; a < longitud; a++) {
-                packet.children[0].remove()
-            }
-            packet.parentNode.removeChild(packet);
-	    
+
+	    if (event.detail.name == "animation") {
+		this.emit('nodeAnim', null, false)
+	    }
+
+
+	    if (event.detail.name == "animation__node"){
+		// Destroy packet element
+		longitud = packet.children.length
+		nodeFromAnimation.removeAttribute('animation');
+		for (var a=0; a < longitud; a++) {
+                    packet.children[0].remove()
+		}
+		packet.parentNode.removeChild(packet);
+
+		// inform controller
+		let playButton = document.querySelector("#playButton");
+		console.log("playButton.emit with start == " + packetParams.start)
+		playButton.emit("next", {start: packetParams.start}, false)
+	    }
         });
     },			 
 
@@ -1151,14 +1175,11 @@ AFRAME.registerComponent('packet', {
 	let packet = this.el
 	let packetParams = this.data
 	
-	
 	// 	scene.removeAttribute("network")
 	if (viewing_mode == "vr")
 	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	else
 	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
-	
-	
     }
 });
 
@@ -1166,7 +1187,7 @@ AFRAME.registerComponent('packet', {
 
 
 CURRENT_TIME=0
-var interval_id = 0
+latest_start = -2
 
 AFRAME.registerComponent('controller', {
 
@@ -1175,35 +1196,48 @@ AFRAME.registerComponent('controller', {
 	position: {type: 'vec3'}
     },
 
-    do_animate: function()
+    do_animate: function(event)
     {
-	next_packet < finalPackets.length
+	console.log("do_animate()")
+	console.log("latest_start: " + latest_start)
+	console.log("event.detail.start: " + event.detail.start)
+
+	
 	if (animationState == "PAUSED")
 	    return
+
+	if (latest_start == event.detail.start)
+	    return
+	latest_start = event.detail.start
 	
 	console.log("do_animate: " + CURRENT_TIME)
 	console.log("flying.length: " + flying.length)	
-	
-	while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
-	    let newPacket = finalPackets[next_packet].newPacket.components.packet
-	    newPacket.startAnimation()
-	    flying.push(finalPackets[next_packet].newPacket)
-	    next_packet += 1
+
+	let packets_ready = false
+	while (next_packet < finalPackets.length && !packets_ready){
+	    CURRENT_TIME += 500
+
+	    while (finalPackets[next_packet].packetDelay <= CURRENT_TIME){
+		let newPacket = finalPackets[next_packet].newPacket.components.packet
+		newPacket.startAnimation()
+		flying.push(finalPackets[next_packet].newPacket)
+		next_packet += 1
+		
+		packets_ready = true
+	    }
 	}
-	
-	CURRENT_TIME += 500
 	
     },
     
     
     init: function() {
 	console.log("init controller")
-	  
     
 	let PERIOD=this.data.PERIOD
 	let do_animate=this.do_animate
 
-    
+
+	
 	function event_listener_function(event) {
 	    console.log("controller click")
 	    
@@ -1225,9 +1259,13 @@ AFRAME.registerComponent('controller', {
 		
 		animationState = "MOVING"
 
-		
-		
-		interval_id = setInterval(do_animate, PERIOD)
+		// Initiate animation
+		//setTimeout(do_animate(0), 500)
+
+		// inform controller
+		playButton = document.querySelector("#playButton");
+		setTimeout(()=>{playButton.emit("next", {start: -1}, false)}, 500)
+
 		
 		break
 
@@ -1250,22 +1288,23 @@ AFRAME.registerComponent('controller', {
 
 		playButton.setAttribute('color', 'gray')
 
-
-
 		// Enviar a los paquetes en vuelo animation-resume
 		console.log("RESUMED: Packets flying: ")
 		for (const packet of flying){
 		    packet.emit("animation-resume", null, false)		
 		}
 		
-		
 		break
-            }
+	    } // switch
+
 	}
 
 
 	// play button
 	playButton = document.createElement('a-entity');
+
+	playButton.addEventListener('next', do_animate)
+	
         playButton.setAttribute('gltf-model', '#play_button');
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
 	let position = Object.assign({}, this.data.position)
@@ -1273,7 +1312,7 @@ AFRAME.registerComponent('controller', {
         playButton.setAttribute('position', position);
         playButton.setAttribute('color', 'orange');
         playButton.setAttribute('scale', '4.5 4.5 4.5');
-        playButton.setAttribute('id', 'startButton');
+        playButton.setAttribute('id', 'playButton');
         playButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
         playButton.addEventListener('mouseenter', function () {
@@ -1315,7 +1354,7 @@ AFRAME.registerComponent('controller', {
         resetButton.setAttribute('position', position);
         resetButton.setAttribute('color', 'orange');
         resetButton.setAttribute('scale', '3.5 3.5 3.5');
-        resetButton.setAttribute('id', 'startButton');
+        resetButton.setAttribute('id', 'resetButton');
         resetButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
         resetButton.addEventListener('mouseenter', function () {
@@ -2205,9 +2244,9 @@ function create_animations(finalPackets){
         newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
         newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
         newPacket.setAttribute('packet','toYPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','elementsScale', data.elementsScale);
         newPacket.setAttribute('packet','class', 'packetClass')
-        newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','id', currentPacket);
         newPacket.setAttribute('packet','start', finalPackets[currentPacket].packetDelay);
 
