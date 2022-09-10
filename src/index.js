@@ -546,7 +546,7 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     var textTemplate = document.getElementById(packetParams.id + '-template');
     textTemplateContent = infoText 
     textTemplate.innerHTML = textTemplateContent;
-    //eva 
+
     textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
     newInfoText.setAttribute('visible', true);
@@ -558,6 +558,8 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 
 AFRAME.registerComponent('packet', {
     schema: {
+        from: {default: null},
+        to: {default: null},
         xPosition: {type: 'number', default: 0},
         yPosition: {type: 'number', default: 1},
         zPosition: {type: 'number', default: 0},
@@ -586,35 +588,6 @@ AFRAME.registerComponent('packet', {
 
 	console.log("startAnimation() in state " + animationState )
 	
-	// Find in which node is now the packet based on the position of the packet
-	var nodeAnimation = nodeList[0]
-	packetXPosition = packetParams.xPosition * 15 * packetParams.elementsScale
-	packetZPosition = packetParams.zPosition * 15 * packetParams.elementsScale
-   	nodeXPosition = nodeList[0].position.split(',')[0]
-   	nodeZPosition = nodeList[0].position.split(',')[1]		    
-	var minDistance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
-
-	for (var k=1; k < nodeList.length; k++) {
-   	    nodeXPosition = nodeList[k].position.split(',')[0]
-   	    nodeZPosition = nodeList[k].position.split(',')[1]		    
-	    var distance = eucDistance([packetXPosition, packetZPosition],[nodeXPosition, nodeZPosition])
-
-	    if (distance < minDistance) {
-		nodeAnimation=nodeList[k]
-		minDistance = distance
-	    }
-	}
-	
-	// Animation of a node when a packet arrives to it
-        var nodeFromAnimation = document.getElementById(nodeAnimation.name);
-
-        // if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
-        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        // }else if(nodeAnimation.name.startsWith('hub')){
-        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        // }else if(nodeAnimation.name.startsWith('r')){
-        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        // }
         
         packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
 
@@ -1118,6 +1091,9 @@ AFRAME.registerComponent('packet', {
         }
 	
 
+
+//	var nodeAnimation = document.getElementById(packetParams.to.from);
+	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
             from: "0 0 0",
@@ -1136,7 +1112,7 @@ AFRAME.registerComponent('packet', {
 	    startEvents: "into_link",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
-	    enabled: 'false'
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 	
         packet_move.setAttribute('animation__into_node', {
@@ -1147,7 +1123,7 @@ AFRAME.registerComponent('packet', {
 	    startEvents: 'into_node',
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
-	    enabled: 'false'
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
         packet.addEventListener('animationcomplete__out_of_node', function (event) {
@@ -1156,7 +1132,6 @@ AFRAME.registerComponent('packet', {
 	    // event. Must be a bug of a-frame. So we enable it before
 	    // emitting event to activate it
 	    packet_move.setAttribute("animation__link", {enabled: 'true'})
-	    packet_move.components.animation__link.enabled = true
 	    this.emit('into_link', null, false)
 	    
 	});
@@ -1167,13 +1142,12 @@ AFRAME.registerComponent('packet', {
 	    // event. Must be a bug of a-frame. So we enable it before
 	    // emitting event to activate it
 	    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
-	    packet_move.components.animation__into_node.enabled = true
 	    this.emit('into_node', null, false)
+
+//	    animate_node_visited_by_packet(packetParams.to.from, nodeAnimation, packetParams)
 	    
 	});
-	
-				
-	    
+						    
         packet.addEventListener('animationcomplete__into_node', function (event) {
 	    if (packet.id == finalPackets.length - 1) {
 		// Animation is finished, clean up
@@ -1184,7 +1158,12 @@ AFRAME.registerComponent('packet', {
 
 	    // Destroy packet element
 	    longitud = packet.children.length
-	    nodeFromAnimation.removeAttribute('animation');
+
+	    // A bug of a-frame requires to remove animation if you want to repeat it
+	    // See https://github.com/aframevr/aframe/issues/4810
+	    // nodeAnimation.removeAttribute('animation__grow');
+	    // nodeAnimation.removeAttribute('animation__shrink');	    
+	    
 	    for (var a=0; a < longitud; a++) {
 		packet.children[0].remove()
 	    }
@@ -1211,6 +1190,40 @@ AFRAME.registerComponent('packet', {
 });
 
 
+function animate_node_visited_by_packet (nodeName, nodeAnimation, packetParams){
+    console.log("nodeName: ")
+    console.log(nodeName)    
+
+    console.log("nodeAnimation: ")
+    console.log(nodeAnimation)    
+    
+        if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
+            // nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
+
+            nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})
+
+            nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0.0006*packetParams.elementsScale, y: 0.0006*packetParams.elementsScale, z: 0.0006*packetParams.elementsScale}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
+	    
+	    
+            nodeAnimation.addEventListener('animationcomplete__grow', function (event) {
+		// Must be not enabled because if pause -> resume, the
+		// animation is started before receiving the start
+		// event. Must be a bug of a-frame. So we enable it before
+		// emitting event to activate it
+		nodeAnimation.setAttribute("animation__shrink", {enabled: 'true'})
+		this.emit('shrink_node', null, false)
+	    });
+	    
+	    
+	    
+	    
+        }else if(nodeName.startsWith('hub')){
+            nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
+        }else if(nodeName.startsWith('r')){
+            nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
+        }
+
+}
 
 
 CURRENT_TIME=0
@@ -1244,7 +1257,7 @@ AFRAME.registerComponent('controller', {
 	while (next_packet < finalPackets.length && !packets_ready){
 	    CURRENT_TIME += 500
 
-	    while (finalPackets[next_packet].packetDelay <= CURRENT_TIME){
+	    while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
 		let newPacket = finalPackets[next_packet].newPacket.components.packet
 		newPacket.startAnimation()
 		flying.push(finalPackets[next_packet].newPacket)
@@ -2045,6 +2058,8 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
         packetDelay = TICK * j
         finalPackets.push({
+	    'from': from,
+	    'to': to,
             'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale,
             'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
             'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
@@ -2084,6 +2099,8 @@ function animatePackets(packets, connectionsLinks, data){
             if (from.to.includes(to.from)){ // hwaddr destino del paquete es vecino del nodo que estamos considerando (from)
                 packetDelay = TICK * j
                 finalPackets.push({
+		    'from': from,
+		    'to': to,
                     'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale,
                     'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
                     'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
@@ -2115,6 +2132,8 @@ function animatePackets(packets, connectionsLinks, data){
 		
                 packetDelay = TICK * j
                 finalPackets.push({
+		    'from': from,
+		    'to': to,
                     'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
                     'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale, 
                     'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
@@ -2143,6 +2162,8 @@ function animatePackets(packets, connectionsLinks, data){
                         packetDelay = TICK * j + DURATION
 			
 			finalPackets.push({
+			    'from': from,
+			    'to': to,
                             'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
                             'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
                             'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
@@ -2176,6 +2197,8 @@ function animatePackets(packets, connectionsLinks, data){
 	    if (to.from.startsWith('hub')){
                 packetDelay = TICK * j
                 finalPackets.push({
+		    'from': from,
+		    'to': to,
 		    'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
 		    'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale, 
 		    'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
@@ -2204,6 +2227,8 @@ function animatePackets(packets, connectionsLinks, data){
                         packetDelay = TICK * j + DURATION
 			
 			finalPackets.push({
+			    'from': from,
+			    'to': to,
 			    'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
 			    'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
 			    'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
@@ -2228,6 +2253,8 @@ function animatePackets(packets, connectionsLinks, data){
 	    } else {
 		packetDelay = TICK * j
 		finalPackets.push({
+		    'from': from,
+		    'to': to,
 		    'xPosition': (from.position.split(',')[0] / 15)/data.elementsScale, 
 		    'zPosition': (from.position.split(',')[1] / 15)/data.elementsScale,
 		    'toXPosition': (to.position.split(',')[0] / 15)/data.elementsScale,
@@ -2265,6 +2292,8 @@ function create_animations(finalPackets){
     escena = document.querySelector('#escena');
     for (var currentPacket = 0; currentPacket < finalPackets.length; currentPacket++) {
         var newPacket = document.createElement('a-entity');
+        newPacket.setAttribute('packet','from', finalPackets[currentPacket].from.from);
+        newPacket.setAttribute('packet','to', finalPackets[currentPacket].to.from);	
         newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
         newPacket.setAttribute('packet','yPosition', ' ' + data.height + ' ');
         newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
