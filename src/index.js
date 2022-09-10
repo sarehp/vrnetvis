@@ -24,8 +24,8 @@ var PREVIOUS_VIEW=""
 // First element in array will be the bottommost option in the view selector
 var VIEWS_MENU=""
 
-var TICK = 2000 // 10000
-var DURATION = 1000 // 5000
+var TICK = 3000 // 10000
+var DURATION = 1500 // 5000
 var COLORS = {dns:"goldenrod",
 	      http:"gold",
 	      dataInfo:"white",
@@ -608,13 +608,13 @@ AFRAME.registerComponent('packet', {
 	// Animation of a node when a packet arrives to it
         var nodeFromAnimation = document.getElementById(nodeAnimation.name);
 
-        if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
-            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        }else if(nodeAnimation.name.startsWith('hub')){
-            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        }else if(nodeAnimation.name.startsWith('r')){
-            nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
-        }
+        // if(nodeAnimation.name.startsWith('pc') || nodeAnimation.name.startsWith('dns')){
+        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        // }else if(nodeAnimation.name.startsWith('hub')){
+        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        // }else if(nodeAnimation.name.startsWith('r')){
+        //     nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, loop: '2', dur: '1000', easing: 'linear' })
+        // }
         
         packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
 
@@ -1123,19 +1123,20 @@ AFRAME.registerComponent('packet', {
             from: "0 0 0",
 	    to: "1 1 1",
             dur: packetParams.duration/2,
-            easing: 'linear',
             pauseEvents:'animation-pause', 
-            resumeEvents:'animation-resume'
+            resumeEvents:'animation-resume',
+            easing: 'linear'
         });
 
         packet_move.setAttribute('animation__link', {
             property: 'position',
             to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
             dur: packetParams.duration,
-            easing: 'linear',
+            easing: 'easeInOutQuart',
+	    startEvents: "into_link",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
-	    startEvents: "linkAnim"
+	    enabled: 'false'
         });
 	
         packet_move.setAttribute('animation__into_node', {
@@ -1143,44 +1144,56 @@ AFRAME.registerComponent('packet', {
             to: "0 0 0",
             dur: packetParams.duration/2,
             easing: 'linear',
+	    startEvents: 'into_node',
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
-	    startEvents: 'nodeAnim'	    
+	    enabled: 'false'
         });
 
+        packet.addEventListener('animationcomplete__out_of_node', function (event) {
+	    // Must be not enabled because if pause -> resume, the
+	    // animation is started before receiving the start
+	    // event. Must be a bug of a-frame. So we enable it before
+	    // emitting event to activate it
+	    packet_move.setAttribute("animation__link", {enabled: 'true'})
+	    packet_move.components.animation__link.enabled = true
+	    this.emit('into_link', null, false)
+	    
+	});
+
+        packet.addEventListener('animationcomplete__link', function (event) {
+	    // Must be not enabled because if pause -> resume, the
+	    // animation is started before receiving the start
+	    // event. Must be a bug of a-frame. So we enable it before
+	    // emitting event to activate it
+	    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
+	    packet_move.components.animation__into_node.enabled = true
+	    this.emit('into_node', null, false)
+	    
+	});
 	
-        packet.addEventListener('animationcomplete', function (event) {
-	    if (packet.id == finalPackets.length -1) {
+				
+	    
+        packet.addEventListener('animationcomplete__into_node', function (event) {
+	    if (packet.id == finalPackets.length - 1) {
 		// Animation is finished, clean up
 		animationState = "INIT";
 		showViews()
 //		clearInterval(interval_id)
 	    }
 
-
-	    if (event.detail.name == "animation__out_of_node") {
-		this.emit('linkAnim', null, false)
+	    // Destroy packet element
+	    longitud = packet.children.length
+	    nodeFromAnimation.removeAttribute('animation');
+	    for (var a=0; a < longitud; a++) {
+		packet.children[0].remove()
 	    }
-
-	    if (event.detail.name == "animation__link") {
-		this.emit('nodeAnim', null, false)
-	    }
-
-
-	    if (event.detail.name == "animation__into_node"){
-		// Destroy packet element
-		longitud = packet.children.length
-		nodeFromAnimation.removeAttribute('animation');
-		for (var a=0; a < longitud; a++) {
-                    packet.children[0].remove()
-		}
-		packet.parentNode.removeChild(packet);
-
-		// inform controller
-		let playButton = document.querySelector("#playButton");
-		console.log("playButton.emit with start == " + packetParams.start)
-		playButton.emit("next", {start: packetParams.start}, false)
-	    }
+	    packet.parentNode.removeChild(packet);
+	    
+	    // inform controller
+	    let playButton = document.querySelector("#playButton");
+	    console.log("playButton.emit with start == " + packetParams.start)
+	    playButton.emit("next", {start: packetParams.start}, false)
         });
     },			 
 
@@ -1217,8 +1230,8 @@ AFRAME.registerComponent('controller', {
 	console.log("event.detail.start: " + event.detail.start)
 
 	
-	if (animationState == "PAUSED")
-	    return
+	// if (animationState == "PAUSED")
+	//     return
 
 	if (latest_start == event.detail.start)
 	    return
