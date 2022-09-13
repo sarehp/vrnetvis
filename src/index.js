@@ -712,7 +712,20 @@ AFRAME.registerComponent('packet', {
             index = Object.keys(levels).findIndex(item => item === 'eth')
 
             let newEthBox = document.createElement('a-box');
-            newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
+
+	    packet.addEventListener('eliminateEth', function(event){
+		console.log('eliminateEth')
+
+		newEthBox.setAttribute('animation', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '3000', easing: 'linear', "loop": "5" })
+		newEthBox.addEventListener('animationcomplete', function(event){
+		    newEthBox.setAttribute('visible', 'false')
+		});
+		
+	    });
+	
+
+	    
+	    newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
             newEthBox.setAttribute('color', getColor("ethernet"));
             newEthBox.setAttribute('visible', true); 
 
@@ -722,7 +735,6 @@ AFRAME.registerComponent('packet', {
 		showInfoText("ethernet", packetParams, newInfoText, newEthBox)
 	    
 
-	    
             newEthBox.addEventListener('mouseenter', function () {
                 newEthBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
             });
@@ -1091,8 +1103,9 @@ AFRAME.registerComponent('packet', {
         }
 	
 
-
-//	var nodeAnimation = document.getElementById(packetParams.to.from);
+	console.log("packetParams")
+	console.log(packetParams)
+	var nodeAnimation = document.getElementById(packetParams.to);
 	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
@@ -1126,7 +1139,8 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
-        packet.addEventListener('animationcomplete__out_of_node', function (event) {
+
+	packet.addEventListener('animationcomplete__out_of_node', function (event) {
 	    // Must be not enabled because if pause -> resume, the
 	    // animation is started before receiving the start
 	    // event. Must be a bug of a-frame. So we enable it before
@@ -1144,8 +1158,7 @@ AFRAME.registerComponent('packet', {
 	    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
 	    this.emit('into_node', null, false)
 
-//	    animate_node_visited_by_packet(packetParams.to.from, nodeAnimation, packetParams)
-	    
+
 	});
 						    
         packet.addEventListener('animationcomplete__into_node', function (event) {
@@ -1153,17 +1166,15 @@ AFRAME.registerComponent('packet', {
 		// Animation is finished, clean up
 		animationState = "INIT";
 		showViews()
-//		clearInterval(interval_id)
 	    }
 
+	    animate_packet_arrives(packetParams.to, nodeAnimation, packetParams, packet)
+
+
+	    
 	    // Destroy packet element
 	    longitud = packet.children.length
 
-	    // A bug of a-frame requires to remove animation if you want to repeat it
-	    // See https://github.com/aframevr/aframe/issues/4810
-	    // nodeAnimation.removeAttribute('animation__grow');
-	    // nodeAnimation.removeAttribute('animation__shrink');	    
-	    
 	    for (var a=0; a < longitud; a++) {
 		packet.children[0].remove()
 	    }
@@ -1190,32 +1201,66 @@ AFRAME.registerComponent('packet', {
 });
 
 
-function animate_node_visited_by_packet (nodeName, nodeAnimation, packetParams){
+function animate_packet_arrives (nodeName, nodeAnimation, packetParams, packet){
     console.log("nodeName: ")
     console.log(nodeName)    
 
     console.log("nodeAnimation: ")
-    console.log(nodeAnimation)    
+    console.log(nodeAnimation)
+
+    console.log("packet")
+    console.log(packet)
+
+    console.log("packetParams")
+    console.log(packetParams)
     
         if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
-            // nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.012/packetParams.elementsScale, y: 0.012/packetParams.elementsScale, z: 0.012/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
+            nodeAnimation.setAttribute("model-opacity", 0.1)
+	    
+            packet.setAttribute('animation__shrink', {property: 'scale', to: {x: 0.003*packetParams.elementsScale, y: 0.003*packetParams.elementsScale, z: 0.003*packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})	    
 
-            nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})
+//            nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})
 
-            nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0.0006*packetParams.elementsScale, y: 0.0006*packetParams.elementsScale, z: 0.0006*packetParams.elementsScale}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
+
+
+            // nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
+
+            nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0, y:0, z:0}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
+	    
+            packet.setAttribute('animation__grow', {property: 'scale', to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, dur: '1000', easing: 'linear' })	    
+
+
+	    // Eliminar eth
+	    packet.emit('eliminateEth', null, false)
+
 	    
 	    
-            nodeAnimation.addEventListener('animationcomplete__grow', function (event) {
-		// Must be not enabled because if pause -> resume, the
-		// animation is started before receiving the start
-		// event. Must be a bug of a-frame. So we enable it before
-		// emitting event to activate it
-		nodeAnimation.setAttribute("animation__shrink", {enabled: 'true'})
-		this.emit('shrink_node', null, false)
-	    });
+            // nodeAnimation.addEventListener('animationcomplete__grow', function (event) {
+	    // 	// Must be not enabled because if pause -> resume, the
+	    // 	// animation is started before receiving the start
+	    // 	// event. Must be a bug of a-frame. So we enable it before
+	    // 	// emitting event to activate it
+	    // 	nodeAnimation.setAttribute("animation__shrink", {enabled: 'true'})
+	    // 	this.emit('shrink_node', null, false)
+	    // });
+
+            // packet.addEventListener('animationcomplete__grow', function (event) {
+	    // 	// Must be not enabled because if pause -> resume, the
+	    // 	// animation is started before receiving the start
+	    // 	// event. Must be a bug of a-frame. So we enable it before
+	    // 	// emitting event to activate it
+	    // 	packet.setAttribute("animation__shrink", {enabled: 'true'})
+	    // 	packet.emit('shrink_node', null, false)
+	    // });
 	    
-	    
-	    
+            // nodeAnimation.addEventListener('animationcomplete__shrink', function (event) {
+	    // 	// A bug of a-frame requires to remove animation if you want to repeat it
+	    // 	// See https://github.com/aframevr/aframe/issues/4810
+	    // 	nodeAnimation.removeAttribute('animation__grow');
+	    // 	nodeAnimation.removeAttribute('animation__shrink');
+
+	    // 	nodeAnimation.setAttribute("model-opacity", 1.0)
+	    // });	    
 	    
         }else if(nodeName.startsWith('hub')){
             nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
@@ -1224,6 +1269,29 @@ function animate_node_visited_by_packet (nodeName, nodeAnimation, packetParams){
         }
 
 }
+
+
+
+AFRAME.registerComponent('model-opacity', {
+  schema: {default: 1.0},
+  init: function () {
+    this.el.addEventListener('model-loaded', this.update.bind(this));
+  },
+  update: function () {
+    var mesh = this.el.getObject3D('mesh');
+    var data = this.data;
+    if (!mesh) { return; }
+    mesh.traverse(function (node) {
+      if (node.isMesh) {
+        node.material.opacity = data;
+        node.material.transparent = data < 1.0;
+        node.material.needsUpdate = true;
+      }
+    });
+  }
+});
+
+
 
 
 CURRENT_TIME=0
@@ -2162,8 +2230,8 @@ function animatePackets(packets, connectionsLinks, data){
                         packetDelay = TICK * j + DURATION
 			
 			finalPackets.push({
-			    'from': from,
-			    'to': to,
+			    'from': secondFrom,
+			    'to': secondTo,
                             'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
                             'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
                             'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
@@ -2227,8 +2295,8 @@ function animatePackets(packets, connectionsLinks, data){
                         packetDelay = TICK * j + DURATION
 			
 			finalPackets.push({
-			    'from': from,
-			    'to': to,
+			    'from': secondFrom,
+			    'to': secondTo,
 			    'xPosition': (secondFrom.position.split(',')[0] / 15)/data.elementsScale, 
 			    'zPosition': (secondFrom.position.split(',')[1] / 15)/data.elementsScale, 
 			    'toXPosition': (secondTo.position.split(',')[0] / 15)/data.elementsScale,
