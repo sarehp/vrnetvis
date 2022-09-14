@@ -1110,15 +1110,20 @@ AFRAME.registerComponent('packet', {
         }
 	
 
-	console.log("packetParams")
-	console.log(packetParams)
 
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
 
-	// anime(packet_move, 'out_of_node')
-	//     .then(() => anime(nodeAnimation, 'shrink'))
-	//     .then(() => packet.emit('eliminateEth', null, false))
+	anime(packet_move, 'out_of_node')
+	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
+	    .then(() => anime(packet_move, 'link'))
+	    .then(() => {
+		packet_move.setAttribute("animation__into_node", {enabled: 'true'})
+		packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
+	    })
+	    .then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+
+
 
 	
         packet_move.setAttribute('animation__out_of_node', {
@@ -1136,7 +1141,7 @@ AFRAME.registerComponent('packet', {
             to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
             dur: packetParams.duration,
             easing: 'easeInOutQuart',
-	    startEvents: "into_link",
+	    startEvents: "link",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
@@ -1166,36 +1171,6 @@ AFRAME.registerComponent('packet', {
         });
 
 
-	packet.addEventListener('animationcomplete__out_of_node', function (event) {
-	    // Must be not enabled because if pause -> resume, the
-	    // animation is started before receiving the start
-	    // event. Must be a bug of a-frame. So we enable it before
-	    // emitting event to activate it
-
-
-	    
-	    animate_node_down(nodeAnimationFrom, packetParams, packet)
-
-	    packet_move.setAttribute("animation__link", {enabled: 'true'})
-	    this.emit('into_link', null, false)
-	});
-
-        packet.addEventListener('animationcomplete__link', function (event) {
-	    // Must be not enabled because if pause -> resume, the
-	    // animation is started before receiving the start
-	    // event. Must be a bug of a-frame. So we enable it before
-	    // emitting event to activate it
-	    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
-	    packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})	    
-
-
-	    animate_packet_arrives(nodeAnimationTo, packetParams, packet)
-
-
-	    
-
-	});
-						    
         packet.addEventListener('animationcomplete__into_node', function (event) {
 	    if (packet.id == finalPackets.length - 1) {
 		// Animation is finished, clean up
@@ -1260,36 +1235,13 @@ const anime = (target, animation_name) =>
 		  });
 
 
-function animate_node_down (nodeAnimation, packetParams, packet){
-    nodeName = packetParams.from
-    
-    if(! nodeName.startsWith('hub')) {
-	console.log('animate_node_down')
-
-	// nodeAnimation.removeAttribute('animation__shrink')
-	// nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
-
-	// nodeAnimation.addEventListener('animationcomplete__shrink', function(event){
-	//     nodeAnimation.setAttribute("model-opacity", 1.0)
-	// });
-	
-	nodeAnimation.setAttribute("model-opacity", 1.0)
-	
-
-
-    }
-
-    
-    
-}
-
 
 function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
         
     
     if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
-	nodeAnimation.setAttribute("model-opacity", 0.1)
+//	nodeAnimation.setAttribute("model-opacity", 0.1)
 
 
 	// nodeAnimation.removeAttribute('animation__grow')
