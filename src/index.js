@@ -716,11 +716,16 @@ AFRAME.registerComponent('packet', {
 	    packet.addEventListener('eliminateEth', function(event){
 		console.log('eliminateEth')
 
-		newEthBox.setAttribute('animation', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '3000', easing: 'linear', "loop": "5" })
-		newEthBox.addEventListener('animationcomplete', function(event){
+		newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '500', easing: 'linear', "loop": "5" })
+
+		newEthBox.addEventListener('animationcomplete__eth', function(event){
+		    console.log("animationcomplete__eth")
 		    newEthBox.setAttribute('visible', 'false')
+		    
+		    next_packet_anim(packetParams)
+		    destroy_packet_anim(packet)
+		    
 		});
-		
 	    });
 	
 
@@ -1105,7 +1110,9 @@ AFRAME.registerComponent('packet', {
 
 	console.log("packetParams")
 	console.log(packetParams)
-	var nodeAnimation = document.getElementById(packetParams.to);
+
+	var nodeAnimationTo = document.getElementById(packetParams.to);
+	var nodeAnimationFrom = document.getElementById(packetParams.from);	
 	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
@@ -1128,9 +1135,21 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 	
+
+        packet_move.setAttribute('animation__into_node_final', {
+            property: 'scale',
+            to: {x: 0, y: 0, z: 0},
+            dur: packetParams.duration/2,
+            easing: 'linear',
+	    startEvents: 'into_node_final',
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
+        });
+
         packet_move.setAttribute('animation__into_node', {
             property: 'scale',
-            to: "0 0 0",
+            to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
             dur: packetParams.duration/2,
             easing: 'linear',
 	    startEvents: 'into_node',
@@ -1145,9 +1164,13 @@ AFRAME.registerComponent('packet', {
 	    // animation is started before receiving the start
 	    // event. Must be a bug of a-frame. So we enable it before
 	    // emitting event to activate it
+
+
+	    
+	    animate_node_down(nodeAnimationFrom, packetParams, packet)
+
 	    packet_move.setAttribute("animation__link", {enabled: 'true'})
 	    this.emit('into_link', null, false)
-	    
 	});
 
         packet.addEventListener('animationcomplete__link', function (event) {
@@ -1156,8 +1179,13 @@ AFRAME.registerComponent('packet', {
 	    // event. Must be a bug of a-frame. So we enable it before
 	    // emitting event to activate it
 	    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
-	    this.emit('into_node', null, false)
+	    packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})	    
 
+
+	    animate_packet_arrives(nodeAnimationTo, packetParams, packet)
+
+
+	    
 
 	});
 						    
@@ -1167,27 +1195,25 @@ AFRAME.registerComponent('packet', {
 		animationState = "INIT";
 		showViews()
 	    }
-
-	    animate_packet_arrives(packetParams.to, nodeAnimation, packetParams, packet)
-
-
-	    
-	    // Destroy packet element
-	    longitud = packet.children.length
-
-	    for (var a=0; a < longitud; a++) {
-		packet.children[0].remove()
-	    }
-	    packet.parentNode.removeChild(packet);
-	    
-	    // inform controller
-	    let playButton = document.querySelector("#playButton");
-	    console.log("playButton.emit with start == " + packetParams.start)
-	    playButton.emit("next", {start: packetParams.start}, false)
         });
+
+        packet.addEventListener('animationcomplete__into_node_final', function (event) {
+	    if (packet.id == finalPackets.length - 1) {
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+	    }
+
+	    next_packet_anim(packetParams)
+	    destroy_packet_anim(packet)
+	});
+	    
+	    
+
+	
     },			 
 
-
+    
     init: function () {
 	let packet = this.el
 	let packetParams = this.data
@@ -1200,76 +1226,77 @@ AFRAME.registerComponent('packet', {
     }
 });
 
+function destroy_packet_anim(packet){
+    // Destroy packet element
+    longitud = packet.children.length
 
-function animate_packet_arrives (nodeName, nodeAnimation, packetParams, packet){
-    console.log("nodeName: ")
-    console.log(nodeName)    
-
-    console.log("nodeAnimation: ")
-    console.log(nodeAnimation)
-
-    console.log("packet")
-    console.log(packet)
-
-    console.log("packetParams")
-    console.log(packetParams)
-    
-        if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
-            nodeAnimation.setAttribute("model-opacity", 0.1)
-	    
-            packet.setAttribute('animation__shrink', {property: 'scale', to: {x: 0.003*packetParams.elementsScale, y: 0.003*packetParams.elementsScale, z: 0.003*packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})	    
-
-//            nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear'})
-
-
-
-            // nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
-
-            nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.060/packetParams.elementsScale, y: 0.060/packetParams.elementsScale, z: 0.060/packetParams.elementsScale}, to: {x: 0, y:0, z:0}, dur: '1000', easing: 'linear', enabled: "false", "startEvents": "shrink_node" })
-	    
-            packet.setAttribute('animation__grow', {property: 'scale', to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, dur: '1000', easing: 'linear' })	    
-
-
-	    // Eliminar eth
-	    packet.emit('eliminateEth', null, false)
-
-	    
-	    
-            // nodeAnimation.addEventListener('animationcomplete__grow', function (event) {
-	    // 	// Must be not enabled because if pause -> resume, the
-	    // 	// animation is started before receiving the start
-	    // 	// event. Must be a bug of a-frame. So we enable it before
-	    // 	// emitting event to activate it
-	    // 	nodeAnimation.setAttribute("animation__shrink", {enabled: 'true'})
-	    // 	this.emit('shrink_node', null, false)
-	    // });
-
-            // packet.addEventListener('animationcomplete__grow', function (event) {
-	    // 	// Must be not enabled because if pause -> resume, the
-	    // 	// animation is started before receiving the start
-	    // 	// event. Must be a bug of a-frame. So we enable it before
-	    // 	// emitting event to activate it
-	    // 	packet.setAttribute("animation__shrink", {enabled: 'true'})
-	    // 	packet.emit('shrink_node', null, false)
-	    // });
-	    
-            // nodeAnimation.addEventListener('animationcomplete__shrink', function (event) {
-	    // 	// A bug of a-frame requires to remove animation if you want to repeat it
-	    // 	// See https://github.com/aframevr/aframe/issues/4810
-	    // 	nodeAnimation.removeAttribute('animation__grow');
-	    // 	nodeAnimation.removeAttribute('animation__shrink');
-
-	    // 	nodeAnimation.setAttribute("model-opacity", 1.0)
-	    // });	    
-	    
-        }else if(nodeName.startsWith('hub')){
-            nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 2/packetParams.elementsScale, y: 2/packetParams.elementsScale, z: 2/packetParams.elementsScale}, to: {x: 1/packetParams.elementsScale, y: 1/packetParams.elementsScale, z: 1/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
-        }else if(nodeName.startsWith('r')){
-            nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
-        }
-
+    for (var a=0; a < longitud; a++) {
+	packet.children[0].remove()
+    }
+    packet.parentNode.removeChild(packet);
 }
 
+function next_packet_anim(packetParams) {
+    console.log ("next_packet_anim()")
+    // inform controller
+    let playButton = document.querySelector("#playButton");
+    console.log("playButton.emit with start == " + packetParams.start)
+    playButton.emit("next", {start: packetParams.start}, false)
+};
+
+
+function animate_node_down (nodeAnimation, packetParams, packet){
+    nodeName = packetParams.from
+    
+    if(! nodeName.startsWith('hub')) {
+	console.log('animate_node_down')
+
+	nodeAnimation.removeAttribute('animation__shrink')
+	nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
+
+	nodeAnimation.addEventListener('animationcomplete__shrink', function(event){
+	    nodeAnimation.setAttribute("model-opacity", 1.0)
+	});
+	
+
+	
+
+
+    }
+
+    
+    
+}
+
+
+function animate_packet_arrives (nodeAnimation, packetParams, packet){
+    let nodeName = packetParams.to
+        
+    
+    if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
+	nodeAnimation.setAttribute("model-opacity", 0.1)
+
+
+	nodeAnimation.removeAttribute('animation__grow')
+        nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
+
+	
+	// Eliminar eth
+	packet.emit('eliminateEth', null, false)
+		
+	
+    }else if(nodeName.startsWith('hub')){
+	packet.emit('into_node_final', null, false)
+	
+	
+    }else if(nodeName.startsWith('r')){
+
+	
+	nodeAnimation.setAttribute("model-opacity", 0.1)
+        nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
+    }
+    
+}
 
 
 AFRAME.registerComponent('model-opacity', {
