@@ -714,23 +714,10 @@ AFRAME.registerComponent('packet', {
             index = Object.keys(levels).findIndex(item => item === 'eth')
 
             let newEthBox = document.createElement('a-box');
+	    newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '500', easing: 'linear', "loop": "5", startEvents: "eth"})
 
-	    packet.addEventListener('eliminateEth', function(event){
-		console.log('eliminateEth')
-		
-		newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '500', easing: 'linear', "loop": "5" })
-		
-		newEthBox.addEventListener('animationcomplete__eth', function(event){
-		    console.log("animationcomplete__eth")
-		    newEthBox.setAttribute('visible', 'false')
-		    
-		    next_packet_anim(packetParams)
-		    destroy_packet_anim(packet)
-		    
-		});
-	    });
+	    packet.ethBox = newEthBox
 	    
-
 	    
 	    newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
             newEthBox.setAttribute('color', getColor("ethernet"));
@@ -1114,6 +1101,9 @@ AFRAME.registerComponent('packet', {
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
 
+	console.log("packet_move")
+	console.log(packet_move)
+	
 	anime(packet_move, 'out_of_node')
 	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
 	    .then(() => anime(packet_move, 'link'))
@@ -1170,27 +1160,17 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
-
-        packet.addEventListener('animationcomplete__into_node', function (event) {
-	    if (packet.id == finalPackets.length - 1) {
-		// Animation is finished, clean up
-		animationState = "INIT";
-		showViews()
-	    }
+        packet_move.setAttribute('animation__park', {
+            property: 'position',
+            to: {x: packetParams.toXPosition, y: 5, z: packetParams.toZPosition},
+            dur: packetParams.duration,
+            easing: 'easeInOutQuart',
+	    startEvents: "park",
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
-        packet.addEventListener('animationcomplete__into_node_final', function (event) {
-	    if (packet.id == finalPackets.length - 1) {
-		// Animation is finished, clean up
-		animationState = "INIT";
-		showViews()
-	    }
-
-	    next_packet_anim(packetParams)
-	    destroy_packet_anim(packet)
-	});
-	    
-	    
 
 	
     },			 
@@ -1240,30 +1220,33 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
         
     
-    if(nodeName.startsWith('pc') || nodeName.startsWith('dns')){
-//	nodeAnimation.setAttribute("model-opacity", 0.1)
+    if(nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r')){
+	//	nodeAnimation.setAttribute("model-opacity", 0.1)
 
-
-	// nodeAnimation.removeAttribute('animation__grow')
-        nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear', startEvents: 'grow'})
-
-        nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '3000', easing: 'linear', startEvents: 'shrink'})
 	
-	
-	// Eliminar eth
-	packet.emit('eliminateEth', null, false)
+	anime(packet.ethBox, 'eth')
+	    .then(() => packet.ethBox.setAttribute('visible', 'false'))
+	    .then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
+	    .then(() => anime(packet, 'park'))
+	    .then(() => {
+		next_packet_anim(packetParams)
+		destroy_packet_anim(packet)
+	    })
 
 	
     }else if(nodeName.startsWith('hub')){
-	packet.emit('into_node_final', null, false)
+	anime(packet, 'into_node_final')
+	    .then (() => {
+		if (packet.id == finalPackets.length - 1) {
+		    // Animation is finished, clean up
+		    animationState = "INIT";
+		    showViews()
+		}
+		
+		next_packet_anim(packetParams)
+		destroy_packet_anim(packet)
+	    })
 	
-	
-    }else if(nodeName.startsWith('r')){
-
-	packet.emit('into_node', null, false)
-	
-//	nodeAnimation.setAttribute("model-opacity", 0.1)
-        nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
     }
     
 }
@@ -1882,7 +1865,8 @@ function shiftCoords (from, to, elementsScale){
     
 
     
-    shift_x = 0.2* Math.abs(to.x-from.x) 
+    shift_x = 0.2* Math.abs(to.x-from.x)
+
 
     if (to.x > from.x && to.z > from.z){
 	coordinates.x += shift_x;
@@ -2104,11 +2088,40 @@ function  readPackets(responseParse) {
 	
 	
     }// for
-    
+
+
+    if  (VIEW == "ALL") {
+    	packets = swap_IP_ARP (packets)
+    }
+
     return packets;
 }
 
+function swap_IP_ARP (packets){
+    // We assume "arp request" / "arp reply" / "ip" they all appear
+    // together and in that order
 
+    let i = 0
+    while(i < packets.length){
+	if ("arp" in packets[i] &&  packets[i]["arp"]["arp.opcode"] == 1){
+	    swap = packets[i+2]
+	    packets[i+2] = packets[i+1]
+	    packets[i+1] = swap
+	    swap = packets[i]
+	    packets[i] = packets[i+1]
+	    packets[i+1] = swap
+
+	    console.log("exchanged")
+	    
+	    i+=3
+	}
+	i+=1
+    }
+
+    console.log (packets)
+    
+    return packets
+}
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
     //    var finalPackets = []
@@ -2344,8 +2357,6 @@ function animatePackets(packets, connectionsLinks, data){
         }
     }
     
-    console.log(finalPackets)
-
 
     create_animations(finalPackets)
 }
