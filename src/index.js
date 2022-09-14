@@ -1,3 +1,9 @@
+/* global AFRAME */
+if (typeof AFRAME === 'undefined') {
+    throw new Error('Component attempted to register before AFRAME was available.');
+}
+
+
 //////////
 // GLOBALS
 var viewing_mode = ""
@@ -46,10 +52,6 @@ function isEndToEndVIEW() {
 
 
 
-/* global AFRAME */
-if (typeof AFRAME === 'undefined') {
-    throw new Error('Component attempted to register before AFRAME was available.');
-}
 
 AFRAME.registerComponent('selector', {
     init: function() {
@@ -715,9 +717,9 @@ AFRAME.registerComponent('packet', {
 
 	    packet.addEventListener('eliminateEth', function(event){
 		console.log('eliminateEth')
-
+		
 		newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '500', easing: 'linear', "loop": "5" })
-
+		
 		newEthBox.addEventListener('animationcomplete__eth', function(event){
 		    console.log("animationcomplete__eth")
 		    newEthBox.setAttribute('visible', 'false')
@@ -727,7 +729,7 @@ AFRAME.registerComponent('packet', {
 		    
 		});
 	    });
-	
+	    
 
 	    
 	    newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
@@ -1113,11 +1115,16 @@ AFRAME.registerComponent('packet', {
 
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
+
+	// anime(packet_move, 'out_of_node')
+	//     .then(() => anime(nodeAnimation, 'shrink'))
+	//     .then(() => packet.emit('eliminateEth', null, false))
+
 	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
             from: "0 0 0",
-	    to: "1 1 1",
+	    to: "2 2 2",
             dur: packetParams.duration/2,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -1245,20 +1252,28 @@ function next_packet_anim(packetParams) {
 };
 
 
+const anime = (target, animation_name) =>
+      new Promise((resolve) =>
+		  {
+		      target.addEventListener('animationcomplete__' + animation_name, resolve)		      
+		      target.emit(animation_name, null, false);
+		  });
+
+
 function animate_node_down (nodeAnimation, packetParams, packet){
     nodeName = packetParams.from
     
     if(! nodeName.startsWith('hub')) {
 	console.log('animate_node_down')
 
-	nodeAnimation.removeAttribute('animation__shrink')
-	nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
+	// nodeAnimation.removeAttribute('animation__shrink')
+	// nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
 
-	nodeAnimation.addEventListener('animationcomplete__shrink', function(event){
-	    nodeAnimation.setAttribute("model-opacity", 1.0)
-	});
+	// nodeAnimation.addEventListener('animationcomplete__shrink', function(event){
+	//     nodeAnimation.setAttribute("model-opacity", 1.0)
+	// });
 	
-
+	nodeAnimation.setAttribute("model-opacity", 1.0)
 	
 
 
@@ -1277,13 +1292,15 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	nodeAnimation.setAttribute("model-opacity", 0.1)
 
 
-	nodeAnimation.removeAttribute('animation__grow')
-        nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear'})
+	// nodeAnimation.removeAttribute('animation__grow')
+        nodeAnimation.setAttribute('animation__grow', {property: 'scale', to: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, from: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '500', easing: 'linear', startEvents: 'grow'})
 
+        nodeAnimation.setAttribute('animation__shrink', {property: 'scale', from: {x: 0.048/packetParams.elementsScale, y: 0.048/packetParams.elementsScale, z: 0.048/packetParams.elementsScale}, to: {x: 0.006*packetParams.elementsScale, y: 0.006*packetParams.elementsScale, z: 0.006*packetParams.elementsScale}, dur: '3000', easing: 'linear', startEvents: 'shrink'})
+	
 	
 	// Eliminar eth
 	packet.emit('eliminateEth', null, false)
-		
+
 	
     }else if(nodeName.startsWith('hub')){
 	packet.emit('into_node_final', null, false)
@@ -1291,8 +1308,9 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	
     }else if(nodeName.startsWith('r')){
 
+	packet.emit('into_node', null, false)
 	
-	nodeAnimation.setAttribute("model-opacity", 0.1)
+//	nodeAnimation.setAttribute("model-opacity", 0.1)
         nodeAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.016/packetParams.elementsScale, y: 0.016/packetParams.elementsScale, z: 0.016/packetParams.elementsScale}, to: {x: 0.008/packetParams.elementsScale, y: 0.008/packetParams.elementsScale, z: 0.008/packetParams.elementsScale}, dur: '1000', easing: 'linear' })
     }
     
