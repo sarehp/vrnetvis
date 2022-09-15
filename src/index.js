@@ -1103,6 +1103,8 @@ AFRAME.registerComponent('packet', {
 
 	console.log("packet_move")
 	console.log(packet_move)
+
+
 	
 	anime(packet_move, 'out_of_node')
 	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
@@ -1306,6 +1308,9 @@ AFRAME.registerComponent('controller', {
 	    CURRENT_TIME += 500
 
 	    while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
+		console.log ("next_ip_position: " + finalPackets[next_packet].next_ip_position)
+
+
 		let newPacket = finalPackets[next_packet].newPacket.components.packet
 		newPacket.startAnimation()
 		flying.push(finalPackets[next_packet].newPacket)
@@ -2089,39 +2094,10 @@ function  readPackets(responseParse) {
 	
     }// for
 
-
-    if  (VIEW == "ALL") {
-    	packets = swap_IP_ARP (packets)
-    }
-
     return packets;
 }
 
-function swap_IP_ARP (packets){
-    // We assume "arp request" / "arp reply" / "ip" they all appear
-    // together and in that order
 
-    let i = 0
-    while(i < packets.length){
-	if ("arp" in packets[i] &&  packets[i]["arp"]["arp.opcode"] == 1){
-	    swap = packets[i+2]
-	    packets[i+2] = packets[i+1]
-	    packets[i+1] = swap
-	    swap = packets[i]
-	    packets[i] = packets[i+1]
-	    packets[i+1] = swap
-
-	    console.log("exchanged")
-	    
-	    i+=3
-	}
-	i+=1
-    }
-
-    console.log (packets)
-    
-    return packets
-}
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
     //    var finalPackets = []
@@ -2168,14 +2144,52 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 function animatePackets(packets, connectionsLinks, data){
     //    var finalPackets = []
 
+
+    console.log("animatePackets: ")
+    console.log(packets)
+    
+
+
+    let latest_arp_requests = {}
+
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
+	
 
+	
+	
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
             to = connectionsLinks.find(o => o.hwaddr.includes(packets[j].dst))
+
+
+	    let eth_dst = packets[j]["eth"]["eth.dst"]
+	    let eth_src = packets[j]["eth"]["eth.src"]
+
+	    if ("arp" in packets[j]
+		&& packets[j]["arp"]["arp.opcode"] == "2"  	    // ARP reply
+		&& eth_dst in latest_arp_requests)
+		// store the hwaddr of the sender of the ARP reply
+		latest_arp_requests[eth_dst]["arp.dst.hw_mac"] = packets[j]["eth"]["eth.src"]
+
+
+
+	    if ("ip" in packets[j]
+		&& eth_src in latest_arp_requests
+		&& eth_dst == latest_arp_requests[eth_src]["arp.dst.hw_mac"]
+	       )
+	    { // Store in the ARP request packet the position of the IP packet in finalPackets
+		arpPacket = finalPackets[latest_arp_requests[eth_src]["next_ip_position"]]
+		arpPacket["next_ip_position"] = finalPackets.length
+		console.log(latest_arp_requests[eth_src])
+		console.log("storing in finalPackets[" + latest_arp_requests[eth_src]["next_ip_position"] + "]  next_ip_position = " + finalPackets.length)
+		delete latest_arp_requests[eth_src] 
+	    }
+	    
+	    
             if (from.to.includes(to.from)){ // hwaddr destino del paquete es vecino del nodo que estamos considerando (from)
                 packetDelay = TICK * j
+
                 finalPackets.push({
 		    'from': from,
 		    'to': to,
@@ -2271,6 +2285,20 @@ function animatePackets(packets, connectionsLinks, data){
 	    nodeName = from.to[i]
 	    
 	    to = connectionsLinks.find(o => o.from == nodeName)
+
+	    
+	    if ("arp" in packets[j] && packets[j]["arp"]["arp.opcode"] == "1"){ // arp request
+		eth_src = packets[j]["eth"]["eth.src"]
+		console.log(eth_src)
+
+		latest_arp_requests[eth_src] = {"next_ip_position": finalPackets.length}
+
+		console.log("latest_arp_requests: ")
+		console.log(latest_arp_requests)
+	    }
+
+
+	    
 	    
 	    if (to.from.startsWith('hub')){
                 packetDelay = TICK * j
@@ -2329,6 +2357,7 @@ function animatePackets(packets, connectionsLinks, data){
 		    }
                 }
 	    } else {
+
 		packetDelay = TICK * j
 		finalPackets.push({
 		    'from': from,
