@@ -584,12 +584,10 @@ AFRAME.registerComponent('packet', {
         icmp:{default: null},		
     },
 
-    startAnimation: function () {
+    startAnimation: function (park=false) {
         let packet = this.el
         let packetParams = this.data
 
-	console.log("startAnimation() in state " + animationState )
-	
         
         packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
 
@@ -625,7 +623,7 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
         packet.setAttribute('id', packetParams.id);
 
-        var packet_move = document.getElementById(packetParams.id);
+
 
         let levels = {}
         let isClosedInfo = false
@@ -1101,22 +1099,22 @@ AFRAME.registerComponent('packet', {
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
 
+	
+        var packet_move = document.getElementById(packetParams.id);
 	console.log("packet_move")
 	console.log(packet_move)
 
 
-	
-	anime(packet_move, 'out_of_node')
-	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
-	    .then(() => anime(packet_move, 'link'))
-	    .then(() => {
-		packet_move.setAttribute("animation__into_node", {enabled: 'true'})
-		packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
-	    })
-	    .then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
-
-
-
+        packet_move.setAttribute('animation__park', {
+            property: 'scale',
+            from: "0 0 0",
+	    to: "5 5 5",
+            dur: packetParams.duration/2,
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    startEvents: "park",
+            easing: 'linear'
+        });
 	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
@@ -1125,7 +1123,9 @@ AFRAME.registerComponent('packet', {
             dur: packetParams.duration/2,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
-            easing: 'linear'
+	    startEvents: "out_of_node",
+            easing: 'linear',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.	    
         });
 
         packet_move.setAttribute('animation__link', {
@@ -1162,16 +1162,30 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
-        packet_move.setAttribute('animation__park', {
-            property: 'position',
-            to: {x: packetParams.toXPosition, y: 5, z: packetParams.toZPosition},
-            dur: packetParams.duration,
-            easing: 'easeInOutQuart',
-	    startEvents: "park",
-            pauseEvents:'animation-pause', 
-            resumeEvents:'animation-resume',
-	    enabled: 'false' // if not false, when resumed it starts. A bug.
-        });
+	
+
+
+	
+	if (park){
+	    console.log("unparking")
+	    packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
+	    anime(packet_move, 'out_of_node')
+	    	.then(() => packet_move.setAttribute("animation__park", {enabled: 'true'}))
+	    	.then(() => anime(packet_move, 'park'))
+
+	    return;
+	}
+
+	packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
+	anime(packet_move, 'out_of_node')
+	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
+	    .then(() => anime(packet_move, 'link'))
+	    .then(() => {
+		packet_move.setAttribute("animation__into_node", {enabled: 'true'})
+		packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
+	    })
+	    .then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+
 
 
 	
@@ -1228,8 +1242,6 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	
 	anime(packet.ethBox, 'eth')
 	    .then(() => packet.ethBox.setAttribute('visible', 'false'))
-	    .then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
-	    .then(() => anime(packet, 'park'))
 	    .then(() => {
 		next_packet_anim(packetParams)
 		destroy_packet_anim(packet)
@@ -1310,6 +1322,12 @@ AFRAME.registerComponent('controller', {
 	    while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
 		console.log ("next_ip_position: " + finalPackets[next_packet].next_ip_position)
 
+		next_ip_position = finalPackets[next_packet].next_ip_position
+		if (next_ip_position){
+		    let nextIPPacket = finalPackets[next_ip_position].newPacket.components.packet
+		    nextIPPacket.startAnimation(true)
+		    flying.push(finalPackets[next_ip_position].newPacket)		    
+		}
 
 		let newPacket = finalPackets[next_packet].newPacket.components.packet
 		newPacket.startAnimation()
