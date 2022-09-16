@@ -1,0 +1,11 @@
+Model Information:
+* title:	Oculus quest 2
+* source:	https://sketchfab.com/3d-models/oculus-quest-2-c6a1c2623d224a1bbb81a38915f7e898
+* author:	NosTeam (https://sketchfab.com/NosTeam)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Oculus quest 2" (https://sketchfab.com/3d-models/oculus-quest-2-c6a1c2623d224a1bbb81a38915f7e898) by NosTeam (https://sketchfab.com/NosTeam) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

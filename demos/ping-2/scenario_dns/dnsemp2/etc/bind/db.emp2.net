@@ -1,0 +1,14 @@
+$TTL			1d	; default ttl
+emp2.net.      			IN      SOA     dnsemp2.emp2.net. root.dnsemp2.emp2.net. (
+                        			2009120901 ; serial
+                        			10m ; refresh
+                        			4m ; retry
+                        			1000h ; expire
+                        			20m ; negative cache ttl
+                        			)
+
+emp2.net.		86400	IN	NS	dnsemp2.emp2.net.
+dnsemp2.emp2.net.	86400	IN	A	14.0.0.10
+
+pc2.emp2.net.		86400	IN	A	14.0.0.100
+pc200.emp2.net.		86400	IN	A	14.0.0.2

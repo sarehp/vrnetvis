@@ -1,0 +1,12 @@
+$TTL	1d ; default ttl
+13.in-addr.arpa.	IN	SOA	dnsnet.net. root.dnsnet.net. (
+			2009120901	; Serial
+			8h		; Refresh
+			4h		; Retry
+			1000h		; Expire
+			20m )		; Negative Cache TTL
+;
+13.in-addr.arpa.	IN	NS	dnsnet.net.
+10.0.0.13.in-addr.arpa. IN	PTR	dnsnet.net.
+3.0.0.13.in-addr.arpa.	IN	PTR	r3.net.
+4.0.0.13.in-addr.arpa.	IN	PTR	r4.net.

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Reset mundial
+* source:	https://sketchfab.com/3d-models/reset-mundial-1220f8a0ccfa40bd83e231e99e7595a6
+* author:	matacu.tec (https://sketchfab.com/matacu.tec)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Reset mundial" (https://sketchfab.com/3d-models/reset-mundial-1220f8a0ccfa40bd83e231e99e7595a6) by matacu.tec (https://sketchfab.com/matacu.tec) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

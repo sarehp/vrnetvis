@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Starting bind..."
+/etc/init.d/bind start
