@@ -1106,14 +1106,15 @@ AFRAME.registerComponent('packet', {
 
 
         packet_move.setAttribute('animation__park', {
-            property: 'scale',
-            from: "0 0 0",
-	    to: "5 5 5",
-            dur: packetParams.duration/2,
+            property: 'position',
+            to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
+            to: {x: packetParams.xPosition, y: packetParams.yPosition +5, z: packetParams.zPosition},
+            dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    startEvents: "park",
-            easing: 'linear'
+            easing: 'linear',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
 	
         packet_move.setAttribute('animation__out_of_node', {
@@ -1164,16 +1165,14 @@ AFRAME.registerComponent('packet', {
 
 	
 
-
 	
 	if (park){
-	    console.log("unparking")
 	    packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
-	    anime(packet_move, 'out_of_node')
+	    let a_promise = anime(packet_move, 'out_of_node')
 	    	.then(() => packet_move.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet_move, 'park'))
-
-	    return;
+	    
+	    return a_promise;
 	}
 
 	packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
@@ -1316,25 +1315,48 @@ AFRAME.registerComponent('controller', {
 	console.log("flying.length: " + flying.length)	
 
 	let packets_ready = false
+
+
+
 	while (next_packet < finalPackets.length && !packets_ready){
 	    CURRENT_TIME += 500
 
 	    while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
-		console.log ("next_ip_position: " + finalPackets[next_packet].next_ip_position)
 
 		next_ip_position = finalPackets[next_packet].next_ip_position
+		
 		if (next_ip_position){
+		    console.log("Before promise: " + next_packet)
+		    let promise = Promise.resolve()
 		    let nextIPPacket = finalPackets[next_ip_position].newPacket.components.packet
-		    nextIPPacket.startAnimation(true)
+		    promise = nextIPPacket.startAnimation(true)
 		    flying.push(finalPackets[next_ip_position].newPacket)		    
+
+		    promise.then(() => {
+			console.log("promise.then, next_packet: " + next_packet)
+
+			let newPacket = finalPackets[next_packet].newPacket.components.packet
+			newPacket.startAnimation()
+			flying.push(finalPackets[next_packet].newPacket)
+			next_packet += 1
+			packets_ready = true
+
+		    })
+		    
+		    
+		    return;
+
 		}
 
+		console.log("next_packet: " + next_packet)
 		let newPacket = finalPackets[next_packet].newPacket.components.packet
 		newPacket.startAnimation()
 		flying.push(finalPackets[next_packet].newPacket)
-		next_packet += 1
 		
-		packets_ready = true
+
+		next_packet += 1		    
+		packets_ready = true		
+
 	    }
 	}
 	
