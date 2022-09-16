@@ -1,7 +1,13 @@
 [
     {
-	"view": "ALL",
+	"view": "APPLICATION+TRANSPORT+NETWORK",
 	"text":"Hop-by-hop",
+	"color": "green"
+    },
+    
+    {
+	"view": "APPLICATION",
+	"text": "End-to-End",
 	"color": "green"
     }
 ]

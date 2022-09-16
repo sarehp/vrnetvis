@@ -1254,21 +1254,18 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    })
 
 	
-    }else if(nodeName.startsWith('hub')){
+    }else 
 	anime(packet, 'into_node_final')
-	    .then (() => {
-		if (packet.id == finalPackets.length - 1) {
-		    // Animation is finished, clean up
-		    animationState = "INIT";
-		    showViews()
-		}
-		
-		next_packet_anim(packetParams)
-		destroy_packet_anim(packet)
-	    })
-	
-    }
-    
+	.then (() => {
+	    if (packet.id == finalPackets.length - 1) {
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+	    }
+	    
+	    next_packet_anim(packetParams)
+	    destroy_packet_anim(packet)
+	})
 }
 
 
