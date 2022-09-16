@@ -1235,9 +1235,10 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
         
     
-    if(nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r')){
+    if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
+       && VIEWS=="ALL"){
 	//	nodeAnimation.setAttribute("model-opacity", 0.1)
-
+	
 	
 	anime(packet.ethBox, 'eth')
 	    .then(() => packet.ethBox.setAttribute('visible', 'false'))
@@ -1348,21 +1349,20 @@ AFRAME.registerComponent('controller', {
 			packets_ready = true
 
 		    })
-		    
-		    
-		    return;
+
+		    return
 
 		}
+		else {
+		    console.log("next_packet: " + next_packet)
+		    let newPacket = finalPackets[next_packet].newPacket.components.packet
+		    newPacket.startAnimation()
+		    flying.push(finalPackets[next_packet].newPacket)
 
-		console.log("next_packet: " + next_packet)
-		let newPacket = finalPackets[next_packet].newPacket.components.packet
-		newPacket.startAnimation()
-		flying.push(finalPackets[next_packet].newPacket)
+		    next_packet += 1		    
+		    packets_ready = true
+		}
 		
-
-		next_packet += 1		    
-		packets_ready = true		
-
 	    }
 	}
 	
