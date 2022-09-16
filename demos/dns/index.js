@@ -584,11 +584,12 @@ AFRAME.registerComponent('packet', {
         icmp:{default: null},		
     },
 
-    startAnimation: function (park=false) {
+    createAnimation: function () {
         let packet = this.el
         let packetParams = this.data
 
-        
+
+
         packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
 
 
@@ -1096,9 +1097,6 @@ AFRAME.registerComponent('packet', {
 	
 
 
-	var nodeAnimationTo = document.getElementById(packetParams.to);
-	var nodeAnimationFrom = document.getElementById(packetParams.from);	
-
 	
         var packet_move = document.getElementById(packetParams.id);
 	console.log("packet_move")
@@ -1107,8 +1105,8 @@ AFRAME.registerComponent('packet', {
 
         packet_move.setAttribute('animation__park', {
             property: 'position',
-            to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
-            to: {x: packetParams.xPosition, y: packetParams.yPosition +5, z: packetParams.zPosition},
+//            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition +5, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -1116,12 +1114,24 @@ AFRAME.registerComponent('packet', {
             easing: 'linear',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
+
+        packet_move.setAttribute('animation__unpark', {
+            property: 'position',
+//            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
+            dur: packetParams.duration,
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    startEvents: "unpark",
+            easing: 'linear',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
+        });
 	
         packet_move.setAttribute('animation__out_of_node', {
             property: 'scale',
-            from: "0 0 0",
+            from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
-            dur: packetParams.duration/2,
+            dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    startEvents: "out_of_node",
@@ -1164,27 +1174,51 @@ AFRAME.registerComponent('packet', {
         });
 
 	
+    },
+    
+    startAnimation: function (anim) {
+        let packet = this.el
+        let packetParams = this.data
 
-	
-	if (park){
+	var nodeAnimationTo = document.getElementById(packetParams.to);
+	var nodeAnimationFrom = document.getElementById(packetParams.from);	
+
+        var packet_move = document.getElementById(packetParams.id);
+
+
+	switch (anim) {
+	case "park":
 	    packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
 	    let a_promise = anime(packet_move, 'out_of_node')
 	    	.then(() => packet_move.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet_move, 'park'))
 	    
 	    return a_promise;
+	    break;
+	case "birth":
+	    packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
+	    anime(packet_move, 'out_of_node')
+		.then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
+		.then(() => anime(packet_move, 'link'))
+		.then(() => {
+		    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
+		    packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
+		})
+		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+	    break;
+	case "unpark":
+	    console.log("unpark")
+	    packet_move.setAttribute("animation__unpark", {enabled: 'true'})
+	    anime(packet_move, 'unpark')
+		.then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
+		.then(() => anime(packet_move, 'link'))
+		.then(() => {
+		    packet_move.setAttribute("animation__into_node", {enabled: 'true'})
+		    packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
+		})
+		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+	    break;
 	}
-
-	packet_move.setAttribute("animation__out_of_node", {enabled: 'true'})
-	anime(packet_move, 'out_of_node')
-	    .then(() => packet_move.setAttribute("animation__link", {enabled: 'true'}))
-	    .then(() => anime(packet_move, 'link'))
-	    .then(() => {
-		packet_move.setAttribute("animation__into_node", {enabled: 'true'})
-		packet_move.setAttribute("animation__into_node_final", {enabled: 'true'})
-	    })
-	    .then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
-
 
 
 	
@@ -1254,21 +1288,18 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    })
 
 	
-    }else if(nodeName.startsWith('hub')){
+    }else 
 	anime(packet, 'into_node_final')
-	    .then (() => {
-		if (packet.id == finalPackets.length - 1) {
-		    // Animation is finished, clean up
-		    animationState = "INIT";
-		    showViews()
-		}
-		
-		next_packet_anim(packetParams)
-		destroy_packet_anim(packet)
-	    })
-	
-    }
-    
+	.then (() => {
+	    if (packet.id == finalPackets.length - 1) {
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+	    }
+	    
+	    next_packet_anim(packetParams)
+	    destroy_packet_anim(packet)
+	})
 }
 
 
@@ -1336,14 +1367,22 @@ AFRAME.registerComponent('controller', {
 		    console.log("Before promise: " + next_packet)
 		    let promise = Promise.resolve()
 		    let nextIPPacket = finalPackets[next_ip_position].newPacket.components.packet
-		    promise = nextIPPacket.startAnimation(true)
+		    finalPackets[next_ip_position].createdAnimation = true
+		    nextIPPacket.createAnimation()
+		    nextIPPacket.createdAnimation = true
+
+		    promise = nextIPPacket.startAnimation("park")
 		    flying.push(finalPackets[next_ip_position].newPacket)		    
 
 		    promise.then(() => {
 			console.log("promise.then, next_packet: " + next_packet)
 
 			let newPacket = finalPackets[next_packet].newPacket.components.packet
-			newPacket.startAnimation()
+			finalPackets[next_packet].createdAnimation = true
+			newPacket.createAnimation()
+			
+
+			newPacket.startAnimation("birth")
 			flying.push(finalPackets[next_packet].newPacket)
 			next_packet += 1
 			packets_ready = true
@@ -1356,12 +1395,23 @@ AFRAME.registerComponent('controller', {
 		else {
 		    console.log("next_packet: " + next_packet)
 		    let newPacket = finalPackets[next_packet].newPacket.components.packet
-		    newPacket.startAnimation()
+		    if (! finalPackets[next_packet].createdAnimation){
+			finalPackets[next_packet].createdAnimation = true
+			newPacket.createAnimation()
+
+			newPacket.startAnimation("birth")
+			
+		    }
+		    else{
+			newPacket.startAnimation("unpark")
+		    }
 		    flying.push(finalPackets[next_packet].newPacket)
 
 		    next_packet += 1		    
 		    packets_ready = true
 		}
+
+
 		
 	    }
 	}
