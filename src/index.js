@@ -1242,6 +1242,12 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	anime(packet.ethBox, 'eth')
 	    .then(() => packet.ethBox.setAttribute('visible', 'false'))
 	    .then(() => {
+		if (packet.id == finalPackets.length - 1) {
+		    // Animation is finished, clean up
+		    animationState = "INIT";
+		    showViews()
+		}
+
 		next_packet_anim(packetParams)
 		destroy_packet_anim(packet)
 	    })
