@@ -1284,6 +1284,16 @@ const anime = (target, animation_name) =>
 		  });
 
 
+function finish_packet(packet, packetParams){
+    if (packet.id == finalPackets.length - 1) {
+	// Animation is finished, clean up
+	animationState = "INIT";
+	showViews()
+    }
+    next_packet_anim(packetParams);
+    destroy(packet)
+}
+
 
 function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
@@ -1317,7 +1327,7 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	if (! packetIsForMe(packetParams)){
 	    console.log("not for me")
 
-	    // fadeout packet and children and then destroy packet
+
 	    let fadeoutChildren = function(packet){
 		for (const child of packet.children) {
 		    anime(child, 'fadeout')
@@ -1325,11 +1335,11 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 		}
 	    }
 	    
+	    // fadeout packet and children and then destroy packet
 	    Promise.all([anime(packet, 'fadeout'),
 			 fadeoutChildren(packet)])
-		.then(() => destroy(packet))
+		.then(() => finish_packet(packet, packetParams))
 	    
-
 	    return
 	    
 	}
@@ -1338,30 +1348,12 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	ethBox = packet.querySelector("#ethBox" + packet.id)
 	anime(ethBox, 'eth')
 	    .then(() => anime(ethBox, 'fadeout'))
-	    .then(() => {
-		if (packet.id == finalPackets.length - 1) {
-		    // Animation is finished, clean up
-		    animationState = "INIT";
-		    showViews()
-		}
-
-		next_packet_anim(packetParams)
-		destroy(packet)
-	    })
+	    .then(() => finish_packet(packet, packetParams))
 
 	
     }else 
 	anime(packet, 'into_node_final')
-	.then (() => {
-	    if (packet.id == finalPackets.length - 1) {
-		// Animation is finished, clean up
-		animationState = "INIT";
-		showViews()
-	    }
-	    
-	    next_packet_anim(packetParams)
-	    destroy(packet)
-	})
+	.then(() => finish_packet(packet, packetParams))
 }
 
 
