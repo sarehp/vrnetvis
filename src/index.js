@@ -624,7 +624,7 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
         packet.setAttribute('id', packetParams.id);
 
-
+	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
 
         let levels = {}
         let isClosedInfo = false
@@ -645,7 +645,6 @@ AFRAME.registerComponent('packet', {
         newInfoText.setAttribute('isPoster', true); 
 
         packet.appendChild(newInfoText);
-
 
 	
         if(packetParams.eth){
@@ -713,10 +712,12 @@ AFRAME.registerComponent('packet', {
             index = Object.keys(levels).findIndex(item => item === 'eth')
 
             let newEthBox = document.createElement('a-box');
-	    newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '500', easing: 'linear', "loop": "5", startEvents: "eth"})
 
-	    packet.ethBox = newEthBox
-	    
+
+	    newEthBox.setAttribute('animation__eth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "3", startEvents: "eth"})
+	    newEthBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+							  
+	    newEthBox.setAttribute('id', "ethBox" + packetParams.id);
 	    
 	    newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
             newEthBox.setAttribute('color', getColor("ethernet"));
@@ -755,6 +756,8 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('ip') && 	!isEndToEndVIEW()){
             index = Object.keys(levels).findIndex(item => item === 'ip')
 	    let newIpBox = document.createElement('a-box');
+	    newIpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+	    
             newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newIpBox.setAttribute('color', getColor("ip"));
             newIpBox.setAttribute('visible', true); 
@@ -794,7 +797,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('arp') && 	!isEndToEndVIEW()){
             index = Object.keys(levels).findIndex(item => item === 'arp')
             let newArpBox = document.createElement('a-box');
-            newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+	    newArpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newArpBox.setAttribute('color', getColor("arp"));
             newArpBox.setAttribute('visible', true);
             packet.appendChild(newArpBox);
@@ -836,7 +841,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('tcp')){
             index = Object.keys(levels).findIndex(item => item === 'tcp')
             let newTcpBox = document.createElement('a-box');
-            newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+	    newTcpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newTcpBox.setAttribute('color', getColor("tcp"));
             newTcpBox.setAttribute('visible', true); 
             packet.appendChild(newTcpBox);
@@ -873,7 +880,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('udp')){
             index = Object.keys(levels).findIndex(item => item === 'udp')
             let newUdpBox = document.createElement('a-box');
-            newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+	    newUdpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newUdpBox.setAttribute('color', getColor("udp"));
             newUdpBox.setAttribute('visible', true);
             packet.appendChild(newUdpBox);
@@ -909,7 +918,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('dns')){
             index = Object.keys(levels).findIndex(item => item === 'dns')
             let newDnsBox = document.createElement('a-box');
-            newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+	    newDnsBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newDnsBox.setAttribute('color', getColor("dns"));
             newDnsBox.setAttribute('visible', true); 
             packet.appendChild(newDnsBox);
@@ -945,7 +956,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('http')){
             index = Object.keys(levels).findIndex(item => item === 'http')
             let newHttpBox = document.createElement('a-box');
-            newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+	    newHttpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newHttpBox.setAttribute('color', getColor("http"));
             newHttpBox.setAttribute('visible', true); 
 
@@ -982,7 +995,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('icmp')){
             index = Object.keys(levels).findIndex(item => item === 'icmp')
             let newIcmpBox = document.createElement('a-box');
-            newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
+	    newIcmpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
             newIcmpBox.setAttribute('color', getColor("icmp"));
             newIcmpBox.setAttribute('visible', true); 
 
@@ -1018,7 +1033,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('dataInfo')){
             index = Object.keys(levels).findIndex(item => item === 'dataInfo')
             let newDataBox = document.createElement('a-box');
-            newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+	    newDataBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newDataBox.setAttribute('color', getColor("dataInfo"));
             newDataBox.setAttribute('visible', true); 
 
@@ -1054,7 +1071,9 @@ AFRAME.registerComponent('packet', {
         if(levels.hasOwnProperty('data')){
             index = Object.keys(levels).findIndex(item => item === 'data')
             let newDataBox = document.createElement('a-box');
-            newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
+	    newDataBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, startEvents: "fadeout"})
+
+	    newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
             newDataBox.setAttribute('color', getColor("data"));
             newDataBox.setAttribute('visible', true); 
 
@@ -1101,6 +1120,7 @@ AFRAME.registerComponent('packet', {
         var packet_move = document.getElementById(packetParams.id);
 	console.log("packet_move")
 	console.log(packet_move)
+
 
 
         packet_move.setAttribute('animation__park', {
@@ -1237,7 +1257,7 @@ AFRAME.registerComponent('packet', {
     }
 });
 
-function destroy_packet_anim(packet){
+function destroy(packet){
     // Destroy packet element
     longitud = packet.children.length
 
@@ -1267,15 +1287,57 @@ const anime = (target, animation_name) =>
 
 function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
-        
+
+    let packetIsForMe = function(packetParams){
+
+	console.log ('packetParams.eth["eth.dst"] ' + packetParams.eth["eth.dst"])
+	console.log (node.hwaddr)	
+	
+	// every bcast is for me
+	if (packetParams.eth["eth.dst"] == "ff:ff:ff:ff:ff:ff")
+	    return true
+
+	// unicast eth frames are for me only if its destination is
+	// one of my hwaddrs
+	node = nodeList.find(o => o.name === nodeName)
+	if (node.hwaddr.includes(packetParams.eth["eth.dst"]))
+	    return true
+
+	return false
+    }
+
+    
+	
     
     if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
-       && VIEWS=="ALL"){
+       && VIEW=="ALL"){
 	//	nodeAnimation.setAttribute("model-opacity", 0.1)
 	
+
+	if (! packetIsForMe(packetParams)){
+	    console.log("not for me")
+
+	    // fadeout packet and children and then destroy packet
+	    let fadeoutChildren = function(packet){
+		for (const child of packet.children) {
+		    anime(child, 'fadeout')
+		    console.log("anime for children")
+		}
+	    }
+	    
+	    Promise.all([anime(packet, 'fadeout'),
+			 fadeoutChildren(packet)])
+		.then(() => destroy(packet))
+	    
+
+	    return
+	    
+	}
+
 	
-	anime(packet.ethBox, 'eth')
-	    .then(() => packet.ethBox.setAttribute('visible', 'false'))
+	ethBox = packet.querySelector("#ethBox" + packet.id)
+	anime(ethBox, 'eth')
+	    .then(() => anime(ethBox, 'fadeout'))
 	    .then(() => {
 		if (packet.id == finalPackets.length - 1) {
 		    // Animation is finished, clean up
@@ -1284,7 +1346,7 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 		}
 
 		next_packet_anim(packetParams)
-		destroy_packet_anim(packet)
+		destroy(packet)
 	    })
 
 	
@@ -1298,7 +1360,7 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    }
 	    
 	    next_packet_anim(packetParams)
-	    destroy_packet_anim(packet)
+	    destroy(packet)
 	})
 }
 
@@ -2203,7 +2265,6 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
 	
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
-
         to = connectionsLinks.find(o => o.ipaddr.includes(packets[j].ip["ip.dst"]))
 
         packetDelay = TICK * j
