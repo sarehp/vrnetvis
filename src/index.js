@@ -616,8 +616,6 @@ AFRAME.registerComponent('packet', {
 
 	    hop_by_hop_protocols = ["eth", "arp", "ip"]
 
-	    console.log("level: " + level.protocol)
-
 	    if (hop_by_hop_protocols.includes(level.protocol) && isEndToEndVIEW())
 		continue
 	    
@@ -628,13 +626,15 @@ AFRAME.registerComponent('packet', {
 	    
 	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
+	    newBox.setAttribute('animation__fadein', {property:'material.opacity', to:1, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadein", enabled: 'false'})
+	    
 	    
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
 
 	    
 	    newBox.setAttribute('position', { x: 0, y:  2 + (level_index), z: 0 });
             newBox.setAttribute('color', getColor(level.protocol));
-            newBox.setAttribute('visible', true); 
+            newBox.setAttribute('visible', false); 
 
 
 	    packet.appendChild(newBox);
@@ -762,27 +762,27 @@ AFRAME.registerComponent('packet', {
         });
 	
 
-        packet.setAttribute('animation__into_node_final', {
-            property: 'scale',
-            to: {x: 0, y: 0, z: 0},
-            dur: packetParams.duration/2,
-            easing: 'linear',
-	    startEvents: 'into_node_final',
-            pauseEvents:'animation-pause', 
-            resumeEvents:'animation-resume',
-	    enabled: 'false' // if not false, when resumed it starts. A bug.
-        });
+        // packet.setAttribute('animation__into_node_final', {
+        //     property: 'scale',
+        //     to: {x: 0, y: 0, z: 0},
+        //     dur: packetParams.duration/2,
+        //     easing: 'linear',
+	//     startEvents: 'into_node_final',
+        //     pauseEvents:'animation-pause', 
+        //     resumeEvents:'animation-resume',
+	//     enabled: 'false' // if not false, when resumed it starts. A bug.
+        // });
 
-        packet.setAttribute('animation__into_node', {
-            property: 'scale',
-            to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
-            dur: packetParams.duration/2,
-            easing: 'linear',
-	    startEvents: 'into_node',
-            pauseEvents:'animation-pause', 
-            resumeEvents:'animation-resume',
-	    enabled: 'false' // if not false, when resumed it starts. A bug.
-        });
+        // packet.setAttribute('animation__into_node', {
+        //     property: 'scale',
+        //     to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
+        //     dur: packetParams.duration/2,
+        //     easing: 'linear',
+	//     startEvents: 'into_node',
+        //     pauseEvents:'animation-pause', 
+        //     resumeEvents:'animation-resume',
+	//     enabled: 'false' // if not false, when resumed it starts. A bug.
+        // });
 
 	
     },
@@ -797,15 +797,15 @@ AFRAME.registerComponent('packet', {
 
 	switch (anim) {
 	case "park":
-	    let a_promise = animate_birth(nodeAnimationTo, packetParams, packet)
-		.then(() => {
-		    ethBox = packet.querySelector("#ethBox" + packet.id)
-		    ethBox.setAttribute("model-opacity", 0.4)
-		})
-		.then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
-		.then(() => anime(ethBox, 'blink'))
-		.then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
-		.then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+	    ethBox = packet.querySelector("#ethBox" + packet.id)
+	    let a_promise = wait(1000)
+		.then(() => animate_birth(packetParams, packet, true))
+		.then(() => ethBox.setAttribute("animation__fadeout", {enabled: 'true'}))
+		.then(() => anime(ethBox, 'fadeout'))
+		// .then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
+		// .then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		// .then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
+		// .then(() => anime(ethBox, 'blink'))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
 
@@ -816,12 +816,23 @@ AFRAME.registerComponent('packet', {
 	case "unpark":
 
 	    ethBox = packet.querySelector("#ethBox" + packet.id)
-	    
-	    
-	    ethBox.setAttribute('animation__blink', {enabled: 'true'})
-	    anime(ethBox, 'blink')
+
+
+	    Promise.resolve()
+		.then(() => wait(1000))
+		.then(() => ethBox.setAttribute('visible', true))
+		.then(() => ethBox.setAttribute('opacity', 0.5))
+		.then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
+		.then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		.then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
+		.then(() => anime(ethBox, 'blink'))
+		.then(() => ethBox.setAttribute('animation__fadein', {enabled: 'true'}))
+		.then(() => anime(ethBox,'fadein'))
+		.then(() => ethBox.setAttribute('animation__blink', {enabled: 'true'}))
+		.then (() => anime(ethBox, 'blink'))
+		// .then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
+		// .then(() => anime(ethBox, 'show'))
 		.then(() => packet.setAttribute("animation__unpark", {enabled: 'true'}))
-		.then(() => ethBox.setAttribute("model-opacity", 1.0))
 		.then(() => anime(packet, 'unpark'))
 		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
 		.then(() => anime(packet, 'show'))
@@ -829,24 +840,24 @@ AFRAME.registerComponent('packet', {
 		.then(() => anime(packet, 'link'))
 		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
 		.then(() => anime(packet, 'hide'))
-		.then(() => {
-		    packet.setAttribute("animation__into_node", {enabled: 'true'})
-		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		})
+		// .then(() => {
+		//     packet.setAttribute("animation__into_node", {enabled: 'true'})
+		//     packet.setAttribute("animation__into_node_final", {enabled: 'true'})
+		// })
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
 
 	case "birth":
 
-	    animate_birth(nodeAnimationTo, packetParams, packet)
+	    animate_birth(packetParams, packet)
 		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
 		.then(() => anime(packet, 'show'))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
-		.then(() => {
-		    packet.setAttribute("animation__into_node", {enabled: 'true'})
-		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		})
+		// .then(() => {
+		//     packet.setAttribute("animation__into_node", {enabled: 'true'})
+		//     packet.setAttribute("animation__into_node_final", {enabled: 'true'})
+		// })
 		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
 		.then(() => anime(packet, 'hide'))
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
@@ -891,6 +902,8 @@ function next_packet_anim(packetParams) {
 };
 
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const anime = (target, animation_name) => 
       new Promise((resolve) =>
 		  {
@@ -906,38 +919,72 @@ function finish_packet(packet, packetParams){
 	animationState = "INIT";
 	showViews()
     }
-    next_packet_anim(packetParams);
     destroy(packet)
+    next_packet_anim(packetParams);
+
 }
 
 
 // returns promise
-function animate_birth(nodeAnimationTo, packetParams, packet){
+function animate_birth(packetParams, packet, noEth=false){
     let promise = Promise.resolve()
+    
+    let nodeName = packetParams.from
+    node = nodeList.find(o => o.name === nodeName)
 
     if (packetParams.from.startsWith('hub')){
+	packet.setAttribute('visible', true)
+
+	for (var i = packet.levels.length-1; i >= 0; i--){
+	    let box = packet.levels[i]["box"]
+	    box.setAttribute('visible', true)
+	}
+	
 	packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
 	promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
     }
-    else{
+    else{ // not hub
+	// promise
+	//     .then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+	//     .then(() => anime(packet, 'hide'))
+ 	//     .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	//     .then(() =>	anime(packet, 'out_of_node'))
+
 	promise
-	    .then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
-	    .then(() => anime(packet, 'hide'))
  	    .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
 	    .then(() =>	anime(packet, 'out_of_node'))
 
-	// Create level boxes from top to bottom
+	
+	// Show level boxes from top to bottom
 	for (var i = packet.levels.length-1; i >= 0; i--){
 	    let box = packet.levels[i]["box"]
-	    console.log("box")
-	    console.log(box)
 	    
 	    box.setAttribute('visible', false)
-	    
-	    promise = promise
-	 	.then(() => box.setAttribute("visible", true))
-	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
-	 	.then(() => anime(box, 'blink'))
+
+	    // if noEth => this is an IP datagram and the hwaddr of
+	    // net how is not known, so don't show eth bo
+	    if (noEth && packet.levels[i]["protocol"] == "eth")
+		box.setAttribute('opacity', 0.4)
+
+
+	    if (packetParams.ip
+		&& ! node.ipaddr.includes(packetParams.ip["ip.src"])		
+		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+		&& packet.levels[i]["protocol"]!= "eth"
+		&& packet.levels[i]["protocol"]!= "ip")
+	    {  // it's an ip datagram being routed => dont create
+	       // levels above ip, just draw them. ip is blinked to
+	       // signify TTL modified
+	 	box.setAttribute("visible", true)
+	    }
+	    else
+	    {
+		promise = promise
+	 	    .then(() => box.setAttribute("visible", true))
+	 	    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+	 	    .then(() => anime(box, 'blink'))
+		    .then(() => wait(1000))
+	    }
 	}
     }
     
@@ -949,8 +996,6 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
 
     let packetIsForMe = function(packetParams){
-
-
 	
 	// every bcast is for me
 	if (packetParams.eth["eth.dst"] == "ff:ff:ff:ff:ff:ff")
@@ -965,17 +1010,12 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	return false
     }
 
-    
-	
-    
+        
     if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
        && VIEW=="ALL"){
 
-	
 
 	if (! packetIsForMe(packetParams)){
-
-
 	    let fadeoutChildren = function(packet){
 		for (const child of packet.children) {
 		    child.setAttribute('animation__fadeout', {enabled: 'true'})
@@ -990,25 +1030,37 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 			 fadeoutChildren(packet)])
 		.then(() => finish_packet(packet, packetParams))
 	    
-	    return
-	    
+	    return	    
 	}
 
-	
-	ethBox = packet.querySelector("#ethBox" + packet.id)
-	ethBox.setAttribute('animation__blink', {enabled: 'true'})
-	anime(ethBox, 'blink')
-	    .then(() => {
-		packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		anime(ethBox, 'fadeout')
-	    })
-	    .then(() => finish_packet(packet, packetParams))
+	// Packet is for us => consume layer from bottom to top
+	let promise = Promise.resolve()
 
+	for (var i = 0; i < packet.levels.length; i++){
+	    let box = packet.levels[i]["box"]
+
+	    node = nodeList.find(o => o.name === nodeName)
+
+	    // an IP datagram is being routed => don't blink layers
+	    if (packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"]) && packet.levels[i]["protocol"]=="ip")
+		break
+
+
+
+	    
+	    promise = promise
+	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+	 	.then(() => anime(box, 'blink'))
+		.then(() => box.setAttribute('visible', false))
+	}
+
+
+
+	promise.then(() => wait(1000))
+	    .then(() => finish_packet(packet, packetParams))
 	
     }else // hub
 	finish_packet(packet, packetParams)
-//	anime(packet, 'into_node_final')
-//	.then(() => finish_packet(packet, packetParams))
 }
 
 
