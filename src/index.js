@@ -677,7 +677,7 @@ AFRAME.registerComponent('packet', {
         }
         if(packetParams.icmp){
             const icmpInfo = {
-                icmp: packetParams.icmpInfo
+                icmp: packetParams.icmp
             }
             levels = Object.assign(levels,icmpInfo);
         }
@@ -1077,7 +1077,7 @@ AFRAME.registerComponent('packet', {
                 }else {
                     isClosedInfo = false;
                     actualInfoShown = 'dataInfo';
-		    showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                              }
+		    showInfoText("icmp", packetParams, newInfoText, newDataBox);				    				    	                              }
             });
         }
 
@@ -1130,14 +1130,14 @@ AFRAME.registerComponent('packet', {
 	
 
 
-	
-        var packet_move = document.getElementById(packetParams.id);
-	console.log("packet_move")
-	console.log(packet_move)
 
 
+        packet = Object.assign(packet, levels);
+	console.log("levels")
+	console.log (levels)
 
-        packet_move.setAttribute('animation__park', {
+
+        packet.setAttribute('animation__park', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
 	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
@@ -1149,7 +1149,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
 
-        packet_move.setAttribute('animation__unpark', {
+        packet.setAttribute('animation__unpark', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
 	    to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
@@ -1161,7 +1161,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
 	
-        packet_move.setAttribute('animation__out_of_node', {
+        packet.setAttribute('animation__out_of_node', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
@@ -1173,7 +1173,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    
         });
 
-        packet_move.setAttribute('animation__out_of_node_immediate', {
+        packet.setAttribute('animation__out_of_node_immediate', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
@@ -1186,7 +1186,7 @@ AFRAME.registerComponent('packet', {
         });
 
 	
-        packet_move.setAttribute('animation__link', {
+        packet.setAttribute('animation__link', {
             property: 'position',
             to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
             dur: packetParams.duration,
@@ -1198,7 +1198,7 @@ AFRAME.registerComponent('packet', {
         });
 	
 
-        packet_move.setAttribute('animation__into_node_final', {
+        packet.setAttribute('animation__into_node_final', {
             property: 'scale',
             to: {x: 0, y: 0, z: 0},
             dur: packetParams.duration/2,
@@ -1209,7 +1209,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 
-        packet_move.setAttribute('animation__into_node', {
+        packet.setAttribute('animation__into_node', {
             property: 'scale',
             to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
             dur: packetParams.duration/2,
@@ -1229,8 +1229,6 @@ AFRAME.registerComponent('packet', {
 
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
-
-//        var packet_move = document.getElementById(packetParams.id);
 
 
 	switch (anim) {
