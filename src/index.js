@@ -729,7 +729,7 @@ AFRAME.registerComponent('packet', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
-            dur: packetParams.duration,
+            dur: 0,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    startEvents: "out_of_node",
@@ -797,13 +797,7 @@ AFRAME.registerComponent('packet', {
 
 	switch (anim) {
 	case "park":
-
-
-	    packet.setAttribute("animation__hide", {enabled: 'true'})
-	    anime(packet, 'hide')
-	    packet.setAttribute("animation__out_of_node", {enabled: 'true'})
-	    
-	    let a_promise = anime(packet, 'out_of_node')
+	    let a_promise = animate_birth(nodeAnimationTo, packetParams, packet)
 		.then(() => {
 		    ethBox = packet.querySelector("#ethBox" + packet.id)
 		    ethBox.setAttribute("model-opacity", 0.4)
@@ -845,6 +839,18 @@ AFRAME.registerComponent('packet', {
 	case "birth":
 
 	    animate_birth(nodeAnimationTo, packetParams, packet)
+		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
+		.then(() => anime(packet, 'show'))
+		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
+		.then(() => anime(packet, 'link'))
+		.then(() => {
+		    packet.setAttribute("animation__into_node", {enabled: 'true'})
+		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
+		})
+		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+		.then(() => anime(packet, 'hide'))
+		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+	    
 
 	    break;
 	}
@@ -914,6 +920,12 @@ function animate_birth(nodeAnimationTo, packetParams, packet){
 	promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
     }
     else{
+	promise
+	    .then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+	    .then(() => anime(packet, 'hide'))
+ 	    .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	    .then(() =>	anime(packet, 'out_of_node'))
+
 	// Create level boxes from top to bottom
 	for (var i = packet.levels.length-1; i >= 0; i--){
 	    let box = packet.levels[i]["box"]
@@ -923,26 +935,12 @@ function animate_birth(nodeAnimationTo, packetParams, packet){
 	    box.setAttribute('visible', false)
 	    
 	    promise = promise
-	// 	.then(() => box.setAttribute("animation__out_of_node", {enabled: 'true'}))
-	// 	.then(() =>	anime(packet, 'out_of_node'))
 	 	.then(() => box.setAttribute("visible", true))
 	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
 	 	.then(() => anime(box, 'blink'))
 	}
     }
     
-    promise = promise
-	.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
-	.then(() => anime(packet, 'show'))
-	.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
-	.then(() => anime(packet, 'link'))
-	.then(() => {
-	    packet.setAttribute("animation__into_node", {enabled: 'true'})
-	    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-	})
-	.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
-	.then(() => anime(packet, 'hide'))
-	.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 
     return promise
 }
