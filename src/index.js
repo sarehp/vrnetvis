@@ -624,8 +624,14 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
         packet.setAttribute('id', packetParams.id);
 
+
+	
 	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
+	packet.setAttribute('animation__hide', {property:'material.opacity', to:0, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "hide", enabled: 'false'})
+
+	packet.setAttribute('animation__show', {property:'material.opacity', to:1, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "show", enabled: 'false'})
+	
 
             
 
@@ -712,14 +718,15 @@ AFRAME.registerComponent('packet', {
             levels = Object.assign(levels,data);
         }
         
-        if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW()){
+        if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW())
+	{
             index = Object.keys(levels).findIndex(item => item === 'eth')
-
+	    
             let newEthBox = document.createElement('a-box');
-
+	    
 
 	    newEthBox.setAttribute('animation__blinkEth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blinkEth", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
-
+	    
 	    newEthBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
 	    
@@ -731,8 +738,9 @@ AFRAME.registerComponent('packet', {
 
             packet.appendChild(newEthBox);
 
-	    if (topmost_protocol == "ethernet")
-		showInfoText("ethernet", packetParams, newInfoText, newEthBox)
+	    // if (topmost_protocol == "ethernet")
+	    // 	showInfoText("ethernet", packetParams, newInfoText, newEthBox)
+
 	    
 
             newEthBox.addEventListener('mouseenter', function () {
@@ -770,8 +778,8 @@ AFRAME.registerComponent('packet', {
 
             packet.appendChild(newIpBox);
 
-	    if (topmost_protocol == "ip")
-		showInfoText("ip", packetParams, newInfoText, newIpBox)
+	    // if (topmost_protocol == "ip")
+	    // 	showInfoText("ip", packetParams, newInfoText, newIpBox)
 	    
 	    
             newIpBox.addEventListener('mouseenter', function () {
@@ -810,8 +818,8 @@ AFRAME.registerComponent('packet', {
             newArpBox.setAttribute('visible', true);
             packet.appendChild(newArpBox);
 
-	    if (topmost_protocol == "arp")
-		showInfoText("arp", packetParams, newInfoText, newArpBox)
+	    // if (topmost_protocol == "arp")
+	    // 	showInfoText("arp", packetParams, newInfoText, newArpBox)
 
 	    
             newArpBox.addEventListener('mouseenter', function () {
@@ -854,8 +862,8 @@ AFRAME.registerComponent('packet', {
             newTcpBox.setAttribute('visible', true); 
             packet.appendChild(newTcpBox);
 
-	    if (topmost_protocol == "tcp")
-		showInfoText("tcp", packetParams, newInfoText, newTcpBox)
+	    // if (topmost_protocol == "tcp")
+	    // 	showInfoText("tcp", packetParams, newInfoText, newTcpBox)
 	    
             newTcpBox.addEventListener('mouseenter', function () {
                 newTcpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -893,8 +901,8 @@ AFRAME.registerComponent('packet', {
             newUdpBox.setAttribute('visible', true);
             packet.appendChild(newUdpBox);
 
-	    if (topmost_protocol == "udp")
-		showInfoText("udp", packetParams, newInfoText, newUdpBox)
+	    // if (topmost_protocol == "udp")
+	    // 	showInfoText("udp", packetParams, newInfoText, newUdpBox)
 
             newUdpBox.addEventListener('mouseenter', function () {
                 newUdpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -931,8 +939,8 @@ AFRAME.registerComponent('packet', {
             newDnsBox.setAttribute('visible', true); 
             packet.appendChild(newDnsBox);
 
-	    if (topmost_protocol == "dns")
-		showInfoText("dns", packetParams, newInfoText, newDnsBox)
+	    // if (topmost_protocol == "dns")
+	    // 	showInfoText("dns", packetParams, newInfoText, newDnsBox)
 	    
             newDnsBox.addEventListener('mouseenter', function () {
                 newDnsBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -970,8 +978,8 @@ AFRAME.registerComponent('packet', {
 
             packet.appendChild(newHttpBox);
 
-	    if (topmost_protocol == "http")
-		showInfoText("http", packetParams, newInfoText, newHttpBox)
+	    // if (topmost_protocol == "http")
+	    // 	showInfoText("http", packetParams, newInfoText, newHttpBox)
 	    
             newHttpBox.addEventListener('mouseenter', function () {
                 newHttpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -1009,8 +1017,8 @@ AFRAME.registerComponent('packet', {
 
             packet.appendChild(newIcmpBox);
 
-	    if (topmost_protocol == "icmp")
-		showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
+	    // if (topmost_protocol == "icmp")
+	    // 	showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
 	    
             newIcmpBox.addEventListener('mouseenter', function () {
                 newIcmpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -1047,8 +1055,8 @@ AFRAME.registerComponent('packet', {
 
             packet.appendChild(newDataBox);
 
-	    if (topmost_protocol == "dataInfo")
-		showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
+	    // if (topmost_protocol == "dataInfo")
+	    // 	showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
 	    
             newDataBox.addEventListener('mouseenter', function () {
                 newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -1086,8 +1094,8 @@ AFRAME.registerComponent('packet', {
             packet.appendChild(newDataBox);
 
 
-	    if (topmost_protocol == "data")
-		showInfoText("data", packetParams, newInfoText, newDataBox)
+	    // if (topmost_protocol == "data")
+	    // 	showInfoText("data", packetParams, newInfoText, newDataBox)
 
 	    
             newDataBox.addEventListener('mouseenter', function () {
@@ -1132,7 +1140,7 @@ AFRAME.registerComponent('packet', {
         packet_move.setAttribute('animation__park', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition +5, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -1227,11 +1235,17 @@ AFRAME.registerComponent('packet', {
 
 	switch (anim) {
 	case "park":
-	    packet.setAttribute("animation__out_of_node", {enabled: 'true'})
-	    ethBox = packet.querySelector("#ethBox" + packet.id)
-	    ethBox.setAttribute("model-opacity", 0.5)
 
+
+	    packet.setAttribute("animation__hide", {enabled: 'true'})
+	    anime(packet, 'hide')
+	    packet.setAttribute("animation__out_of_node", {enabled: 'true'})
+	    
 	    let a_promise = anime(packet, 'out_of_node')
+		.then(() => {
+		    ethBox = packet.querySelector("#ethBox" + packet.id)
+		    ethBox.setAttribute("model-opacity", 0.4)
+		})
 		.then(() => ethBox.setAttribute("animation__blinkEth", {enabled: 'true'}))
 		.then(() => anime(ethBox, 'blinkEth'))
 		.then(() => ethBox.removeAttribute('blinkEth')) // must reinstall animation because we use it in unpark
@@ -1253,14 +1267,19 @@ AFRAME.registerComponent('packet', {
 		.then(() => packet.setAttribute("animation__unpark", {enabled: 'true'}))
 		.then(() => ethBox.setAttribute("model-opacity", 1.0))
 		.then(() => anime(packet, 'unpark'))
+		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
+		.then(() => anime(packet, 'show'))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
+		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+		.then(() => anime(packet, 'hide'))
 		.then(() => {
 		    packet.setAttribute("animation__into_node", {enabled: 'true'})
 		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
 		})
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
+
 	case "birth":
 	    let ev = null
 	    
@@ -1272,15 +1291,17 @@ AFRAME.registerComponent('packet', {
 		packet.setAttribute("animation__out_of_node", {enabled: 'true'})
 		ev = "out_of_node"
 	    }
-	    
-	    
 	    anime(packet, ev)
+		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
+		.then(() => anime(packet, 'show'))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
 		.then(() => {
 		    packet.setAttribute("animation__into_node", {enabled: 'true'})
 		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
 		})
+		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+		.then(() => anime(packet, 'hide'))
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
 	}
