@@ -577,49 +577,10 @@ AFRAME.registerComponent('packet', {
         let packetParams = this.data
 
 
-	protocols = ["eth", "ip", "arp", "icmp", "tcp", "udp", "http", "dns", "dataInfo", "data"]
-        let levels = []
-	for (const protocol of protocols){
-            if(packetParams[protocol]){
-
-		const level = {
-                    "protocol": protocol,
-		    "info": packetParams[protocol]
-		}
-		levels.push(level)
-            }
-	}
-	let topmost_protocol = levels[levels.length - 1]["protocol"]
-	let bottommost_protocol = levels[0]["protocol"]	
-	let packetColor = getColor(bottommost_protocol);
-
-	
         packet.setAttribute('geometry', {primitive: 'sphere',  radius: 0.1/packetParams.elementsScale });
 
-
-
-	
-        packet.setAttribute('material', 'color', packetColor);
-        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
-        packet.setAttribute('class', packetParams.class);
-        packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
-        packet.setAttribute('id', packetParams.id);
-
-
-	
-	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	packet.setAttribute('animation__hide', {property:'material.opacity', to:0, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "hide", enabled: 'false'})
-
-	packet.setAttribute('animation__show', {property:'material.opacity', to:1, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "show", enabled: 'false'})
-	
-
-            
-
-	
-
         let isClosedInfo = false
-        let actualInfoShown = topmost_protocol;
+
 
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
@@ -638,11 +599,21 @@ AFRAME.registerComponent('packet', {
         packet.appendChild(newInfoText);
 
 
+	let actualInfoShown = ''
+	
+	protocols = ["eth", "ip", "arp", "icmp", "tcp", "udp", "http", "dns", "dataInfo", "data"]
+        let levels = []
 
-	// Iterate levels from bottom to top
+	level_index = 0
+	for (const protocol of protocols){
 
-	for (var i = 0; i < levels.length; i++){
-	    level = levels[i]
+	    if (!packetParams[protocol])
+		continue
+
+	    let level = {
+                "protocol": protocol,
+	    }
+
 	    hop_by_hop_protocols = ["eth", "arp", "ip"]
 
 	    console.log("level: " + level.protocol)
@@ -650,11 +621,9 @@ AFRAME.registerComponent('packet', {
 	    if (hop_by_hop_protocols.includes(level.protocol) && isEndToEndVIEW())
 		continue
 	    
-            index = i//Object.keys(levels).findIndex(item => item === level.protocol)
+
 	    
             let newBox = document.createElement('a-box');
-	    
-
 	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
 	    
 	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
@@ -662,14 +631,13 @@ AFRAME.registerComponent('packet', {
 	    
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
 
-	    console.log ("pheras")
-	    console.log(level.protocol + "Box" + packetParams.id)
 	    
-	    newBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
+	    newBox.setAttribute('position', { x: 0, y:  2 + (level_index), z: 0 });
             newBox.setAttribute('color', getColor(level.protocol));
             newBox.setAttribute('visible', true); 
 
-            packet.appendChild(newBox);
+
+	    packet.appendChild(newBox);
 
 	    // if (topmost_protocol == "eth")
 	    // 	showInfoText("eth", packetParams, newInfoText, newBox)
@@ -684,7 +652,9 @@ AFRAME.registerComponent('packet', {
                 newBox.removeAttribute('animation');
                 newBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
             });
-            newBox.addEventListener('click', function () {
+
+
+	    newBox.addEventListener('click', function () {
                 if(isClosedInfo == false && actualInfoShown == level.protocol){
 		    isClosedInfo = true
                     actualInfoShown = ''
@@ -700,16 +670,35 @@ AFRAME.registerComponent('packet', {
 		
             });
 
+	    level_index += 1
+	    level["box"] = newBox
 	    
+	    levels.push(level)
 	}
 
+        packet = Object.assign(packet, {"levels": levels});
 	
 
+	let bottommost_protocol = levels[0]["protocol"]	
+	let packetColor = getColor(bottommost_protocol);
+
+        packet.setAttribute('material', 'color', packetColor);
+        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
+        packet.setAttribute('class', packetParams.class);
+        packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
+        packet.setAttribute('id', packetParams.id);
 
 
-        // packet = Object.assign(packet, levels);
-	// console.log("levels")
-	// console.log (levels)
+
+
+
+	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+
+	packet.setAttribute('animation__hide', {property:'material.opacity', to:0, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "hide", enabled: 'false'})
+
+	packet.setAttribute('animation__show', {property:'material.opacity', to:1, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "show", enabled: 'false'})
+	
+
 
 
         packet.setAttribute('animation__park', {
@@ -854,28 +843,9 @@ AFRAME.registerComponent('packet', {
 	    break;
 
 	case "birth":
-	    let ev = null
-	    
-	    if (packetParams.from.startsWith('hub')){
-		packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-		ev = "out_of_node_immediate"
-	    }
-	    else{
-		packet.setAttribute("animation__out_of_node", {enabled: 'true'})
-		ev = "out_of_node"
-	    }
-	    anime(packet, ev)
-		.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
-		.then(() => anime(packet, 'show'))
-		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
-		.then(() => anime(packet, 'link'))
-		.then(() => {
-		    packet.setAttribute("animation__into_node", {enabled: 'true'})
-		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		})
-		.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
-		.then(() => anime(packet, 'hide'))
-		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+
+	    animate_birth(nodeAnimationTo, packetParams, packet)
+
 	    break;
 	}
 
@@ -934,6 +904,48 @@ function finish_packet(packet, packetParams){
     destroy(packet)
 }
 
+
+// returns promise
+function animate_birth(nodeAnimationTo, packetParams, packet){
+    let promise = Promise.resolve()
+
+    if (packetParams.from.startsWith('hub')){
+	packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
+	promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
+    }
+    else{
+	// Create level boxes from top to bottom
+	for (var i = packet.levels.length-1; i >= 0; i--){
+	    let box = packet.levels[i]["box"]
+	    console.log("box")
+	    console.log(box)
+	    
+	    box.setAttribute('visible', false)
+	    
+	    promise = promise
+	// 	.then(() => box.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	// 	.then(() =>	anime(packet, 'out_of_node'))
+	 	.then(() => box.setAttribute("visible", true))
+	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+	 	.then(() => anime(box, 'blink'))
+	}
+    }
+    
+    promise = promise
+	.then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
+	.then(() => anime(packet, 'show'))
+	.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
+	.then(() => anime(packet, 'link'))
+	.then(() => {
+	    packet.setAttribute("animation__into_node", {enabled: 'true'})
+	    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
+	})
+	.then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+	.then(() => anime(packet, 'hide'))
+	.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+
+    return promise
+}
 
 function animate_packet_arrives (nodeAnimation, packetParams, packet){
     let nodeName = packetParams.to
