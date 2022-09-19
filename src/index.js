@@ -772,7 +772,24 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 	
+        packet.setAttribute('animation__route', {
+            property: 'position',
+	    to: shiftCoords (
+		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
+		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+		data.elementsScale,
+		0.3
+	    ),
+            dur: packetParams.duration*2,
+            easing: 'easeInOutCubic',
+	    startEvents: "route",
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
+        });
+	
 
+	
         // packet.setAttribute('animation__into_node_final', {
         //     property: 'scale',
         //     to: {x: 0, y: 0, z: 0},
@@ -957,6 +974,14 @@ function animate_birth(packetParams, packet, noEth=false){
  	    .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
 	    .then(() =>	anime(packet, 'out_of_node'))
 
+	if (packetParams.ip
+	    && ! node.ipaddr.includes(packetParams.ip["ip.src"])		
+	    && ! node.ipaddr.includes(packetParams.ip["ip.dst"]))
+	{
+	    promise
+	    .then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+		.then(() => anime(packet, 'route'))
+	}
 	
 	// Show level boxes from top to bottom
 	for (var i = packet.levels.length-1; i >= 0; i--){
@@ -1047,7 +1072,8 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 
 	    node = nodeList.find(o => o.name === nodeName)
 
-	    // an IP datagram is being routed => don't blink layers above ip
+	    // It's an IP datagram is being routed => don't blink
+	    // layers above ip
 	    if (packetParams.ip
 		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
 		&& packet.levels[i]["protocol"]!="ip"
@@ -1064,8 +1090,9 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	if (packetParams.ip
 	    && ! node.ipaddr.includes(packetParams.ip["ip.dst"]))
 	{
-	    // an IP datagram is being routed => show the datagram on
-	    // next link before destroying the incoming datagram
+	    // It's an IP datagram is being routed => show the datagram on
+	    // next link before destroying the incoming datagram,
+	    // then move it towards destination 
 	    promise = promise
 	    	.then(() => next_packet_anim(packetParams))
 		.then(() => wait(1000))
@@ -1739,8 +1766,8 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
 }
 
 
-
-function shiftCoords (from, to, elementsScale){
+    
+function shiftCoords (from, to, elementsScale, shift = 0.2){
     coords = {};
     coords.x = from.x;
     coords.z = from.z;
@@ -1748,7 +1775,7 @@ function shiftCoords (from, to, elementsScale){
     slope = Math.abs(to.z - from.z) / Math.abs(to.x - from.x)
 
     
-    shift_x = 0.2* Math.abs(to.x-from.x)
+    shift_x = shift * Math.abs(to.x-from.x)
 
 
     if (to.x >= from.x && to.z >= from.z){
@@ -1801,7 +1828,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
-            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 1.2rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
+            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 1.5rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
             newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
             newSectionTemplate.id = id_text + "-template";
