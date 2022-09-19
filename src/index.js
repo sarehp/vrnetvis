@@ -1469,9 +1469,9 @@ function createNetwork(filename, elementScale){
 		node = nodeList[k];
 		
 		if(!node.name.startsWith('hub')){
-		    coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    coords = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
 		    node.routingTableText =
-			createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+			createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
 
 		}
 	    }
@@ -1600,7 +1600,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
+	coords = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
@@ -1741,34 +1741,32 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
 
 
 function shiftCoords (from, to, elementsScale){
-    coordinates = {};
-    coordinates.x = from.x;
-    coordinates.z = from.z;
+    coords = {};
+    coords.x = from.x;
+    coords.z = from.z;
 
     slope = Math.abs(to.z - from.z) / Math.abs(to.x - from.x)
-
-    
 
     
     shift_x = 0.2* Math.abs(to.x-from.x)
 
 
-    if (to.x > from.x && to.z > from.z){
-	coordinates.x += shift_x;
+    if (to.x >= from.x && to.z >= from.z){
+	coords.x += shift_x;
     }
-    else if (to.x > from.x && to.z < from.z){
-	coordinates.x += shift_x;
+    else if (to.x >= from.x && to.z <= from.z){
+	coords.x += shift_x;
     }
-    else if (to.x < from.x && to.z > from.z){
-	coordinates.x -= shift_x;
+    else if (to.x <= from.x && to.z >= from.z){
+	coords.x -= shift_x;
     }
-    else if (to.x < from.x && to.z < from.z){
-	coordinates.x -= shift_x;
+    else if (to.x <= from.x && to.z <= from.z){
+	coords.x -= shift_x;
     }
 
-    coordinates.z = from.z + (coordinates.x - from.x) * (to.z - from.z) / (to.x - from.x) 
+    coords.z = from.z + (coords.x - from.x) * (to.z - from.z) / (to.x - from.x) 
     
-    return coordinates;
+    return coords;
 }
 
 
@@ -1810,7 +1808,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             htmltemplates.appendChild(newSectionTemplate);
 
 
-	    coordinates = shiftCoords (
+	    coords = shiftCoords (
 		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale,  "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
 		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
 		data.elementsScale
@@ -1820,15 +1818,15 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 	    if (viewing_mode == "vr")
 		newText.setAttribute('position', {
-		    x: coordinates.x,
+		    x: coords.x,
 		    y: data.height * 1.01,
-		    z: coordinates.z
+		    z: coords.z
 		});
 	    else // viewing_mode == "desktop"
 		newText.setAttribute('position', {
-		    x: coordinates.x,
+		    x: coords.x,
 		    y: data.height * 0.5,
-		    z: coordinates.z
+		    z: coords.z
 		});
 		
 
@@ -1851,7 +1849,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 
 
-function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
+function createRoutingTableInfo(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
 
@@ -1866,9 +1864,9 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
 
     let newText = document.createElement('a-entity');
     newText.setAttribute('position', {
-	x: coordinates.x,
-	y: (4.5)/elementsScale + coordinates.y,
-	z: coordinates.z
+	x: coords.x,
+	y: (4.5)/elementsScale + coords.y,
+	z: coords.z
     });
     
 
