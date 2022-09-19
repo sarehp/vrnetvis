@@ -1,0 +1,13 @@
+[
+    {
+	"view": "ALL",
+	"text":"hop-by-hop with ARP",
+	"color": "green"
+    },
+    
+    {
+	"view": "APPLICATION+TRANSPORT+NETWORK",
+	"text": "hop-by-hop without ARP",
+	"color": "green"
+    }
+]

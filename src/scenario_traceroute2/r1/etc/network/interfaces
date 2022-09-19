@@ -1,0 +1,25 @@
+######################################################################
+
+auto lo
+iface lo inet loopback
+
+
+auto eth0
+iface eth0 inet static
+     hwaddress ether 00:1c:42:00:00:01
+     address 11.0.0.1
+     netmask 255.255.255.0
+
+auto eth1
+iface eth1 inet static
+     hwaddress ether 00:1c:42:00:01:01
+     address 13.0.0.1
+     netmask 255.255.255.0
+
+auto eth2
+iface eth2 inet static
+     hwaddress ether 00:1c:42:00:02:01
+     address 12.0.0.1
+     netmask 255.255.255.0
+
+up route add default gw 13.0.0.3

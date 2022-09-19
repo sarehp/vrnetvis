@@ -20,6 +20,8 @@
 2. ```$ ln -f -s scenario_NAME/netgui.nkp .```
 3. ```$ ln -f -s scenario_NAME/caps.json .```
 4. ```ln -f -s scenario_NAME/shared/*.json . ```
+5. ```ln -f -s scenario_NAME/viewsMenu.json . ```
+
 Link all files in caps.json.
 
 Usually we use only one capture file obtained by merging with mergecap.
