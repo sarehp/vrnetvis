@@ -434,7 +434,7 @@ function showRoutingTable(id, newInfoText, newBox){
 }
 
 
-function showInfoText(protocol, packetParams, newInfoText, newBox){
+function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     let infoText = ""
     color = getColor(protocol)
@@ -521,10 +521,16 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 	break;
 
     case 'eth':
+	if (noEth){
+	    ethDst = ""
+	    console.log("NO ETH")
+	}
+	else
+	    ethDst = packetParams.eth['eth.dst'] 
 	infoText += '<p>' + h2 + 
             'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
             'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
-            'Destino: ' + packetParams.eth['eth.dst']  + '</p><p>' +  
+            'Destino: ' + ethDst + '</p><p>' +  
             'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
 
 	break;
@@ -534,8 +540,8 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     newInfoText.setAttribute('visible', true);
     newInfoText.removeAttribute('html');
     var textTemplate = document.getElementById(packetParams.id + '-template');
-    textTemplateContent = infoText 
-    textTemplate.innerHTML = textTemplateContent;
+
+    textTemplate.innerHTML = infoText
 
     textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
@@ -606,8 +612,10 @@ AFRAME.registerComponent('packet', {
         newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
         newInfoText.setAttribute('isPoster', true); 
 
+	newInfoText.setAttribute('id', "infotext" + packet.id)
 
-        packet.appendChild(newInfoText);
+        packet.appendChild(newInfoText)
+
 
 
 	let actualInfoShown = ''
@@ -649,7 +657,7 @@ AFRAME.registerComponent('packet', {
             newBox.setAttribute('visible', false); 
 
 
-	    packet.appendChild(newBox);
+	    packet.appendChild(newBox)
 
 	    // if (topmost_protocol == "eth")
 	    // 	showInfoText("eth", packetParams, newInfoText, newBox)
@@ -762,12 +770,39 @@ AFRAME.registerComponent('packet', {
         });
 
 	
+        // packet.setAttribute('animation__link', {
+        //     property: 'position',
+	//     to: pointInSegment (
+	// 	{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
+	// 	{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+	// 	data.elementsScale,
+	// 	-0.2
+	//     ),
+        //     dur: packetParams.duration,
+        //     easing: 'easeInOutCubic',
+	//     startEvents: "link",
+        //     pauseEvents:'animation-pause', 
+        //     resumeEvents:'animation-resume',
+	//     enabled: 'false' // if not false, when resumed it starts. A bug.
+        // });
+
         packet.setAttribute('animation__link', {
             property: 'position',
-            to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
+	    to: {"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
             dur: packetParams.duration,
             easing: 'easeInOutCubic',
 	    startEvents: "link",
+            pauseEvents:'animation-pause', 
+            resumeEvents:'animation-resume',
+	    enabled: 'false' // if not false, when resumed it starts. A bug.
+        });
+	
+        packet.setAttribute('animation__into_node', {
+            property: 'position',
+	    to: {"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+            dur: packetParams.duration,
+            easing: 'linear',
+	    startEvents: "into_node",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
@@ -779,7 +814,7 @@ AFRAME.registerComponent('packet', {
 		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
 		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
 		data.elementsScale,
-		0.3
+		0.2
 	    ),
             dur: packetParams.duration*2,
             easing: 'easeInOutCubic',
@@ -791,28 +826,6 @@ AFRAME.registerComponent('packet', {
 	
 
 	
-        // packet.setAttribute('animation__into_node_final', {
-        //     property: 'scale',
-        //     to: {x: 0, y: 0, z: 0},
-        //     dur: packetParams.duration/2,
-        //     easing: 'linear',
-	//     startEvents: 'into_node_final',
-        //     pauseEvents:'animation-pause', 
-        //     resumeEvents:'animation-resume',
-	//     enabled: 'false' // if not false, when resumed it starts. A bug.
-        // });
-
-        // packet.setAttribute('animation__into_node', {
-        //     property: 'scale',
-        //     to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
-        //     dur: packetParams.duration/2,
-        //     easing: 'linear',
-	//     startEvents: 'into_node',
-        //     pauseEvents:'animation-pause', 
-        //     resumeEvents:'animation-resume',
-	//     enabled: 'false' // if not false, when resumed it starts. A bug.
-        // });
-
 	
     },
     
@@ -832,8 +845,7 @@ AFRAME.registerComponent('packet', {
 	case "park":
 	    let a_promise = wait(500)
 		.then(() => animate_birth(packetParams, packet, true))
-		.then(() => ethBox.setAttribute("animation__fadeout", {enabled: 'true'}))
-		.then(() => anime(ethBox, 'fadeout'))
+		.then(() => ethBox.setAttribute('opacity', 0.5))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
 
@@ -843,6 +855,10 @@ AFRAME.registerComponent('packet', {
 
 	case "unpark":
 	    Promise.resolve()
+		.then(() => {
+		    newInfoText = packet.querySelector("#infotext" + packet.id)
+		    showInfoText("eth", packetParams, newInfoText, ethBox)
+		})
 		.then(() => ethBox.setAttribute('visible', true))
 		.then(() => ethBox.setAttribute('opacity', 0.5))
 		.then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
@@ -852,17 +868,13 @@ AFRAME.registerComponent('packet', {
 		.then(() => ethBox.setAttribute('animation__fadein', {enabled: 'true'}))
 		.then(() => anime(ethBox,'fadein'))
 		.then(() => ethBox.setAttribute('animation__blink', {enabled: 'true'}))
-		.then (() => anime(ethBox, 'blink'))
+		.then(() => anime(ethBox, 'blink'))
 		.then(() => packet.setAttribute("animation__unpark", {enabled: 'true'}))
 		.then(() => anime(packet, 'unpark'))
 		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
 		.then(() => sphere.setAttribute('visible', false))
-		// .then(() => {
-		//     packet.setAttribute("animation__into_node", {enabled: 'true'})
-		//     packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		// })
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
 
@@ -871,10 +883,7 @@ AFRAME.registerComponent('packet', {
 		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
-		// .then(() => {
-		//     packet.setAttribute("animation__into_node", {enabled: 'true'})
-		//     packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		// })
+//		.then(() => anime(packet, 'into_node'))	    
 		.then(() => sphere.setAttribute('visible', true))
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    
@@ -940,6 +949,7 @@ function finish_packet(packet, packetParams){
 }
 
 
+
 // returns promise
 function animate_birth(packetParams, packet, noEth=false){
     let promise = Promise.resolve()
@@ -993,22 +1003,37 @@ function animate_birth(packetParams, packet, noEth=false){
 	    if (packetParams.ip
 		&& ! node.ipaddr.includes(packetParams.ip["ip.src"])		
 		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
-		&& packet.levels[i]["protocol"]!= "eth")
-//		&& packet.levels[i]["protocol"]!= "ip")
+		&& packet.levels[i]["protocol"]!= "eth"
+		&& packet.levels[i]["protocol"]!= "ip")
 	    {  // it's an ip datagram being routed => dont create
 	       // levels above ip, just draw them. ip is blinked to
 	       // signify TTL modified
 	 	box.setAttribute("visible", true)
+
+		var newInfoText = packet.querySelector("#infotext" + packet.id)
+
+		console.log("infotext__")
+		console.log(newInfoText)
+		showInfoText(packet.levels[i]["protocol"], packetParams, newInfoText, box, noEth)
+		
 	    }
 	    else
 	    {
+		let protocol = packet.levels[i]["protocol"]
 		promise = promise
 	 	    .then(() => box.setAttribute("visible", true))
+		    .then(() => {
+			newInfoText = packet.querySelector("#infotext" + packet.id)
+			showInfoText(protocol, packetParams, newInfoText, box, noEth)
+		    })
 	 	    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
 	 	    .then(() => anime(box, 'blink'))
 		    .then(() => wait(500))
 	    }
+
+	    
 	}
+
     }
     
 
@@ -1067,16 +1092,27 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 
 	    node = nodeList.find(o => o.name === nodeName)
 
+	    let protocol = packet.levels[i]["protocol"]
+
 	    // It's an IP datagram is being routed => don't blink
 	    // layers above ip
 	    if (packetParams.ip
 		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
 		&& packet.levels[i]["protocol"]!="ip"
-		&& packet.levels[i]["protocol"]!="eth")
+		&& packet.levels[i]["protocol"]!="eth"){
+
+		newInfoText = packet.querySelector("#infotext" + packet.id)
+		showInfoText(protocol, packetParams, newInfoText, box)
+		
 		break
+	    }
 
 
 	    promise = promise
+		.then(() => {
+		    newInfoText = packet.querySelector("#infotext" + packet.id)
+		    showInfoText(protocol, packetParams, newInfoText, box)
+		})
 	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
 	 	.then(() => anime(box, 'blink'))
 
@@ -1098,13 +1134,14 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    // next link before destroying the incoming datagram,
 	    // then move it towards destination 
 	    promise = promise
+		.then(() => wait(1000))
 	    	.then(() => next_packet_anim(packetParams))
 		.then(() => wait(1000))
 		.then(() => finish_packet(packet, packetParams))
 	}
 	else{
 	    promise = promise
-		.then(() => wait(500))
+		.then(() => wait(1000))
 		.then(() => finish_packet(packet, packetParams))
 		.then(() => wait(1000))
 		.then(() => next_packet_anim(packetParams))
@@ -1193,7 +1230,7 @@ AFRAME.registerComponent('controller', {
 			    newPacket.createAnimation()
 			    
 			    
-			    newPacket.startAnimation("birth")
+			    newPacket.startAnimation("birth", true)
 			    flying.push(finalPackets[next_packet].newPacket)
 			    next_packet += 1
 			    packets_ready = true
