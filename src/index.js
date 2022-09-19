@@ -633,7 +633,8 @@ AFRAME.registerComponent('packet', {
 
 	    
             let newBox = document.createElement('a-box');
-	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
+	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
+
 	    
 	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
@@ -715,7 +716,7 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('animation__park', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 5, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -774,7 +775,7 @@ AFRAME.registerComponent('packet', {
 	
         packet.setAttribute('animation__route', {
             property: 'position',
-	    to: shiftCoords (
+	    to: pointInSegment (
 		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
 		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
 		data.elementsScale,
@@ -833,10 +834,6 @@ AFRAME.registerComponent('packet', {
 		.then(() => animate_birth(packetParams, packet, true))
 		.then(() => ethBox.setAttribute("animation__fadeout", {enabled: 'true'}))
 		.then(() => anime(ethBox, 'fadeout'))
-		// .then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
-		// .then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
-		// .then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
-		// .then(() => anime(ethBox, 'blink'))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
 
@@ -849,15 +846,13 @@ AFRAME.registerComponent('packet', {
 		.then(() => ethBox.setAttribute('visible', true))
 		.then(() => ethBox.setAttribute('opacity', 0.5))
 		.then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
-		.then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		.then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
 		.then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
 		.then(() => anime(ethBox, 'blink'))
 		.then(() => ethBox.setAttribute('animation__fadein', {enabled: 'true'}))
 		.then(() => anime(ethBox,'fadein'))
 		.then(() => ethBox.setAttribute('animation__blink', {enabled: 'true'}))
 		.then (() => anime(ethBox, 'blink'))
-		// .then(() => packet.setAttribute("animation__show", {enabled: 'true'}))
-		// .then(() => anime(ethBox, 'show'))
 		.then(() => packet.setAttribute("animation__unpark", {enabled: 'true'}))
 		.then(() => anime(packet, 'unpark'))
 		.then(() => sphere.setAttribute('visible', true))
@@ -978,8 +973,8 @@ function animate_birth(packetParams, packet, noEth=false){
 	    && ! node.ipaddr.includes(packetParams.ip["ip.src"])		
 	    && ! node.ipaddr.includes(packetParams.ip["ip.dst"]))
 	{
-	    promise
-	    .then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+	    promise = promise
+		.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
 		.then(() => anime(packet, 'route'))
 	}
 	
@@ -998,8 +993,8 @@ function animate_birth(packetParams, packet, noEth=false){
 	    if (packetParams.ip
 		&& ! node.ipaddr.includes(packetParams.ip["ip.src"])		
 		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
-		&& packet.levels[i]["protocol"]!= "eth"
-		&& packet.levels[i]["protocol"]!= "ip")
+		&& packet.levels[i]["protocol"]!= "eth")
+//		&& packet.levels[i]["protocol"]!= "ip")
 	    {  // it's an ip datagram being routed => dont create
 	       // levels above ip, just draw them. ip is blinked to
 	       // signify TTL modified
@@ -1080,10 +1075,19 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 		&& packet.levels[i]["protocol"]!="eth")
 		break
 
+
 	    promise = promise
 	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
 	 	.then(() => anime(box, 'blink'))
-		.then(() => box.setAttribute('visible', false))
+
+
+	    isDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
+	    notDestinationEliminateEth = packetParams.ip && (! node.ipaddr.includes(packetParams.ip["ip.dst"])) && packet.levels[i]["protocol"] == "eth"
+	    if (isDestination || notDestinationEliminateEth || !packetParams.ip)
+		 promise = promise
+		 .then(() => box.setAttribute('visible', false))
+		 
+		     
 	}
 
 
@@ -1102,6 +1106,7 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    promise = promise
 		.then(() => wait(500))
 		.then(() => finish_packet(packet, packetParams))
+		.then(() => wait(1000))
 		.then(() => next_packet_anim(packetParams))
 	}
 
@@ -1766,16 +1771,33 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
 }
 
 
+// Returns a point in the segment from-to
+//
+// if shift > 0 return a point close to from, at a distance
+// proportional to shift
+//
+// if shift < 0 return a point close to to, at a distance
+// proportional to shift
+function pointInSegment (from, to, elementsScale, shift = 0.2){
+
     
-function shiftCoords (from, to, elementsScale, shift = 0.2){
     coords = {};
-    coords.x = from.x;
-    coords.z = from.z;
+
+    if (shift >= 0)
+    {
+	coords.x = from.x;
+	coords.z = from.z;
+    }
+    else
+    {
+	coords.x = to.x;
+	coords.z = to.z;
+    }
 
     slope = Math.abs(to.z - from.z) / Math.abs(to.x - from.x)
 
-    
     shift_x = shift * Math.abs(to.x-from.x)
+
 
 
     if (to.x >= from.x && to.z >= from.z){
@@ -1835,7 +1857,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             htmltemplates.appendChild(newSectionTemplate);
 
 
-	    coords = shiftCoords (
+	    coords = pointInSegment (
 		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale,  "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
 		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
 		data.elementsScale
