@@ -1204,12 +1204,13 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 
 	    promise = promise
 	 	.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
-	 	.then(() => anime(box, 'blink'))
 		.then(() => {
 		    newInfoText = packet.querySelector("#infotext" + packet.id)
 		    showInfoText(protocol, packetParams, newInfoText, box)
 		})
+	 	.then(() => anime(box, 'blink'))
 
+    
 
 	    isIPDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
 	    switch(packet.levels[i]["protocol"]){
@@ -1226,7 +1227,11 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 	    default:
 		if (isIPDestination)
 		    promise = promise
-		    .then(() => box.setAttribute('visible', false))
+		    .then(() => {
+			newInfoText = packet.querySelector("#infotext" + packet.id)
+			newInfoText.setAttribute('visible', false)
+			box.setAttribute('visible', false)
+		    })
 		break;
 	    }
 		
