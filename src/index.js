@@ -878,6 +878,7 @@ AFRAME.registerComponent('packet', {
 	
 	switch (anim) {
 	case "park":
+
 	    let a_promise = wait(500)
 		.then(() => animate_birth(packetParams, packet, true))
 		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
@@ -926,17 +927,24 @@ AFRAME.registerComponent('packet', {
 	    break;
 
 	case "birth":
-	    let promise = Promise.resolve()
+	    var promise = Promise.resolve()
 
 	    promise = promise
 		.then(() => animate_birth(packetParams, packet))
 
-	    // if (packetParams.ip){
-	    // 	promise = promise
-	    // 	    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-	    // 	    .then(() => wait(2000))
-	    // 	    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
-	    // }
+	    if (packetParams.ip && !node.name.startsWith('hub')){
+
+		console.log("node")
+		console.log(node)
+		console.log("packetParams")
+		console.log(packetParams)		
+		
+		promise = promise
+		    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+		    .then(() => wait(2000))
+		    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+	    }
+	    
 	    promise = promise
 		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
