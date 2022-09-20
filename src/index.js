@@ -880,9 +880,9 @@ AFRAME.registerComponent('packet', {
 
 	    let a_promise = wait(500)
 		.then(() => animate_birth(packetParams, packet, true))
-		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-		.then(() => wait(2000))
-		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
+		// .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+		// .then(() => wait(2000))
+		// .then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
 		.then(() => ethBox.setAttribute('opacity', 0.5))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
@@ -938,10 +938,10 @@ AFRAME.registerComponent('packet', {
 		console.log("packetParams")
 		console.log(packetParams)		
 		
-		promise = promise
-		    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-		    .then(() => wait(2000))
-		    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+		// promise = promise
+		//     .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+		//     .then(() => wait(2000))
+		//     .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
 	    }
 	    
 	    promise = promise
@@ -1089,6 +1089,20 @@ function animate_birth(packetParams, packet, noEth=false){
 	    else
 	    {
 		let protocol = packet.levels[i]["protocol"]
+
+		if (packetParams.ip && protocol == "eth"){
+		    var newNodeElement = document.querySelector("#" + node.name)
+		    promise = promise
+			.then(() => showRoutingTable(node.routingTableText, newNodeElement))
+			.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+			.then(() => anime(packet, 'route'))
+			.then(() => wait(1000))
+			.then(() => node.routingTableText.setAttribute('visible', false))
+			.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+			.then(() => wait(2000))
+			.then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+		}
+		    
 		promise = promise
 	 	    .then(() => box.setAttribute("visible", true))
 	 	    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
@@ -1102,21 +1116,22 @@ function animate_birth(packetParams, packet, noEth=false){
 
 	    
 	}
-	if (packetParams.ip
-	    && ! node.ipaddr.includes(packetParams.ip["ip.src"]))
-//	    && ! node.ipaddr.includes(packetParams.ip["ip.dst"]))
-	{
+// 	if (packetParams.ip
+// 	    && ! node.ipaddr.includes(packetParams.ip["ip.src"]))
+// //	    && ! node.ipaddr.includes(packetParams.ip["ip.dst"]))
+// 	{
 
-	    var newNodeElement = document.querySelector("#" + node.name)
-	    promise = promise
-		.then(() => showRoutingTable(node.routingTableText, newNodeElement))
-		.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
-		.then(() => anime(packet, 'route'))
-		.then(() => node.routingTableText.setAttribute('visible', false))
-		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-		.then(() => wait(2000))
-		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
-	}
+// 	    var newNodeElement = document.querySelector("#" + node.name)
+// 	    promise = promise
+// 		.then(() => showRoutingTable(node.routingTableText, newNodeElement))
+// 		.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+// 		.then(() => anime(packet, 'route'))
+// 		.then(() => wait(1000))
+// 		.then(() => node.routingTableText.setAttribute('visible', false))
+// 		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+// 		.then(() => wait(2000))
+// 		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
+// 	}
 	
 
     }
