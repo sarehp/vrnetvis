@@ -677,9 +677,9 @@ AFRAME.registerComponent('packet', {
 	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
 
 	    
-	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
-	    newBox.setAttribute('animation__fadein', {property:'material.opacity', to:1, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadein", enabled: 'false'})
+	    newBox.setAttribute('animation__fadein', {property:'material.opacity', to:1, dur:500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadein", enabled: 'false'})
 	    
 	    
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
@@ -739,7 +739,6 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
         packet.setAttribute('class', packetParams.class);
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
-
 
 
 
@@ -994,7 +993,26 @@ function next_packet_anim(packetParams) {
 };
 
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const wwait = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms)
+});
+
+// Waits ms milliseconds and then:
+//
+// if animationState == 'PAUSED' it waits 100ms, and checks again
+//     every 100ms until animationState != PAUSED
+//
+// Returns a promise so you can use in a then() chain
+const wait = (ms) =>
+      new Promise((resolve) =>
+		  {
+		      (function f(mms){
+			  setTimeout(() => {
+			      if (animationState == 'PAUSED') f(100)
+			      else resolve()
+			  }, mms)
+		      })(ms);
+		  });
 
 const anime = (target, animation_name) => 
       new Promise((resolve) =>
