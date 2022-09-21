@@ -1249,8 +1249,6 @@ AFRAME.registerComponent('model-opacity', {
 
 
 
-CURRENT_TIME=0
-latest_start = -2
 
 AFRAME.registerComponent('controller', {
 
@@ -1261,10 +1259,6 @@ AFRAME.registerComponent('controller', {
 
     do_animate: function(event)
     {
-	// if (latest_start == event.detail.start)
-	//     return
-	// latest_start = event.detail.start
-
 	let packets_ready = false
 
 	let deleteARPCache = function(packet_index){
