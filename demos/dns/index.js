@@ -36,12 +36,12 @@ var COLORS = {dns:"goldenrod",
 	      http:"gold",
 	      dataInfo:"white",
 	      data:"white",
-	      tcp:"steelblue",
+	      tcp:"#A9CCE3",
 	      udp:"orchid",
 	      icmp:"red",
 	      ip:"LightGreen", // verde
 	      arp:"sandybrown",
-	      ethernet:"khaki"}
+	      eth:"khaki"}
 
 
 
@@ -187,10 +187,6 @@ function hideViews()
 
 // Creates a box for each menu option in VIEWS_MENU
 function createViewSelector(position) {
-    console.log("VIEWS_MENU: ")
-    console.log(VIEWS_MENU)
-
-
     
     for (var i = 0; i < VIEWS_MENU.length; i++) {
 
@@ -246,14 +242,10 @@ function createViewSelector(position) {
 	    else // "desktop"
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
 
-
-
 	    
-	    
-	    console.log ("new view: " + newView)
 	}
 
-	console.log("adding listener with " + VIEWS_MENU[i].view)
+
         viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i]));
 	
         scene.appendChild(viewSelectorApp);
@@ -335,13 +327,9 @@ AFRAME.registerComponent('network', {
 
 	finalPackets.length=0
 	flying.length=0
-	
-
-	console.log("network removed");
     },
     
     init: function() {
-	console.log("init network")
 	
 	// // request netgui.nkp
         data = this.data
@@ -432,12 +420,12 @@ function getColor(protocol){
 }
 
 
-function showRoutingTable(id, newInfoText, newBox){
+function showRoutingTable(newInfoText, newBox){
     newInfoText.removeAttribute('html');
 
-    var textTemplate = document.getElementById(id + '-template');
+    var textTemplate = document.getElementById(newBox.id + '-template');
     
-    newInfoText.setAttribute('html', '#' + id +  "routing_table" + '-template');
+    newInfoText.setAttribute('html', '#' + newBox.id +  "routing_table" + '-template');
 
     
     newInfoText.setAttribute('visible', true);
@@ -446,7 +434,24 @@ function showRoutingTable(id, newInfoText, newBox){
 }
 
 
-function showInfoText(protocol, packetParams, newInfoText, newBox){
+
+
+function showARPCacheInfoText(newInfoText, arpCache){
+    var infotext = formatARPCache(arpCache)
+
+    newInfoText.setAttribute('visible', true);
+    newInfoText.removeAttribute('html');
+
+    var textTemplate = document.getElementById(newInfoText.id + '-template');
+    
+    textTemplate.innerHTML = infotext
+
+    textTemplate.style = "display: inline-block; background: #5f6a76; color: white; border-radius: 1em; padding: 1em; margin:0;"
+    newInfoText.setAttribute('html', '#' + newInfoText.id + '-template');
+    newInfoText.setAttribute('visible', true);
+}
+
+function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     let infoText = ""
     color = getColor(protocol)
@@ -490,7 +495,25 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
 	infoText += '<p>' + h2 + 
             'Nivel TCP:</h2></p>' + h3 + '<p>' +
             'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
-            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p></h3>'
+            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p><p>'
+
+        let tcp_flags_str =""
+
+        if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.syn"] == "1")
+            tcp_flags_str += "SYN "
+        if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.fin"] == "1")
+            tcp_flags += "FIN "
+        if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.ack"] == "1")
+            tcp_flags_str += "ACK "
+        if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.reset"] == "1")
+            tcp_flags_str += "RST "
+        if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.push"] == "1")
+             tcp_flags_str += "PSH "
+
+        infoText += 'Flags: ' + tcp_flags_str + '</p><p>'
+        infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '</p><p>' +
+                    'Ack: ' +  packetParams.tcp['tcp.ack'] + '</p><p>' +
+                    'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</p></h3>' 
 	break;
 
     case 'udp':
@@ -532,11 +555,16 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
             'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
 	break;
 
-    case 'ethernet':
+    case 'eth':
+	if (noEth){
+	    ethDst = ""
+	}
+	else
+	    ethDst = packetParams.eth['eth.dst'] 
 	infoText += '<p>' + h2 + 
             'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
             'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
-            'Destino: ' + packetParams.eth['eth.dst']  + '</p><p>' +  
+            'Destino: ' + ethDst + '</p><p>' +  
             'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
 
 	break;
@@ -546,8 +574,8 @@ function showInfoText(protocol, packetParams, newInfoText, newBox){
     newInfoText.setAttribute('visible', true);
     newInfoText.removeAttribute('html');
     var textTemplate = document.getElementById(packetParams.id + '-template');
-    textTemplateContent = infoText 
-    textTemplate.innerHTML = textTemplateContent;
+
+    textTemplate.innerHTML = infoText
 
     textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
@@ -588,51 +616,19 @@ AFRAME.registerComponent('packet', {
         let packet = this.el
         let packetParams = this.data
 
-
-
-        packet.setAttribute('geometry', {primitive: 'cylinder', 'height': 0.4/packetParams.elementsScale, radius: 0.4/packetParams.elementsScale });
-
-
-	let topmost_protocol = "";
-	if(packetParams.dns){
-	    topmost_protocol = "dns"
-	}else if(packetParams.http){
-	    topmost_protocol = "http"
-	}else if(packetParams.dataInfo){
-	    topmost_protocol = "dataInfo"                        
-	}else if(packetParams.data){
-	    topmost_protocol = "data"                        
-	}else if(packetParams.tcp){
-	    topmost_protocol = "tcp"                        
-	}else if(packetParams.udp){
-	    topmost_protocol = "udp"                        
-	}else if(packetParams.icmp){
-	    topmost_protocol = "icmp"                        
-	}else if(packetParams.ip){
-	    topmost_protocol = "ip"                        
-	}else if(packetParams.arp){
-	    topmost_protocol = "arp"                        
-	}else if(packetParams.eth){
-	    topmost_protocol = "ethernet"                        
-        }
-
-	let packetColor = getColor(topmost_protocol);
-	
-        packet.setAttribute('material', 'color', packetColor);
-        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
-        packet.setAttribute('class', packetParams.class);
-        packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
         packet.setAttribute('id', packetParams.id);
+	
+	// The sphere in the link representing a packet
+	let sphere = document.createElement('a-sphere');
+        sphere.setAttribute('id', 'sphere'+packet.id)
+        sphere.setAttribute('geometry', {primitive: 'sphere',  radius: 0.1/packetParams.elementsScale });
+        sphere.setAttribute('visible', false)
 
-	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-
-            
+	packet.appendChild(sphere)
 
 	
-        let levels = {}
         let isClosedInfo = false
-        let actualInfoShown = topmost_protocol;
+
 
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
@@ -640,7 +636,8 @@ AFRAME.registerComponent('packet', {
         newSectionTemplate.id = packetParams.id + '-template'
         htmltemplates.appendChild(newSectionTemplate);
 
-        let newInfoText = document.createElement('a-entity');
+
+	let newInfoText = document.createElement('a-entity');
         
         newInfoText.setAttribute('position', { x: 5 , y: 3, z: 0 });
         newInfoText.setAttribute('look-at', "[camera]");
@@ -648,491 +645,118 @@ AFRAME.registerComponent('packet', {
         newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
         newInfoText.setAttribute('isPoster', true); 
 
-        packet.appendChild(newInfoText);
+	newInfoText.setAttribute('id', "infotext" + packet.id)
 
+        packet.appendChild(newInfoText)
+
+
+
+	let actualInfoShown = ''
 	
-        if(packetParams.eth){
-            const ethInfo = {
-                eth: packetParams.eth
-            }
-            levels = Object.assign(levels,ethInfo);
-        }
-        if(packetParams.ip){
-            const ipInfo = {
-                ip: packetParams.ip
-            }
-            levels = Object.assign(levels,ipInfo);
-        }
-        if(packetParams.arp){
-            const arpInfo = {
-                arp: packetParams.arp
-            }
-            levels = Object.assign(levels,arpInfo);
-        }
-        if(packetParams.icmp){
-            const icmpInfo = {
-                icmp: packetParams.icmpInfo
-            }
-            levels = Object.assign(levels,icmpInfo);
-        }
-        if(packetParams.tcp){
-            const tcpInfo = {
-                tcp: packetParams.tcpInfo
-            }
-            levels = Object.assign(levels,tcpInfo);
-        }
-        if(packetParams.udp){
-            const udpInfo = {
-                udp: packetParams.udpInfo
-            }
-            levels = Object.assign(levels,udpInfo);
-        }
-        if(packetParams.http){
-            const httpInfo = {
-                http: packetParams.httpInfo
-            }
-            levels = Object.assign(levels,httpInfo);
-        }
-        if(packetParams.dns){
-            const dnsInfo = {
-                dns: packetParams.dns
-            }
-            levels = Object.assign(levels,dnsInfo);
-        }
-        if(packetParams.dataInfo){
-            const dataInfo = {
-                dataInfo: packetParams.dataInfo
-            }
-            levels = Object.assign(levels,dataInfo);
-        }
-        if(packetParams.data){
-            const data = {
-                data: packetParams.data
-            }
-            levels = Object.assign(levels,data);
-        }
-        
-        if(levels.hasOwnProperty('eth') && 	!isEndToEndVIEW()){
-            index = Object.keys(levels).findIndex(item => item === 'eth')
+	protocols = ["eth", "ip", "arp", "icmp", "tcp", "udp", "http", "dns", "dataInfo", "data"]
+        let levels = []
 
-            let newEthBox = document.createElement('a-box');
+	level_index = 0
+	for (const protocol of protocols){
 
+	    if (!packetParams[protocol])
+		continue
 
-	    newEthBox.setAttribute('animation__blinkEth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blinkEth", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
+	    let level = {
+                "protocol": protocol,
+	    }
 
-	    newEthBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+	    hop_by_hop_protocols = ["eth", "arp", "ip"]
 
-	    
-	    newEthBox.setAttribute('id', "ethBox" + packetParams.id);
-	    
-	    newEthBox.setAttribute('position', { x: 0, y:  2 + (index), z: 0 });
-            newEthBox.setAttribute('color', getColor("ethernet"));
-            newEthBox.setAttribute('visible', true); 
-
-            packet.appendChild(newEthBox);
-
-	    if (topmost_protocol == "ethernet")
-		showInfoText("ethernet", packetParams, newInfoText, newEthBox)
+	    if (hop_by_hop_protocols.includes(level.protocol) && isEndToEndVIEW())
+		continue
 	    
 
-            newEthBox.addEventListener('mouseenter', function () {
-                newEthBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+	    
+            let newBox = document.createElement('a-box');
+	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
+
+	    
+	    newBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+
+	    newBox.setAttribute('animation__fadein', {property:'material.opacity', to:1, dur:500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadein", enabled: 'false'})
+	    
+	    
+	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
+
+	    
+	    newBox.setAttribute('position', { x: 0, y:  2 + (level_index), z: 0 });
+            newBox.setAttribute('color', getColor(level.protocol));
+            newBox.setAttribute('visible', false); 
+
+
+	    packet.appendChild(newBox)
+
+	    // if (topmost_protocol == "eth")
+	    // 	showInfoText("eth", packetParams, newInfoText, newBox)
+
+	    
+
+            newBox.addEventListener('mouseenter', function () {
+                newBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
             });
-            newEthBox.addEventListener('mouseleave', function () {
-                newEthBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newEthBox.removeAttribute('animation');
-                newEthBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
+            newBox.addEventListener('mouseleave', function () {
+                newBox.setAttribute('scale', {x: 1, y: 1, z: 1})
+                newBox.removeAttribute('animation');
+                newBox.setAttribute('rotation', {x: 0, y: 0, z: 0 });
             });
-            newEthBox.addEventListener('click', function () {
-                if(isClosedInfo == false && actualInfoShown == "ethernet"){
+
+
+	    newBox.addEventListener('click', function () {
+                if(isClosedInfo == false && actualInfoShown == level.protocol){
 		    isClosedInfo = true
                     actualInfoShown = ''
                     newInfoText.setAttribute('visible', false);
-                    newEthBox.removeAttribute('sound');
+                    newBox.removeAttribute('sound');
                     newInfoText.removeAttribute('html');
-                    newEthBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
+                    newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
                 }else{
                     isClosedInfo = false
-		    actualInfoShown = "ethernet"
-		    showInfoText("ethernet", packetParams, newInfoText, newEthBox);
+		    actualInfoShown = level.protocol
+		    showInfoText(level.protocol, packetParams, newInfoText, newBox);
                 }
 		
             });
-        }
-        if(levels.hasOwnProperty('ip') && 	!isEndToEndVIEW()){
-            index = Object.keys(levels).findIndex(item => item === 'ip')
-	    let newIpBox = document.createElement('a-box');
-	    newIpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+
+	    level_index += 1
+	    level["box"] = newBox
 	    
-            newIpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newIpBox.setAttribute('color', getColor("ip"));
-            newIpBox.setAttribute('visible', true); 
+	    levels.push(level)
+	}
 
-            packet.appendChild(newIpBox);
-
-	    if (topmost_protocol == "ip")
-		showInfoText("ip", packetParams, newInfoText, newIpBox)
-	    
-	    
-            newIpBox.addEventListener('mouseenter', function () {
-                newIpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newIpBox.addEventListener('mouseleave', function () {
-                newIpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newIpBox.removeAttribute('animation');
-                newIpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newIpBox.addEventListener('click', function () {
-
-
-                if(isClosedInfo == false && actualInfoShown == 'ip'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newIpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newIpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else{
-                    isClosedInfo = false
-		    actualInfoShown = "ip"
-		    showInfoText("ip", packetParams, newInfoText, newIpBox);
-
-                }
-                
-            });
-        }
-        if(levels.hasOwnProperty('arp') && 	!isEndToEndVIEW()){
-            index = Object.keys(levels).findIndex(item => item === 'arp')
-            let newArpBox = document.createElement('a-box');
-	    newArpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newArpBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-            newArpBox.setAttribute('color', getColor("arp"));
-            newArpBox.setAttribute('visible', true);
-            packet.appendChild(newArpBox);
-
-	    if (topmost_protocol == "arp")
-		showInfoText("arp", packetParams, newInfoText, newArpBox)
-
-	    
-            newArpBox.addEventListener('mouseenter', function () {
-                newArpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newArpBox.addEventListener('mouseleave', function () {
-                newArpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newArpBox.removeAttribute('animation');
-                newArpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newArpBox.addEventListener('click', function () {
-
-
-                if(isClosedInfo == true){
-                    isClosedInfo = false
-                    actualInfoShown = 'arp'
-		    showInfoText("arp", packetParams, newInfoText, newArpBox);
-                }else if(isClosedInfo == false && actualInfoShown == 'arp'){
-		    isClosedInfo = true
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newArpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newArpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else if(isClosedInfo == false){
-		    actualInfoShown = "arp"
-		    showInfoText("arp", packetParams, newInfoText, newArpBox);
-                }
-
-                
-            });
-        }
-        if(levels.hasOwnProperty('tcp')){
-            index = Object.keys(levels).findIndex(item => item === 'tcp')
-            let newTcpBox = document.createElement('a-box');
-	    newTcpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newTcpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newTcpBox.setAttribute('color', getColor("tcp"));
-            newTcpBox.setAttribute('visible', true); 
-            packet.appendChild(newTcpBox);
-
-	    if (topmost_protocol == "tcp")
-		showInfoText("tcp", packetParams, newInfoText, newTcpBox)
-	    
-            newTcpBox.addEventListener('mouseenter', function () {
-                newTcpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newTcpBox.addEventListener('mouseleave', function () {
-                newTcpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newTcpBox.removeAttribute('animation');
-                newTcpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newTcpBox.addEventListener('click', function () {
-
-                if(isClosedInfo == false && actualInfoShown == 'tcp'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newTcpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newTcpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else {
-                    isClosedInfo = false
-		    actualInfoShown = "tcp"
-		    showInfoText("tcp", packetParams, newInfoText, newTcpBox);				    
-		    
-                }
-
-                
-            });
-        }
-        if(levels.hasOwnProperty('udp')){
-            index = Object.keys(levels).findIndex(item => item === 'udp')
-            let newUdpBox = document.createElement('a-box');
-	    newUdpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newUdpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newUdpBox.setAttribute('color', getColor("udp"));
-            newUdpBox.setAttribute('visible', true);
-            packet.appendChild(newUdpBox);
-
-	    if (topmost_protocol == "udp")
-		showInfoText("udp", packetParams, newInfoText, newUdpBox)
-
-            newUdpBox.addEventListener('mouseenter', function () {
-                newUdpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newUdpBox.addEventListener('mouseleave', function () {
-                newUdpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newUdpBox.removeAttribute('animation');
-                newUdpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newUdpBox.addEventListener('click', function () {
-
-
-                if(isClosedInfo == false && actualInfoShown == 'udp'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newUdpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newUdpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else{
-                    isClosedInfo = false
-                    actualInfoShown = 'udp'
-		    showInfoText("udp", packetParams, newInfoText, newUdpBox);
-                }
-                
-            });
-        }
-        if(levels.hasOwnProperty('dns')){
-            index = Object.keys(levels).findIndex(item => item === 'dns')
-            let newDnsBox = document.createElement('a-box');
-	    newDnsBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newDnsBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newDnsBox.setAttribute('color', getColor("dns"));
-            newDnsBox.setAttribute('visible', true); 
-            packet.appendChild(newDnsBox);
-
-	    if (topmost_protocol == "dns")
-		showInfoText("dns", packetParams, newInfoText, newDnsBox)
-	    
-            newDnsBox.addEventListener('mouseenter', function () {
-                newDnsBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newDnsBox.addEventListener('mouseleave', function () {
-                newDnsBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newDnsBox.removeAttribute('animation');
-                newDnsBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newDnsBox.addEventListener('click', function () {
-
-                if(isClosedInfo == false && actualInfoShown == 'dns'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newDnsBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newDnsBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else {
-                    isClosedInfo = false
-                    actualInfoShown = 'dns';
-		    showInfoText("dns", packetParams, newInfoText, newDnsBox);				    
-                }
-
-                
-            });
-        }
-        if(levels.hasOwnProperty('http')){
-            index = Object.keys(levels).findIndex(item => item === 'http')
-            let newHttpBox = document.createElement('a-box');
-	    newHttpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newHttpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newHttpBox.setAttribute('color', getColor("http"));
-            newHttpBox.setAttribute('visible', true); 
-
-            packet.appendChild(newHttpBox);
-
-	    if (topmost_protocol == "http")
-		showInfoText("http", packetParams, newInfoText, newHttpBox)
-	    
-            newHttpBox.addEventListener('mouseenter', function () {
-                newHttpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newHttpBox.addEventListener('mouseleave', function () {
-                newHttpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newHttpBox.removeAttribute('animation');
-                newHttpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newHttpBox.addEventListener('click', function () {
-
-
-                if(isClosedInfo == false && actualInfoShown == 'http'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newHttpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newHttpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else {
-                    isClosedInfo = false
-                    actualInfoShown = 'http';
-		    showInfoText("http", packetParams, newInfoText, newHttpBox);				    				    
-                }
-                
-            });
-        }
-        if(levels.hasOwnProperty('icmp')){
-            index = Object.keys(levels).findIndex(item => item === 'icmp')
-            let newIcmpBox = document.createElement('a-box');
-	    newIcmpBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newIcmpBox.setAttribute('position', { x: 0, y: 2 + (index), z: 0 });
-            newIcmpBox.setAttribute('color', getColor("icmp"));
-            newIcmpBox.setAttribute('visible', true); 
-
-            packet.appendChild(newIcmpBox);
-
-	    if (topmost_protocol == "icmp")
-		showInfoText("icmp", packetParams, newInfoText, newIcmpBox)
-	    
-            newIcmpBox.addEventListener('mouseenter', function () {
-                newIcmpBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newIcmpBox.addEventListener('mouseleave', function () {
-                newIcmpBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newIcmpBox.removeAttribute('animation');
-                newIcmpBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newIcmpBox.addEventListener('click', function () {
-                if(isClosedInfo == false && actualInfoShown == 'icmp'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newIcmpBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newIcmpBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else {
-                    isClosedInfo = false
-                    actualInfoShown = 'icmp'
-		    showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                          }
-                
-            });
-        }
+        packet = Object.assign(packet, {"levels": levels});
 	
-	// TCP data
-        if(levels.hasOwnProperty('dataInfo')){
-            index = Object.keys(levels).findIndex(item => item === 'dataInfo')
-            let newDataBox = document.createElement('a-box');
-	    newDataBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
 
-	    newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-            newDataBox.setAttribute('color', getColor("dataInfo"));
-            newDataBox.setAttribute('visible', true); 
+	let bottommost_protocol = levels[0]["protocol"]	
+	let packetColor = getColor(bottommost_protocol);
 
-            packet.appendChild(newDataBox);
-
-	    if (topmost_protocol == "dataInfo")
-		showInfoText("dataInfo", packetParams, newInfoText, newDataBox)
-	    
-            newDataBox.addEventListener('mouseenter', function () {
-                newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newDataBox.addEventListener('mouseleave', function () {
-                newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newDataBox.removeAttribute('animation');
-                newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newDataBox.addEventListener('click', function () {
-
-		if(isClosedInfo == false && actualInfoShown == 'dataInfo'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newDataBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else {
-                    isClosedInfo = false;
-                    actualInfoShown = 'dataInfo';
-		    showInfoText("icmp", packetParams, newInfoText, newIcmpBox);				    				    	                              }
-            });
-        }
-
-	// TCP or UDP data
-        if(levels.hasOwnProperty('data')){
-            index = Object.keys(levels).findIndex(item => item === 'data')
-            let newDataBox = document.createElement('a-box');
-	    newDataBox.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
-	    newDataBox.setAttribute('position', { x: 0, y: 2 +(index), z: 0 });
-            newDataBox.setAttribute('color', getColor("data"));
-            newDataBox.setAttribute('visible', true); 
-
-            packet.appendChild(newDataBox);
+        packet.setAttribute('material', 'color', packetColor);
+        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
+        packet.setAttribute('class', packetParams.class);
+        packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
 
 
-	    if (topmost_protocol == "data")
-		showInfoText("data", packetParams, newInfoText, newDataBox)
 
-	    
-            newDataBox.addEventListener('mouseenter', function () {
-                newDataBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
-            });
-            newDataBox.addEventListener('mouseleave', function () {
-                newDataBox.setAttribute('scale', {x: 1, y: 1, z: 1})
-                newDataBox.removeAttribute('animation');
-                newDataBox.setAttribute('rotation', {x: 0, y: 0, z: 0});
-            });
-            newDataBox.addEventListener('click', function () {
-		if (levels.hasOwnProperty('udp'))
-                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.data) + '</p><p>Longitud de datos: ' + packetParams.udp['udp.length'] + '</p>'
-		else if (levels.hasOwnProperty('tcp'))
-                    infoText = '<p>DATOS:</p><p>Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>Longitud de datos: ' + packetParams.tcp['tcp.len'] + '</p>'
-		
 
-                if(isClosedInfo == false && actualInfoShown == 'data'){
-                    actualInfoShown = ''
-                    newInfoText.setAttribute('visible', false);
-                    newDataBox.removeAttribute('sound');
-                    newInfoText.removeAttribute('html');
-                    newDataBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
-                }else{
-                    isClosedInfo = false
-                    actualInfoShown = 'data'
-		    showInfoText("data", packetParams, newInfoText, newDataBox);				    
-                }
 
-            });
-        }
+	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
+
+	packet.setAttribute('animation__hide', {property:'material.opacity', to:0, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "hide", enabled: 'false'})
+
+	packet.setAttribute('animation__show', {property:'material.opacity', to:1, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "show", enabled: 'false'})
 	
 
 
-	
-        var packet_move = document.getElementById(packetParams.id);
-	console.log("packet_move")
-	console.log(packet_move)
 
-
-
-        packet_move.setAttribute('animation__park', {
+        packet.setAttribute('animation__park', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition +5, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -1141,7 +765,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
 
-        packet_move.setAttribute('animation__unpark', {
+        packet.setAttribute('animation__unpark', {
             property: 'position',
 //            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
 	    to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
@@ -1153,11 +777,11 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    	    
         });
 	
-        packet_move.setAttribute('animation__out_of_node', {
+        packet.setAttribute('animation__out_of_node', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
-            dur: packetParams.duration,
+            dur: 0,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    startEvents: "out_of_node",
@@ -1165,7 +789,7 @@ AFRAME.registerComponent('packet', {
 	    enabled: 'false' // if not false, when resumed it starts. A bug.	    
         });
 
-        packet_move.setAttribute('animation__out_of_node_immediate', {
+        packet.setAttribute('animation__out_of_node_immediate', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
 	    to: "2 2 2",
@@ -1178,40 +802,62 @@ AFRAME.registerComponent('packet', {
         });
 
 	
-        packet_move.setAttribute('animation__link', {
+        // packet.setAttribute('animation__link', {
+        //     property: 'position',
+	//     to: pointInSegment (
+	// 	{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
+	// 	{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+	// 	data.elementsScale,
+	// 	-0.2
+	//     ),
+        //     dur: packetParams.duration,
+        //     easing: 'easeInOutCubic',
+	//     startEvents: "link",
+        //     pauseEvents:'animation-pause', 
+        //     resumeEvents:'animation-resume',
+	//     enabled: 'false' // if not false, when resumed it starts. A bug.
+        // });
+
+        packet.setAttribute('animation__link', {
             property: 'position',
-            to: packetParams.toXPosition + packetParams.toYPosition + packetParams.toZPosition,
+	    to: {"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
             dur: packetParams.duration,
-            easing: 'easeInOutQuart',
+            easing: 'easeInOutCubic',
 	    startEvents: "link",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
 	
-
-        packet_move.setAttribute('animation__into_node_final', {
-            property: 'scale',
-            to: {x: 0, y: 0, z: 0},
-            dur: packetParams.duration/2,
+        packet.setAttribute('animation__into_node', {
+            property: 'position',
+	    to: {"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+            dur: packetParams.duration,
             easing: 'linear',
-	    startEvents: 'into_node_final',
+	    startEvents: "into_node",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
-
-        packet_move.setAttribute('animation__into_node', {
-            property: 'scale',
-            to: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
-            dur: packetParams.duration/2,
-            easing: 'linear',
-	    startEvents: 'into_node',
+	
+        packet.setAttribute('animation__route', {
+            property: 'position',
+	    to: pointInSegment (
+		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
+		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
+		data.elementsScale,
+		0.2
+	    ),
+            dur: packetParams.duration,
+            easing: 'easeInOutCubic',
+	    startEvents: "route",
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
+	
 
+	
 	
     },
     
@@ -1222,20 +868,19 @@ AFRAME.registerComponent('packet', {
 	var nodeAnimationTo = document.getElementById(packetParams.to);
 	var nodeAnimationFrom = document.getElementById(packetParams.from);	
 
-//        var packet_move = document.getElementById(packetParams.id);
+
+	var ethBox = packet.querySelector("#ethBox" + packet.id)
+	var sphere = packet.querySelector("#sphere" + packet.id)
 
 
+	var node = nodeList.find(o => o.name === packetParams.from)
+	
 	switch (anim) {
 	case "park":
-	    packet.setAttribute("animation__out_of_node", {enabled: 'true'})
-	    ethBox = packet.querySelector("#ethBox" + packet.id)
-	    ethBox.setAttribute("model-opacity", 0.5)
 
-	    let a_promise = anime(packet, 'out_of_node')
-		.then(() => ethBox.setAttribute("animation__blinkEth", {enabled: 'true'}))
-		.then(() => anime(ethBox, 'blinkEth'))
-		.then(() => ethBox.removeAttribute('blinkEth')) // must reinstall animation because we use it in unpark
-		.then(() => ethBox.setAttribute('animation__blinkEth', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '300', easing: 'linear', "loop": "5", startEvents: "blinkEth", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+	    let a_promise = wait(500)
+		.then(() => animate_birth(packetParams, packet, true))
+		.then(() => ethBox.setAttribute('opacity', 0.5))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
 
@@ -1244,44 +889,54 @@ AFRAME.registerComponent('packet', {
 	    break;
 
 	case "unpark":
-	    console.log("unpark")
-	    ethBox = packet.querySelector("#ethBox" + packet.id)
+	    //	    var newNodeElement = document.querySelector("#" + node.name)
+
+	    console.log ("unpark node")
+	    console.log (node)	    
+	    var node = nodeList.find(o => o.name === packetParams.from)
 	    
-	    
-	    ethBox.setAttribute('animation__blinkEth', {enabled: 'true'})
-	    anime(ethBox, 'blinkEth')
+	    Promise.resolve()
+		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+		.then(() => wait(2000))
+		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
+		.then(() => {
+		    newInfoText = packet.querySelector("#infotext" + packet.id)
+		    showInfoText("eth", packetParams, newInfoText, ethBox)
+		})
+		.then(() => ethBox.setAttribute('visible', true))
+		.then(() => ethBox.setAttribute('opacity', 0.5))
+		.then(() => ethBox.removeAttribute('blink')) // must reinstall animation because we use it in unpark
+		.then(() => ethBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		.then(() => ethBox.setAttribute("animation__blink", {enabled: 'true'}))
+		.then(() => anime(ethBox, 'blink'))
+		.then(() => ethBox.setAttribute('animation__fadein', {enabled: 'true'}))
+		.then(() => anime(ethBox,'fadein'))
+		.then(() => ethBox.setAttribute('animation__blink', {enabled: 'true'}))
+		.then(() => anime(ethBox, 'blink'))
 		.then(() => packet.setAttribute("animation__unpark", {enabled: 'true'}))
-		.then(() => ethBox.setAttribute("model-opacity", 1.0))
 		.then(() => anime(packet, 'unpark'))
+		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
-		.then(() => {
-		    packet.setAttribute("animation__into_node", {enabled: 'true'})
-		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		})
+		.then(() => sphere.setAttribute('visible', false))
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
+
 	case "birth":
-	    let ev = null
-	    
-	    if (packetParams.from.startsWith('hub')){
-		packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-		ev = "out_of_node_immediate"
-	    }
-	    else{
-		packet.setAttribute("animation__out_of_node", {enabled: 'true'})
-		ev = "out_of_node"
-	    }
-	    
-	    
-	    anime(packet, ev)
+	    var promise = Promise.resolve()
+
+	    promise = promise
+		.then(() => animate_birth(packetParams, packet))
+
+	    promise = promise
+		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
-		.then(() => {
-		    packet.setAttribute("animation__into_node", {enabled: 'true'})
-		    packet.setAttribute("animation__into_node_final", {enabled: 'true'})
-		})
+//		.then(() => anime(packet, 'into_node'))	    
+		.then(() => sphere.setAttribute('visible', true))
 		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+	    
+
 	    break;
 	}
 
@@ -1312,14 +967,36 @@ function destroy(packet){
     packet.parentNode.removeChild(packet);
 }
 
+
 function next_packet_anim(packetParams) {
-    console.log ("next_packet_anim()")
+
     // inform controller
     let playButton = document.querySelector("#playButton");
-    console.log("playButton.emit with start == " + packetParams.start)
+
     playButton.emit("next", {start: packetParams.start}, false)
 };
 
+
+const wwait = (ms) => new Promise((resolve) => {
+    setTimeout(resolve, ms)
+});
+
+// Waits ms milliseconds and then:
+//
+// if animationState == 'PAUSED' it waits 100ms, and checks again
+//     every 100ms until animationState != PAUSED
+//
+// Returns a promise so you can use in a then() chain
+const wait = (ms) =>
+      new Promise((resolve) =>
+		  {
+		      (function f(mms){
+			  setTimeout(() => {
+			      if (animationState == 'PAUSED') f(100)
+			      else resolve()
+			  }, mms)
+		      })(ms);
+		  });
 
 const anime = (target, animation_name) => 
       new Promise((resolve) =>
@@ -1336,18 +1013,136 @@ function finish_packet(packet, packetParams){
 	animationState = "INIT";
 	showViews()
     }
-    next_packet_anim(packetParams);
     destroy(packet)
 }
 
 
+
+// returns promise
+function animate_birth(packetParams, packet, noEth=false){
+    let promise = Promise.resolve()
+    
+    let nodeName = packetParams.from
+    node = nodeList.find(o => o.name === nodeName)
+
+    if (packetParams.from.startsWith('hub')){
+	packet.setAttribute('visible', true)
+
+	for (var i = packet.levels.length-1; i >= 0; i--){
+	    let box = packet.levels[i]["box"]
+	    box.setAttribute('visible', true)
+	}
+	
+	packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
+	promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
+    }
+    else{ // not hub
+	// promise
+	//     .then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
+	//     .then(() => anime(packet, 'hide'))
+ 	//     .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	//     .then(() =>	anime(packet, 'out_of_node'))
+
+	promise
+ 	    .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	    .then(() =>	anime(packet, 'out_of_node'))
+
+	
+	// Show level boxes from top to bottom
+	for (var i = packet.levels.length-1; i >= 0; i--){
+	    let box = packet.levels[i]["box"]
+	    
+	    box.setAttribute('visible', false)
+
+	    // if noEth => this is an IP datagram and the hwaddr of
+	    // net how is not known, so don't show eth bo
+	    if (noEth && packet.levels[i]["protocol"] == "eth")
+		box.setAttribute('opacity', 0.4)
+
+
+	    if (packetParams.ip
+		&& ! node.ipaddr.includes(packetParams.ip["ip.src"])		
+		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+		&& packet.levels[i]["protocol"]!= "eth"
+		&& packet.levels[i]["protocol"]!= "ip")
+	    {   // it's an ip datagram being routed => dont create
+		// levels above ip, just draw them. ip is blinked to
+		// signify TTL modified
+	 	box.setAttribute("visible", true)
+	    }
+	    else
+	    {
+		let protocol = packet.levels[i]["protocol"]
+
+		if (packetParams.ip && protocol == "eth"){
+		    var newNodeElement = document.querySelector("#" + node.name)
+		    promise = promise
+			.then(() => showRoutingTable(node.routingTableText, newNodeElement))
+			.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+			.then(() => anime(packet, 'route'))
+			.then(() => wait(1000))
+			.then(() => node.routingTableText.setAttribute('visible', false))
+			.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+			.then(() => wait(2000))
+			.then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+		}
+		    
+		promise = promise
+	 	    .then(() => box.setAttribute("visible", true))
+	 	    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+		    .then(() => {
+			newInfoText = packet.querySelector("#infotext" + packet.id)
+			showInfoText(protocol, packetParams, newInfoText, box, noEth)
+		    })
+	 	    .then(() => anime(box, 'blink'))
+		    .then(() => wait(500))
+	    }
+
+	    
+	}
+    }
+    
+
+    return promise
+}
+
 function animate_packet_arrives (nodeAnimation, packetParams, packet){
+
+    let receivingARPResponse = function(packet){
+	// to be called when an arp response is received:
+	// add in the receiver's ARPCache the eth_src
+	let eth_dst = packet.eth["eth.dst"]
+	let eth_src = packet.eth["eth.src"]
+
+	
+	
+	if (packet["arp"]
+	    && packet["arp"]["arp.opcode"] == "2") // ARP request
+	{		
+	console.log("receivingARPResponse")
+	console.log("eth_dst: " + eth_dst)
+	console.log("eth_src: " + eth_src)	
+	    var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_dst))
+	    var node = nodeList.find(o => o.name === connectionLink.from)               
+	    var i = connectionLink.hwaddr.findIndex(o => o == eth_dst)
+
+	    var ipaddr = packet["arp"]["arp.src.proto_ipv4"]
+	    
+	    node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_src}
+		console.log("adding ipaddr: " + ipaddr)
+		console.log("adding iface: " + "eth"+i)
+		console.log("adding hwaddr: " + eth_src)
+
+	}
+	
+    }
+    
+
+
     let nodeName = packetParams.to
-
-    let packetIsForMe = function(packetParams){
-
-	console.log ('packetParams.eth["eth.dst"] ' + packetParams.eth["eth.dst"])
-	console.log (node.hwaddr)	
+    var node = nodeList.find(o => o.name === nodeName)
+    
+    let frameIsForMe = function(packetParams){
 	
 	// every bcast is for me
 	if (packetParams.eth["eth.dst"] == "ff:ff:ff:ff:ff:ff")
@@ -1355,31 +1150,24 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 
 	// unicast eth frames are for me only if its destination is
 	// one of my hwaddrs
-	node = nodeList.find(o => o.name === nodeName)
+
 	if (node.hwaddr.includes(packetParams.eth["eth.dst"]))
 	    return true
 
 	return false
     }
 
-    
-	
-    
+        
     if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
        && VIEW=="ALL"){
 
-	
 
-	if (! packetIsForMe(packetParams)){
-	    console.log("not for me")
-
-
+	if (! frameIsForMe(packetParams)){
 	    let fadeoutChildren = function(packet){
 		for (const child of packet.children) {
 		    child.setAttribute('animation__fadeout', {enabled: 'true'})
 
 		    anime(child, 'fadeout')
-		    console.log("anime for children")
 		}
 	    }
 	    
@@ -1389,25 +1177,138 @@ function animate_packet_arrives (nodeAnimation, packetParams, packet){
 			 fadeoutChildren(packet)])
 		.then(() => finish_packet(packet, packetParams))
 	    
-	    return
+	    return	    
+	}
+
+
+	// Frame is for us => consume layers from bottom to top
+	let promise = Promise.resolve()
+	promise = promise
+	    .then(() => wait(500))
+	
+	for (var i = 0; i < packet.levels.length; i++){
+	    let box = packet.levels[i]["box"]
+
+	    let protocol = packet.levels[i]["protocol"]
+
+	    if (packetParams.ip
+		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+		&& packet.levels[i]["protocol"]!="ip"
+		&& packet.levels[i]["protocol"]!="eth"){
+		// It's an IP datagram being routed => don't blink
+		// layers above ip
+		console.log(packet.levels[i]["protocol"])
+		
+		break
+	    }
+
+
+	    promise = promise
+		.then(() => {
+		    newInfoText = packet.querySelector("#infotext" + packet.id)
+		    showInfoText(protocol, packetParams, newInfoText, box)
+		})
+		.then(() => box.removeAttribute('blink')) // must reinstall animation because we use it before
+		.then(() => box.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+		.then(() => anime(box, 'blink'))
+
+
+    
+
+	    isIPDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
+	    switch(packet.levels[i]["protocol"]){
+	    case "eth":
+		promise = promise
+		    .then(() => box.setAttribute('visible', false))
+		break;
+	    case "ip":
+		if (isIPDestination){
+		    promise = promise
+			.then(() => box.setAttribute('visible', false))
+		}
+		else if (packetParams.ip["ip.ttl"] == 1){
+		    
+		    promise = promise
+	 		.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+			.then(() => {
+			    newInfoText = packet.querySelector("#infotext" + packet.id)
+			    showInfoText(protocol, packetParams, newInfoText, box)
+			})
+	 		.then(() => anime(box, 'blink'))
+		    
+		    let fadeoutChildren = function(packet){
+			for (const child of packet.children) {
+			    child.setAttribute('animation__fadeout', {enabled: 'true'})
+			    
+			    anime(child, 'fadeout')
+			    newInfoText = packet.querySelector("#infotext" + packet.id)
+			    newInfoText.setAttribute('visible', false)
+			    
+			}
+		    }
+		    
+		    packet.setAttribute('animation__fadeout', {enabled: 'true'})
+		    promise=promise
+			.then(()=> {Promise.all([anime(packet, 'fadeout'),
+	 					 fadeoutChildren(packet)])
+	 			    .then(() => finish_packet(packet, packetParams))
+				   })
+		}
+		
+		
+		break;
+	    default:
+		if (isIPDestination)
+		    promise = promise
+		    .then(() => {
+			newInfoText = packet.querySelector("#infotext" + packet.id)
+			newInfoText.setAttribute('visible', false)
+			box.setAttribute('visible', false)
+		    })
+		break;
+	    }
+		
 	    
 	}
 
 	
-	ethBox = packet.querySelector("#ethBox" + packet.id)
-	ethBox.setAttribute('animation__blinkEth', {enabled: 'true'})
-	anime(ethBox, 'blinkEth')
-	    .then(() => {
-		packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		anime(ethBox, 'fadeout')
-	    })
-	    .then(() => finish_packet(packet, packetParams))
+	    
+	// }
+	    
+	
+	
 
 	
-    }else // hub
+	receivingARPResponse(packetParams)
+	
+	
+	isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+	if (isNotIPDestination)
+	{
+	    // It's an IP datagram is being routed => show the datagram on
+	    // next link before destroying the incoming datagram,
+	    // then move it towards destination 
+	    promise = promise
+		.then(() => wait(1000))
+	    	.then(() => next_packet_anim(packetParams))
+		.then(() => wait(1000))
+		.then(() => finish_packet(packet, packetParams))
+	}
+	else{
+	    promise = promise
+		.then(() => wait(1000))
+		.then(() => finish_packet(packet, packetParams))
+		.then(() => wait(1000))
+		.then(() => next_packet_anim(packetParams))
+	}
+
+	
+    }else{ // hub
 	finish_packet(packet, packetParams)
-//	anime(packet, 'into_node_final')
-//	.then(() => finish_packet(packet, packetParams))
+	next_packet_anim(packetParams);
+    }
+    
 }
 
 
@@ -1445,9 +1346,6 @@ AFRAME.registerComponent('controller', {
 
     do_animate: function(event)
     {
-	console.log("do_animate()")
-	console.log("latest_start: " + latest_start)
-	console.log("event.detail.start: " + event.detail.start)
 
 	
 	// if (animationState == "PAUSED")
@@ -1457,11 +1355,62 @@ AFRAME.registerComponent('controller', {
 	    return
 	latest_start = event.detail.start
 	
-	console.log("do_animate: " + CURRENT_TIME)
-	console.log("flying.length: " + flying.length)	
+
 
 	let packets_ready = false
 
+
+	let deleteARPCache = function(packet_index){
+	    // To be called in the sender of an ARP request
+	    let packet = finalPackets[packet_index]
+	    let eth_dst = packet.eth["eth.dst"]
+	    let eth_src = packet.eth["eth.src"]
+
+	    
+	    if (packet["arp"]
+		&&packet["arp"]["arp.opcode"] == "1") // ARP request
+	    {		
+	console.log("deleteARPResponse")
+	console.log("eth_dst: " + eth_dst)
+	console.log("eth_src: " + eth_src)	
+		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_src))
+		var node = nodeList.find(o => o.name === connectionLink.from)               
+		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
+		var ipaddr = connectionLink.ipaddr[i]
+		delete node.ARPCache[ipaddr]
+		console.log("deleting ipaddr: " + ipaddr)
+
+	    }
+
+	}
+	
+	let sendingARPResponse = function(packet_index){
+	    // to be called when an arp response is sent:
+	    // add in the sender's ARPCache the eth_dst
+	    let packet = finalPackets[packet_index]
+	    let eth_dst = packet.eth["eth.dst"]
+	    let eth_src = packet.eth["eth.src"]
+
+	    if (packet["arp"]
+		&& packet["arp"]["arp.opcode"] == "2") // ARP response
+	    {		
+	console.log("sendingARPResponse")
+	console.log("eth_dst: " + eth_dst)
+	console.log("eth_src: " + eth_src)	
+		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_src))
+		var node = nodeList.find(o => o.name === connectionLink.from)               
+		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
+
+		var ipaddr = packet["arp"]["arp.dst.proto_ipv4"]
+
+		node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_dst}
+		console.log("adding ipaddr: " + ipaddr)
+		console.log("adding iface: " + "eth"+i)
+		console.log("adding hwaddr: " + eth_dst)
+
+	    }
+	    
+	}
 
 
 	while (next_packet < finalPackets.length && !packets_ready){
@@ -1469,10 +1418,25 @@ AFRAME.registerComponent('controller', {
 
 	    while (next_packet < finalPackets.length && finalPackets[next_packet].packetDelay <= CURRENT_TIME){
 
+		// delete from the sender of the ARP request the
+		// requested IP
+		deleteARPCache(next_packet)
+		// in case it's an ARP response update cache with what
+		// we learnt from the sender of the previous ARP
+		// request
+		sendingARPResponse(next_packet)
+		
 		next_ip_position = finalPackets[next_packet].next_ip_position
 		
 		if (next_ip_position){
-		    console.log("Before promise: " + next_packet)
+		    // This is an ARP request, so we must first show
+		    // the IP datagram that caused it
+
+		    // delete from the sender of the ARP request the
+		    // requested IP
+		    deleteARPCache(next_packet)
+	
+		    
 		    let promise = Promise.resolve()
 		    let nextIPPacket = finalPackets[next_ip_position].newPacket.components.packet
 		    finalPackets[next_ip_position].createdAnimation = true
@@ -1482,53 +1446,53 @@ AFRAME.registerComponent('controller', {
 		    promise = nextIPPacket.startAnimation("park")
 		    flying.push(finalPackets[next_ip_position].newPacket)
 
-		    promise.then(() => {
-			console.log("promise.then, next_packet: " + next_packet)
-
-			let newPacket = finalPackets[next_packet].newPacket.components.packet
-			finalPackets[next_packet].createdAnimation = true
-			newPacket.createAnimation()
-			
-
-			newPacket.startAnimation("birth")
-			flying.push(finalPackets[next_packet].newPacket)
-			next_packet += 1
-			packets_ready = true
-
-		    })
-
+		    promise = promise
+			.then(() => {
+			    
+			    let newPacket = finalPackets[next_packet].newPacket.components.packet
+			    finalPackets[next_packet].createdAnimation = true
+			    newPacket.createAnimation()
+			    
+			    
+			    newPacket.startAnimation("birth", true)
+			    flying.push(finalPackets[next_packet].newPacket)
+			    next_packet += 1
+			    packets_ready = true
+			    
+			})
+		    
 		    return
-
+		    
 		}
 		else {
-		    console.log("next_packet: " + next_packet)
 		    let newPacket = finalPackets[next_packet].newPacket.components.packet
 		    if (! finalPackets[next_packet].createdAnimation){
+			// Normal packet, first we must create its a-frame
 			finalPackets[next_packet].createdAnimation = true
 			newPacket.createAnimation()
 
 			newPacket.startAnimation("birth")
-			
 		    }
 		    else{
+			// This is an IP datagram that was created
+			// when the Request ARP appeared in the
+			// capture, so only animate it, don't create
+			// it
 			newPacket.startAnimation("unpark")
 		    }
 		    flying.push(finalPackets[next_packet].newPacket)
 
 		    next_packet += 1		    
 		    packets_ready = true
-		}
-
-
+		}}
 		
-	    }
 	}
 	
     },
     
     
     init: function() {
-	console.log("init controller")
+
     
 	let PERIOD=this.data.PERIOD
 	let do_animate=this.do_animate
@@ -1536,7 +1500,7 @@ AFRAME.registerComponent('controller', {
 
 	
 	function event_listener_function(event) {
-	    console.log("controller click")
+
 	    
             switch(animationState) {
             case 'INIT':
@@ -1573,7 +1537,7 @@ AFRAME.registerComponent('controller', {
 
 		
 		// Enviar a los paquetes en vuelo animation-pause
-		console.log("PAUSED: Packets flying: ")
+
 		for (const packet of flying){
 		    // pause animations of the packet and animations of the children
 		    packet.emit("animation-pause", null, false)
@@ -1590,7 +1554,7 @@ AFRAME.registerComponent('controller', {
 		playButton.setAttribute('color', 'gray')
 
 		// Enviar a los paquetes en vuelo animation-resume
-		console.log("RESUMED: Packets flying: ")
+
 		for (const packet of flying){
 		    // resume animations of the packet and animations of the children
 		    packet.emit("animation-resume", null, false)		
@@ -1791,18 +1755,25 @@ function createNetwork(filename, elementScale){
 
 
             finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
-	    console.log("finalConnectionsLinks en createNetwork:")
-	    console.log(finalConnectionsLinks)		
 
 
-	    // show routing tables
+
+	    // show routing tables + ARPCaches
 	    for (var k=0; k < nodeList.length; k++) {
 		node = nodeList[k];
 		
 		if(!node.name.startsWith('hub')){
-		    coordinates = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    coords = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height + 4, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+
 		    node.routingTableText =
-			createRoutingTableInfo(node.name + "routing_table", coordinates, data.elementsScale, formatRoutingTable(node.routing_table))
+			createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
+
+
+		    // ARPCache contents
+		    node.ARPCache = {}
+		    // ARPCache panel
+		    node.ARPCacheInfoText =
+			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 
 		}
 	    }
@@ -1828,27 +1799,70 @@ function loadAndAnimatePackets(finalConnectionsLinks){
 	
 	
 	if (isEndToEndVIEW()){
-	    console.log("finalConnectionsLinks en loadAndAnimatePackets:")
-	    console.log(finalConnectionsLinks)	    
+
 	    
 	    animateEndToEndPackets(packets, finalConnectionsLinks, data)
-	    console.log("isEndToEndVIEW")
+
 	}
 	else{
 	    animatePackets(packets, finalConnectionsLinks, data)
-	    console.log("! isEndToEndVIEW")
+
 	}
     }
 }
 
+function formatARPCache(ARPCache){
+    color = "white"
+    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' + 
+        'font-family: monospace; text-align: left; color: ' + color + '">'
+    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' +
+        'font-family: monospace;  text-align: left; color: ' + color+ '">'
+
+
+    
+    text = '<h1>ARP cache</h1>' +
+	'<table style="border-spacing: 1rem; text-align: center">' +
+        '<tr><th>IP address</th>' +
+        '<th>hwaddr</th>' +
+        '<th>Iface</th>' +
+        '</tr>'
+    
+    text += "<h2>"    
+    for (const ip in ARPCache){
+	text += "<tr>" +
+            "<td>" + ip + "</td> " +
+            "<td>" + ARPCache[ip]["hwaddr"] + "</td> " +
+      	    "<td>" + ARPCache[ip]["iface"]  + "</td> " +
+	    "</tr>"
+    }
+
+    text += "</h2>"
+    text += "</table>"
+
+    return text;
+}
+
 function formatRoutingTable(routing_table){
-    text = '<table style="border-spacing: 1rem; text-align: center">' +
+    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+        'font-family: monospace; text-align: left;">'
+    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' +
+        'font-family: monospace; text-align: left;">'
+    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
+        'font-family: monospace; text-align: left;">'
+
+    text = '<h1>Routing table</h1>' +
+	'<h2>' +
+	'<table style="border-spacing: 1rem; text-align: center">' +
         '<tr><th>Destination</th>' +
         '<th>Mask</th>' +
         '<th> Gateway</th>' +
         '<th>Iface</th>' +
         '</tr>'
+	+'</h2>'
     
+    text += '<h2>'
     for (var i = 0; i < routing_table.length; i++){
 	text += "<tr>" +
             "<td>" + routing_table[i][0] + "</td> " +
@@ -1857,6 +1871,7 @@ function formatRoutingTable(routing_table){
 	    "<td>" + routing_table[i][3] + "</td> " +
 	    "</tr>"
     }
+    text += '</h2>'
 
     text += "</table>"
 
@@ -1891,7 +1906,7 @@ function deleteNodes(nodeList){
 	    // Not all nodes are in the scene
 	    continue
 	
-	console.log("deleting node: " + nodeList[i].name)	
+
 
 	// Destroy node's text
 	scene.removeChild(nodeList[i].text)
@@ -1932,7 +1947,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-	coordinates = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
+	coords = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
@@ -1959,7 +1974,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 	
         newNodeElement.addEventListener('click', function () {
 	    if  (isEndToEndVIEW()){
-		console.log("No routing table available in end-to-end views")
+
 		return;
 	    }
 
@@ -1969,15 +1984,19 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 
                 node.routingTableText.removeAttribute('html');
-
 		node.routingTableText.setAttribute('visible', false);
-                newNodeElement.removeAttribute('sound');
+
+		node.ARPCacheInfoText.removeAttribute('html')
+		node.ARPCacheInfoText.setAttribute('visible', false);
+		
+		newNodeElement.removeAttribute('sound');
 
 
                 newNodeElement.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
             }else{ 
                 isClosedRoutingTableInfo = false
-	    	showRoutingTable(newNodeElement.id, node.routingTableText, newNodeElement);
+	    	showRoutingTable(node.routingTableText, newNodeElement);
+		showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache)
             }
         });
 
@@ -2071,36 +2090,59 @@ function setStandardConnectionsLinks(connectionsLinks, nodeList, data){
 }
 
 
+// Returns a point in the segment from-to
+//
+// if shift > 0 return a point close to from, at a distance
+// proportional to shift
+//
+// if shift < 0 return a point close to to, at a distance
+// proportional to shift
+function pointInSegment (from, to, elementsScale, shift = 0.2){
 
-function shiftCoords (from, to, elementsScale){
-    coordinates = {};
-    coordinates.x = from.x;
-    coordinates.z = from.z;
+    
+    coords = {};
+
+    if (shift >= 0)
+    {
+	coords.x = from.x;
+	coords.z = from.z;
+    }
+    else
+    {
+	coords.x = to.x;
+	coords.z = to.z;
+    }
 
     slope = Math.abs(to.z - from.z) / Math.abs(to.x - from.x)
 
+    shift_x = shift * Math.abs(to.x-from.x)
+
+
+
+    if (to.x >= from.x && to.z >= from.z){
+	coords.x += shift_x;
+    }
+    else if (to.x >= from.x && to.z <= from.z){
+	coords.x += shift_x;
+    }
+    else if (to.x <= from.x && to.z >= from.z){
+	coords.x -= shift_x;
+    }
+    else if (to.x <= from.x && to.z <= from.z){
+	coords.x -= shift_x;
+    }
+
+    shift_z = (coords.x - from.x) * (to.z - from.z) / (to.x - from.x)
+    if (Math.abs(shift_x) < 0.1) {
+	// Fix for vertical lines
+	if (shift_z < 0)
+	    shift_z = Math.min(-3, shift_z)
+	else
+	    shift_z = Math.max(3, shift_z)
+    }
+    coords.z = from.z + shift_z
     
-
-    
-    shift_x = 0.2* Math.abs(to.x-from.x)
-
-
-    if (to.x > from.x && to.z > from.z){
-	coordinates.x += shift_x;
-    }
-    else if (to.x > from.x && to.z < from.z){
-	coordinates.x += shift_x;
-    }
-    else if (to.x < from.x && to.z > from.z){
-	coordinates.x -= shift_x;
-    }
-    else if (to.x < from.x && to.z < from.z){
-	coordinates.x -= shift_x;
-    }
-
-    coordinates.z = from.z + (coordinates.x - from.x) * (to.z - from.z) / (to.x - from.x) 
-    
-    return coordinates;
+    return coords;
 }
 
 
@@ -2135,14 +2177,14 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    
             var htmltemplates = document.getElementById("htmltemplates");
             var newSectionTemplate = document.createElement("section");
-            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 1.2rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
+            templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 2.5rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
             newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
             newSectionTemplate.id = id_text + "-template";
             htmltemplates.appendChild(newSectionTemplate);
 
 
-	    coordinates = shiftCoords (
+	    coords = pointInSegment (
 		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale,  "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
 		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
 		data.elementsScale
@@ -2152,20 +2194,20 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 	    if (viewing_mode == "vr")
 		newText.setAttribute('position', {
-		    x: coordinates.x,
+		    x: coords.x,
 		    y: data.height * 1.01,
-		    z: coordinates.z
+		    z: coords.z
 		});
 	    else // viewing_mode == "desktop"
 		newText.setAttribute('position', {
-		    x: coordinates.x,
-		    y: data.height * 0.5,
-		    z: coordinates.z
+		    x: coords.x,
+		    y: data.height * 0.8,
+		    z: coords.z
 		});
 		
 
 
-	    console.log("id_text: " + id_text);
+
             newText.setAttribute('html', '#' + id_text + "-template");
             newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
             newText.setAttribute('look-at', "[camera]");
@@ -2183,11 +2225,47 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 
 
-function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
+function createARPCacheInfoText(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
 
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 2rem; font-weight: 400; font-family: monospace">' + info + '</h1>'
+    
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
+    newSectionTemplate.innerHTML = templateText;
+    
+    
+    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
+    newSectionTemplate.id = id_text + "-template";
+    htmltemplates.appendChild(newSectionTemplate);
+
+
+    let newText = document.createElement('a-entity');
+    newText.setAttribute('position', coords)
+    
+    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
+    
+    newText.setAttribute('html', '#' + id_text + "-template");
+    // newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
+    newText.setAttribute('look-at', "[camera]");
+    newText.setAttribute('visible', false);
+
+    newText.setAttribute('id', id_text);    
+    
+    scene = document.querySelector('#escena');
+
+    scene.appendChild(newText);
+
+    return newText;
+
+}
+
+
+function createRoutingTableInfo(id_text, coords, elementsScale, info){
+    var htmltemplates = document.getElementById("htmltemplates");
+    var newSectionTemplate = document.createElement("section");
+
+    
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
     
@@ -2198,12 +2276,13 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
 
     let newText = document.createElement('a-entity');
     newText.setAttribute('position', {
-	x: coordinates.x,
-	y: (4.5)/elementsScale + coordinates.y,
-	z: coordinates.z
+	x: coords.x,
+	y: (4.5)/elementsScale + coords.y,
+	z: coords.z
     });
     
-
+    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
+    
     newText.setAttribute('html', '#' + id_text + "-template");
     newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
     newText.setAttribute('look-at', "[camera]");
@@ -2214,8 +2293,8 @@ function createRoutingTableInfo(id_text, coordinates, elementsScale, info){
     scene.appendChild(newText);
 
     return newText;
-
 }
+
 
 function  readPackets(responseParse) {
     var seen_packets = [];
@@ -2313,7 +2392,7 @@ function  readPackets(responseParse) {
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
     //    var finalPackets = []
-    console.log("animateEndToEndPackets")
+
 
     for (var j = 0; j < packets.length; j++) {
 
@@ -2356,20 +2435,11 @@ function animatePackets(packets, connectionsLinks, data){
     //    var finalPackets = []
 
 
-    console.log("animatePackets: ")
-    console.log(packets)
-    
-
-
     let latest_arp_requests = {}
 
     for (var j = 0; j < packets.length; j++) {
         var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 
-	
-
-	
-	
         if (packets[j].dst != 'ff:ff:ff:ff:ff:ff') {
             to = connectionsLinks.find(o => o.hwaddr.includes(packets[j].dst))
 
@@ -2380,9 +2450,12 @@ function animatePackets(packets, connectionsLinks, data){
 	    if ("arp" in packets[j]
 		&& packets[j]["arp"]["arp.opcode"] == "2"  	    // ARP reply
 		&& eth_dst in latest_arp_requests)
+	    {
 		// store the hwaddr of the sender of the ARP reply
 		latest_arp_requests[eth_dst]["arp.dst.hw_mac"] = packets[j]["eth"]["eth.src"]
 
+		
+	    }
 
 
 	    if ("ip" in packets[j]
@@ -2392,8 +2465,7 @@ function animatePackets(packets, connectionsLinks, data){
 	    { // Store in the ARP request packet the position of the IP packet in finalPackets
 		arpPacket = finalPackets[latest_arp_requests[eth_src]["next_ip_position"]]
 		arpPacket["next_ip_position"] = finalPackets.length
-		console.log(latest_arp_requests[eth_src])
-		console.log("storing in finalPackets[" + latest_arp_requests[eth_src]["next_ip_position"] + "]  next_ip_position = " + finalPackets.length)
+
 		delete latest_arp_requests[eth_src] 
 	    }
 	    
@@ -2500,15 +2572,8 @@ function animatePackets(packets, connectionsLinks, data){
 	    
 	    if ("arp" in packets[j] && packets[j]["arp"]["arp.opcode"] == "1"){ // arp request
 		eth_src = packets[j]["eth"]["eth.src"]
-		console.log(eth_src)
-
 		latest_arp_requests[eth_src] = {"next_ip_position": finalPackets.length}
-
-		console.log("latest_arp_requests: ")
-		console.log(latest_arp_requests)
 	    }
-
-
 	    
 	    
 	    if (to.from.startsWith('hub')){

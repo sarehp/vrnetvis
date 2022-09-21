@@ -1984,15 +1984,19 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 
                 node.routingTableText.removeAttribute('html');
-
 		node.routingTableText.setAttribute('visible', false);
-                newNodeElement.removeAttribute('sound');
+
+		node.ARPCacheInfoText.removeAttribute('html')
+		node.ARPCacheInfoText.setAttribute('visible', false);
+		
+		newNodeElement.removeAttribute('sound');
 
 
                 newNodeElement.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
             }else{ 
                 isClosedRoutingTableInfo = false
 	    	showRoutingTable(node.routingTableText, newNodeElement);
+		showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache)
             }
         });
 
