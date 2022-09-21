@@ -20,7 +20,7 @@ var last_packet_id = null  // id of last packet in animation. Set when packets a
 
 var animationState = "INIT" // INIT, PAUSED, MOVING
 
-//////////
+
 
 var VIEWS=["APPLICATION", "APPLICATION+TRANSPORT", "APPLICATION+TRANSPORT+NETWORK", "ALL"]
 var VIEW=""
@@ -43,6 +43,9 @@ var COLORS = {dns:"goldenrod",
 	      arp:"sandybrown",
 	      eth:"khaki"}
 
+//////////
+
+
 
 
 function isEndToEndVIEW() {
@@ -50,10 +53,7 @@ function isEndToEndVIEW() {
 }
 
 
-
-
-
-AFRAME.registerComponent('selector', {
+AFRAME.registerComponent('scene', {
     init: function() {
         let scene = this.el
 
@@ -166,10 +166,10 @@ AFRAME.registerComponent('inmersiveMode', {
 
 function showViews()
 {
-	    for (var i=0; i<VIEWS_MENU.length; i++){
-		VIEWS_MENU[i].box.setAttribute("visible", "true")
-		VIEWS_MENU[i].text.setAttribute("visible", "true")		
-	    }
+    for (var i=0; i<VIEWS_MENU.length; i++){
+	VIEWS_MENU[i].box.setAttribute("visible", "true")
+	VIEWS_MENU[i].text.setAttribute("visible", "true")		
+    }
 
 }
 
@@ -241,8 +241,6 @@ function createViewSelector(position) {
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	    else // "desktop"
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
-
-	    
 	}
 
 
@@ -258,7 +256,7 @@ function createViewSelector(position) {
 	pos = Object.assign({}, position);
 	pos.y += 2*i
 	pos.x += 2
-	//        text.setAttribute('position', {x: 22, y: 15 + 2*i, z: 20 });
+
         text.setAttribute('position', pos)
 	text.setAttribute("color", "gray")	
 	VIEWS_MENU[i].text = text
@@ -292,21 +290,13 @@ function createViewSelector(position) {
 }
 
 AFRAME.registerComponent('network', {
-
-
     schema: {
         filename: {type: 'string', default: ''},
     },
 
-
     remove: function() {
-//	clearInterval(interval_id)
-
 	for (packet of flying)
 	    packet.emit("animation-pause", null, false)
-
-
-
 	
 	for (var i=0; i<finalPackets.length; i++){
 	    packet= finalPackets[i].newPacket
@@ -322,25 +312,23 @@ AFRAME.registerComponent('network', {
 	deleteNodes(nodeList)
 	deleteLinks(finalConnectionsLinks)
 
-	nodeList.length=0
-	finalConnectionsLinks.length=0
+	nodeList.length = 0
+	finalConnectionsLinks.length = 0
 
-	finalPackets.length=0
-	flying.length=0
+	finalPackets.length = 0
+	flying.length = 0
     },
     
-    init: function() {
-	
-	// // request netgui.nkp
+    init: function() {	
+	// request netgui.nkp
         data = this.data
         scene = this.el
 	
 	// Store in globals
-	nkp_filename = data.filename
-	elementsScale=data.elementsScale
+	nkp_filename  = this.data.filename
+	elementsScale = this.data.elementsScale
 	
 	createNetwork(nkp_filename, elementsScale)
-
     }
 });
 
@@ -407,8 +395,6 @@ function dns_info (packetParams)
 	for (const [key, value] of Object.entries(packetParams.dns["Additional records"]))
             info += '<p>' + h3 + key + '</h3></p>';
     }
-
-    
     return info;
 }
 
@@ -427,7 +413,6 @@ function showRoutingTable(newInfoText, newBox){
     
     newInfoText.setAttribute('html', '#' + newBox.id +  "routing_table" + '-template');
 
-    
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
     newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
@@ -508,12 +493,12 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.reset"] == "1")
             tcp_flags_str += "RST "
         if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.push"] == "1")
-             tcp_flags_str += "PSH "
+            tcp_flags_str += "PSH "
 
         infoText += 'Flags: ' + tcp_flags_str + '</p><p>'
         infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '</p><p>' +
-                    'Ack: ' +  packetParams.tcp['tcp.ack'] + '</p><p>' +
-                    'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</p></h3>' 
+            'Ack: ' +  packetParams.tcp['tcp.ack'] + '</p><p>' +
+            'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</p></h3>' 
 	break;
 
     case 'udp':
@@ -649,10 +634,7 @@ AFRAME.registerComponent('packet', {
 
         packet.appendChild(newInfoText)
 
-
-
 	let actualInfoShown = ''
-	
 	protocols = ["eth", "ip", "arp", "icmp", "tcp", "udp", "http", "dns", "dataInfo", "data"]
         let levels = []
 
@@ -670,8 +652,6 @@ AFRAME.registerComponent('packet', {
 
 	    if (hop_by_hop_protocols.includes(level.protocol) && isEndToEndVIEW())
 		continue
-	    
-
 	    
             let newBox = document.createElement('a-box');
 	    newBox.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'})
@@ -692,10 +672,6 @@ AFRAME.registerComponent('packet', {
 
 	    packet.appendChild(newBox)
 
-	    // if (topmost_protocol == "eth")
-	    // 	showInfoText("eth", packetParams, newInfoText, newBox)
-
-	    
 
             newBox.addEventListener('mouseenter', function () {
                 newBox.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
@@ -740,22 +716,13 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('class', packetParams.class);
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
 
-
-
-
-
 	packet.setAttribute('animation__fadeout', {property:'material.opacity', to:0, dur:1500, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "fadeout", enabled: 'false'})
-
 	packet.setAttribute('animation__hide', {property:'material.opacity', to:0, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "hide", enabled: 'false'})
-
 	packet.setAttribute('animation__show', {property:'material.opacity', to:1, dur:0, resumeEvents:'animation-resume', pauseEvents:'animation-pause', startEvents: "show", enabled: 'false'})
 	
 
-
-
         packet.setAttribute('animation__park', {
             property: 'position',
-//            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
 	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
@@ -767,7 +734,6 @@ AFRAME.registerComponent('packet', {
 
         packet.setAttribute('animation__unpark', {
             property: 'position',
-//            from: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
 	    to: {x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
@@ -802,21 +768,6 @@ AFRAME.registerComponent('packet', {
         });
 
 	
-        // packet.setAttribute('animation__link', {
-        //     property: 'position',
-	//     to: pointInSegment (
-	// 	{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
-	// 	{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
-	// 	data.elementsScale,
-	// 	-0.2
-	//     ),
-        //     dur: packetParams.duration,
-        //     easing: 'easeInOutCubic',
-	//     startEvents: "link",
-        //     pauseEvents:'animation-pause', 
-        //     resumeEvents:'animation-resume',
-	//     enabled: 'false' // if not false, when resumed it starts. A bug.
-        // });
 
         packet.setAttribute('animation__link', {
             property: 'position',
@@ -855,9 +806,274 @@ AFRAME.registerComponent('packet', {
             resumeEvents:'animation-resume',
 	    enabled: 'false' // if not false, when resumed it starts. A bug.
         });
+    },
+    
+    // returns promise
+    animate_birth: function(packetParams, packet, noEth=false){
+	let promise = Promise.resolve()
+	
+	let nodeName = packetParams.from
+	node = nodeList.find(o => o.name === nodeName)
+	
+	if (packetParams.from.startsWith('hub')){
+	    packet.setAttribute('visible', true)
+
+	    for (var i = packet.levels.length-1; i >= 0; i--){
+		let box = packet.levels[i]["box"]
+		box.setAttribute('visible', true)
+	    }
+	    
+	    packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
+	    promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
+	}
+	else{ // not hub
+	    promise
+ 		.then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+		.then(() =>	anime(packet, 'out_of_node'))
+
+	    
+	    // Show level boxes from top to bottom
+	    for (var i = packet.levels.length-1; i >= 0; i--){
+		let box = packet.levels[i]["box"]
+		
+		box.setAttribute('visible', false)
+
+		// if noEth => this is an IP datagram and the hwaddr of
+		// net how is not known, so don't show eth bo
+		if (noEth && packet.levels[i]["protocol"] == "eth")
+		    box.setAttribute('opacity', 0.4)
+
+
+		if (packetParams.ip
+		    && ! node.ipaddr.includes(packetParams.ip["ip.src"])		
+		    && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+		    && packet.levels[i]["protocol"]!= "eth"
+		    && packet.levels[i]["protocol"]!= "ip")
+		{   // it's an ip datagram being routed => dont create
+		    // levels above ip, just draw them. ip is blinked to
+		    // signify TTL modified
+	 	    box.setAttribute("visible", true)
+		}
+		else
+		{
+		    let protocol = packet.levels[i]["protocol"]
+
+		    if (packetParams.ip && protocol == "eth"){
+			var newNodeElement = document.querySelector("#" + node.name)
+			promise = promise
+			    .then(() => showRoutingTable(node.routingTableText, newNodeElement))
+			    .then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
+			    .then(() => anime(packet, 'route'))
+			    .then(() => wait(1000))
+			    .then(() => node.routingTableText.setAttribute('visible', false))
+			    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+			    .then(() => wait(2000))
+			    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+		    }
+		    
+		    promise = promise
+	 		.then(() => box.setAttribute("visible", true))
+	 		.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+			.then(() => {
+			    newInfoText = packet.querySelector("#infotext" + packet.id)
+			    showInfoText(protocol, packetParams, newInfoText, box, noEth)
+			})
+	 		.then(() => anime(box, 'blink'))
+			.then(() => wait(500))
+		}
+
+		
+	    }
+	}
 	
 
+	return promise
+    },
+
+    animate_packet_arrives: function (nodeAnimation, packetParams, packet){
+	let receivingARPResponse = function(packet){
+	    // to be called when an arp response is received:
+	    // add in the receiver's ARPCache the eth_src
+	    let eth_dst = packet.eth["eth.dst"]
+	    let eth_src = packet.eth["eth.src"]
+
+	    if (packet["arp"]
+		&& packet["arp"]["arp.opcode"] == "2") // ARP request
+	    {		
+		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_dst))
+		var node = nodeList.find(o => o.name === connectionLink.from)               
+		var i = connectionLink.hwaddr.findIndex(o => o == eth_dst)
+
+		var ipaddr = packet["arp"]["arp.src.proto_ipv4"]
+		
+		node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_src}
+
+	    }
+	}
 	
+
+
+	let nodeName = packetParams.to
+	var node = nodeList.find(o => o.name === nodeName)
+	
+	let frameIsForMe = function(packetParams){
+	    
+	    // every bcast is for me
+	    if (packetParams.eth["eth.dst"] == "ff:ff:ff:ff:ff:ff")
+		return true
+
+	    // unicast eth frames are for me only if its destination is
+	    // one of my hwaddrs
+
+	    if (node.hwaddr.includes(packetParams.eth["eth.dst"]))
+		return true
+
+	    return false
+	}
+
+        
+	if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
+	   && VIEW=="ALL"){
+
+
+	    if (! frameIsForMe(packetParams)){
+		let fadeoutChildren = function(packet){
+		    for (const child of packet.children) {
+			child.setAttribute('animation__fadeout', {enabled: 'true'})
+
+			anime(child, 'fadeout')
+		    }
+		}
+		
+		// fadeout packet and children and then destroy packet
+		packet.setAttribute('animation__fadeout', {enabled: 'true'})
+		Promise.all([anime(packet, 'fadeout'),
+			     fadeoutChildren(packet)])
+		    .then(() => finish_packet(packet, packetParams))
+		
+		return	    
+	    }
+
+
+	    // Frame is for us => consume layers from bottom to top
+	    let promise = Promise.resolve()
+	    promise = promise
+		.then(() => wait(500))
+	    
+	    for (var i = 0; i < packet.levels.length; i++){
+		let box = packet.levels[i]["box"]
+
+		let protocol = packet.levels[i]["protocol"]
+
+		if (packetParams.ip
+		    && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+		    && packet.levels[i]["protocol"]!="ip"
+		    && packet.levels[i]["protocol"]!="eth"){
+		    // It's an IP datagram being routed => don't blink
+		    // layers above ip
+		    break
+		}
+
+
+		promise = promise
+		    .then(() => {
+			newInfoText = packet.querySelector("#infotext" + packet.id)
+			showInfoText(protocol, packetParams, newInfoText, box)
+		    })
+		    .then(() => box.removeAttribute('blink')) // must reinstall animation because we use it before
+		    .then(() => box.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
+		    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+		    .then(() => anime(box, 'blink'))
+
+
+		
+
+		isIPDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
+		switch(packet.levels[i]["protocol"]){
+		case "eth":
+		    promise = promise
+			.then(() => box.setAttribute('visible', false))
+		    break;
+		case "ip":
+		    if (isIPDestination){
+			promise = promise
+			    .then(() => box.setAttribute('visible', false))
+		    }
+		    else if (packetParams.ip["ip.ttl"] == 1){
+			
+			promise = promise
+	 		    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
+			    .then(() => {
+				newInfoText = packet.querySelector("#infotext" + packet.id)
+				showInfoText(protocol, packetParams, newInfoText, box)
+			    })
+	 		    .then(() => anime(box, 'blink'))
+			
+			let fadeoutChildren = function(packet){
+			    for (const child of packet.children) {
+				child.setAttribute('animation__fadeout', {enabled: 'true'})
+				
+				anime(child, 'fadeout')
+				newInfoText = packet.querySelector("#infotext" + packet.id)
+				newInfoText.setAttribute('visible', false)
+				
+			    }
+			}
+			
+			packet.setAttribute('animation__fadeout', {enabled: 'true'})
+			promise=promise
+			    .then(()=> {Promise.all([anime(packet, 'fadeout'),
+	 					     fadeoutChildren(packet)])
+	 				.then(() => finish_packet(packet, packetParams))
+				       })
+		    }
+		    
+		    
+		    break;
+		default:
+		    if (isIPDestination)
+			promise = promise
+			.then(() => {
+			    newInfoText = packet.querySelector("#infotext" + packet.id)
+			    newInfoText.setAttribute('visible', false)
+			    box.setAttribute('visible', false)
+			})
+		    break;
+		}
+		
+		
+	    }
+
+	    
+	    
+	    receivingARPResponse(packetParams)
+	    
+	    
+	    isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
+	    if (isNotIPDestination)
+	    {
+		// It's an IP datagram is being routed => show the datagram on
+		// next link before destroying the incoming datagram,
+		// then move it towards destination 
+		promise = promise
+		    .then(() => wait(1000))
+	    	    .then(() => next_packet_anim(packetParams))
+		    .then(() => wait(1000))
+		    .then(() => finish_packet(packet, packetParams))
+	    }
+	    else{
+		promise = promise
+		    .then(() => wait(1000))
+		    .then(() => finish_packet(packet, packetParams))
+		    .then(() => wait(1000))
+		    .then(() => next_packet_anim(packetParams))
+	    }
+
+	    
+	}else{ // hub
+	    finish_packet(packet, packetParams)
+	    next_packet_anim(packetParams);
+	}
 	
     },
     
@@ -879,7 +1095,7 @@ AFRAME.registerComponent('packet', {
 	case "park":
 
 	    let a_promise = wait(500)
-		.then(() => animate_birth(packetParams, packet, true))
+		.then(() => this.animate_birth(packetParams, packet, true))
 		.then(() => ethBox.setAttribute('opacity', 0.5))
 	    	.then(() => packet.setAttribute("animation__park", {enabled: 'true'}))
 	    	.then(() => anime(packet, 'park'))
@@ -889,10 +1105,6 @@ AFRAME.registerComponent('packet', {
 	    break;
 
 	case "unpark":
-	    //	    var newNodeElement = document.querySelector("#" + node.name)
-
-	    console.log ("unpark node")
-	    console.log (node)	    
 	    var node = nodeList.find(o => o.name === packetParams.from)
 	    
 	    Promise.resolve()
@@ -919,29 +1131,25 @@ AFRAME.registerComponent('packet', {
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
 		.then(() => sphere.setAttribute('visible', false))
-		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+		.then(() => this.animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    break;
 
 	case "birth":
 	    var promise = Promise.resolve()
 
 	    promise = promise
-		.then(() => animate_birth(packetParams, packet))
+		.then(() => this.animate_birth(packetParams, packet))
 
 	    promise = promise
 		.then(() => sphere.setAttribute('visible', true))
 		.then(() => packet.setAttribute("animation__link", {enabled: 'true'}))
 		.then(() => anime(packet, 'link'))
-//		.then(() => anime(packet, 'into_node'))	    
 		.then(() => sphere.setAttribute('visible', true))
-		.then(() => animate_packet_arrives(nodeAnimationTo, packetParams, packet))
+		.then(() => this.animate_packet_arrives(nodeAnimationTo, packetParams, packet))
 	    
 
 	    break;
 	}
-
-
-	
     },			 
 
     
@@ -949,7 +1157,6 @@ AFRAME.registerComponent('packet', {
 	let packet = this.el
 	let packetParams = this.data
 	
-	// 	scene.removeAttribute("network")
 	if (viewing_mode == "vr")
 	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	else
@@ -977,9 +1184,6 @@ function next_packet_anim(packetParams) {
 };
 
 
-const wwait = (ms) => new Promise((resolve) => {
-    setTimeout(resolve, ms)
-});
 
 // Waits ms milliseconds and then:
 //
@@ -1018,324 +1222,32 @@ function finish_packet(packet, packetParams){
 
 
 
-// returns promise
-function animate_birth(packetParams, packet, noEth=false){
-    let promise = Promise.resolve()
-    
-    let nodeName = packetParams.from
-    node = nodeList.find(o => o.name === nodeName)
-
-    if (packetParams.from.startsWith('hub')){
-	packet.setAttribute('visible', true)
-
-	for (var i = packet.levels.length-1; i >= 0; i--){
-	    let box = packet.levels[i]["box"]
-	    box.setAttribute('visible', true)
-	}
-	
-	packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-	promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
-    }
-    else{ // not hub
-	// promise
-	//     .then(() => packet.setAttribute("animation__hide", {enabled: 'true'}))
-	//     .then(() => anime(packet, 'hide'))
- 	//     .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
-	//     .then(() =>	anime(packet, 'out_of_node'))
-
-	promise
- 	    .then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
-	    .then(() =>	anime(packet, 'out_of_node'))
-
-	
-	// Show level boxes from top to bottom
-	for (var i = packet.levels.length-1; i >= 0; i--){
-	    let box = packet.levels[i]["box"]
-	    
-	    box.setAttribute('visible', false)
-
-	    // if noEth => this is an IP datagram and the hwaddr of
-	    // net how is not known, so don't show eth bo
-	    if (noEth && packet.levels[i]["protocol"] == "eth")
-		box.setAttribute('opacity', 0.4)
-
-
-	    if (packetParams.ip
-		&& ! node.ipaddr.includes(packetParams.ip["ip.src"])		
-		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
-		&& packet.levels[i]["protocol"]!= "eth"
-		&& packet.levels[i]["protocol"]!= "ip")
-	    {   // it's an ip datagram being routed => dont create
-		// levels above ip, just draw them. ip is blinked to
-		// signify TTL modified
-	 	box.setAttribute("visible", true)
-	    }
-	    else
-	    {
-		let protocol = packet.levels[i]["protocol"]
-
-		if (packetParams.ip && protocol == "eth"){
-		    var newNodeElement = document.querySelector("#" + node.name)
-		    promise = promise
-			.then(() => showRoutingTable(node.routingTableText, newNodeElement))
-			.then(() => packet.setAttribute("animation__route", {enabled: 'true'}))
-			.then(() => anime(packet, 'route'))
-			.then(() => wait(1000))
-			.then(() => node.routingTableText.setAttribute('visible', false))
-			.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-			.then(() => wait(2000))
-			.then(() => node.ARPCacheInfoText.setAttribute('visible', false))
-		}
-		    
-		promise = promise
-	 	    .then(() => box.setAttribute("visible", true))
-	 	    .then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
-		    .then(() => {
-			newInfoText = packet.querySelector("#infotext" + packet.id)
-			showInfoText(protocol, packetParams, newInfoText, box, noEth)
-		    })
-	 	    .then(() => anime(box, 'blink'))
-		    .then(() => wait(500))
-	    }
-
-	    
-	}
-    }
-    
-
-    return promise
-}
-
-function animate_packet_arrives (nodeAnimation, packetParams, packet){
-
-    let receivingARPResponse = function(packet){
-	// to be called when an arp response is received:
-	// add in the receiver's ARPCache the eth_src
-	let eth_dst = packet.eth["eth.dst"]
-	let eth_src = packet.eth["eth.src"]
-
-	
-	
-	if (packet["arp"]
-	    && packet["arp"]["arp.opcode"] == "2") // ARP request
-	{		
-	console.log("receivingARPResponse")
-	console.log("eth_dst: " + eth_dst)
-	console.log("eth_src: " + eth_src)	
-	    var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_dst))
-	    var node = nodeList.find(o => o.name === connectionLink.from)               
-	    var i = connectionLink.hwaddr.findIndex(o => o == eth_dst)
-
-	    var ipaddr = packet["arp"]["arp.src.proto_ipv4"]
-	    
-	    node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_src}
-		console.log("adding ipaddr: " + ipaddr)
-		console.log("adding iface: " + "eth"+i)
-		console.log("adding hwaddr: " + eth_src)
-
-	}
-	
-    }
-    
-
-
-    let nodeName = packetParams.to
-    var node = nodeList.find(o => o.name === nodeName)
-    
-    let frameIsForMe = function(packetParams){
-	
-	// every bcast is for me
-	if (packetParams.eth["eth.dst"] == "ff:ff:ff:ff:ff:ff")
-	    return true
-
-	// unicast eth frames are for me only if its destination is
-	// one of my hwaddrs
-
-	if (node.hwaddr.includes(packetParams.eth["eth.dst"]))
-	    return true
-
-	return false
-    }
-
-        
-    if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
-       && VIEW=="ALL"){
-
-
-	if (! frameIsForMe(packetParams)){
-	    let fadeoutChildren = function(packet){
-		for (const child of packet.children) {
-		    child.setAttribute('animation__fadeout', {enabled: 'true'})
-
-		    anime(child, 'fadeout')
-		}
-	    }
-	    
-	    // fadeout packet and children and then destroy packet
-	    packet.setAttribute('animation__fadeout', {enabled: 'true'})
-	    Promise.all([anime(packet, 'fadeout'),
-			 fadeoutChildren(packet)])
-		.then(() => finish_packet(packet, packetParams))
-	    
-	    return	    
-	}
-
-
-	// Frame is for us => consume layers from bottom to top
-	let promise = Promise.resolve()
-	promise = promise
-	    .then(() => wait(500))
-	
-	for (var i = 0; i < packet.levels.length; i++){
-	    let box = packet.levels[i]["box"]
-
-	    let protocol = packet.levels[i]["protocol"]
-
-	    if (packetParams.ip
-		&& ! node.ipaddr.includes(packetParams.ip["ip.dst"])
-		&& packet.levels[i]["protocol"]!="ip"
-		&& packet.levels[i]["protocol"]!="eth"){
-		// It's an IP datagram being routed => don't blink
-		// layers above ip
-		console.log(packet.levels[i]["protocol"])
-		
-		break
-	    }
-
-
-	    promise = promise
-		.then(() => {
-		    newInfoText = packet.querySelector("#infotext" + packet.id)
-		    showInfoText(protocol, packetParams, newInfoText, box)
-		})
-		.then(() => box.removeAttribute('blink')) // must reinstall animation because we use it before
-		.then(() => box.setAttribute('animation__blink', {property: 'scale', from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale}, to: {x: packetParams.elementsScale, y: packetParams.elementsScale, z: packetParams.elementsScale}, dur: '400', easing: 'easeInOutQuint', "loop": "4", startEvents: "blink", resumeEvents:'animation-resume', pauseEvents:'animation-pause', enabled: 'false'}))
-		.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
-		.then(() => anime(box, 'blink'))
-
-
-    
-
-	    isIPDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
-	    switch(packet.levels[i]["protocol"]){
-	    case "eth":
-		promise = promise
-		    .then(() => box.setAttribute('visible', false))
-		break;
-	    case "ip":
-		if (isIPDestination){
-		    promise = promise
-			.then(() => box.setAttribute('visible', false))
-		}
-		else if (packetParams.ip["ip.ttl"] == 1){
-		    
-		    promise = promise
-	 		.then(() => box.setAttribute("animation__blink", {enabled: 'true'}))
-			.then(() => {
-			    newInfoText = packet.querySelector("#infotext" + packet.id)
-			    showInfoText(protocol, packetParams, newInfoText, box)
-			})
-	 		.then(() => anime(box, 'blink'))
-		    
-		    let fadeoutChildren = function(packet){
-			for (const child of packet.children) {
-			    child.setAttribute('animation__fadeout', {enabled: 'true'})
-			    
-			    anime(child, 'fadeout')
-			    newInfoText = packet.querySelector("#infotext" + packet.id)
-			    newInfoText.setAttribute('visible', false)
-			    
-			}
-		    }
-		    
-		    packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		    promise=promise
-			.then(()=> {Promise.all([anime(packet, 'fadeout'),
-	 					 fadeoutChildren(packet)])
-	 			    .then(() => finish_packet(packet, packetParams))
-				   })
-		}
-		
-		
-		break;
-	    default:
-		if (isIPDestination)
-		    promise = promise
-		    .then(() => {
-			newInfoText = packet.querySelector("#infotext" + packet.id)
-			newInfoText.setAttribute('visible', false)
-			box.setAttribute('visible', false)
-		    })
-		break;
-	    }
-		
-	    
-	}
-
-	
-	    
-	// }
-	    
-	
-	
-
-	
-	receivingARPResponse(packetParams)
-	
-	
-	isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
-	if (isNotIPDestination)
-	{
-	    // It's an IP datagram is being routed => show the datagram on
-	    // next link before destroying the incoming datagram,
-	    // then move it towards destination 
-	    promise = promise
-		.then(() => wait(1000))
-	    	.then(() => next_packet_anim(packetParams))
-		.then(() => wait(1000))
-		.then(() => finish_packet(packet, packetParams))
-	}
-	else{
-	    promise = promise
-		.then(() => wait(1000))
-		.then(() => finish_packet(packet, packetParams))
-		.then(() => wait(1000))
-		.then(() => next_packet_anim(packetParams))
-	}
-
-	
-    }else{ // hub
-	finish_packet(packet, packetParams)
-	next_packet_anim(packetParams);
-    }
-    
-}
 
 
 AFRAME.registerComponent('model-opacity', {
-  schema: {default: 1.0},
-  init: function () {
-    this.el.addEventListener('model-loaded', this.update.bind(this));
-  },
-  update: function () {
-    var mesh = this.el.getObject3D('mesh');
-    var data = this.data;
-    if (!mesh) { return; }
-    mesh.traverse(function (node) {
-      if (node.isMesh) {
-        node.material.opacity = data;
-        node.material.transparent = data < 1.0;
-        node.material.needsUpdate = true;
-      }
-    });
-  }
+    schema: {default: 1.0},
+    init: function () {
+	this.el.addEventListener('model-loaded', this.update.bind(this));
+    },
+    update: function () {
+	var mesh = this.el.getObject3D('mesh');
+	var data = this.data;
+	if (!mesh) { return; }
+	mesh.traverse(function (node) {
+	    if (node.isMesh) {
+		node.material.opacity = data;
+		node.material.transparent = data < 1.0;
+		node.material.needsUpdate = true;
+	    }
+	});
+    }
 });
 
 
 
 
-CURRENT_TIME=0
-latest_start = -2
+
+
 
 AFRAME.registerComponent('controller', {
 
@@ -1346,40 +1258,22 @@ AFRAME.registerComponent('controller', {
 
     do_animate: function(event)
     {
-
-	
-	// if (animationState == "PAUSED")
-	//     return
-
-	if (latest_start == event.detail.start)
-	    return
-	latest_start = event.detail.start
-	
-
-
 	let packets_ready = false
-
 
 	let deleteARPCache = function(packet_index){
 	    // To be called in the sender of an ARP request
 	    let packet = finalPackets[packet_index]
 	    let eth_dst = packet.eth["eth.dst"]
 	    let eth_src = packet.eth["eth.src"]
-
 	    
 	    if (packet["arp"]
 		&&packet["arp"]["arp.opcode"] == "1") // ARP request
 	    {		
-	console.log("deleteARPResponse")
-	console.log("eth_dst: " + eth_dst)
-	console.log("eth_src: " + eth_src)	
 		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_src))
 		var node = nodeList.find(o => o.name === connectionLink.from)               
 		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
 		var ipaddr = connectionLink.ipaddr[i]
 		delete node.ARPCache[ipaddr]
-		console.log("deleting ipaddr: " + ipaddr)
-
 	    }
 
 	}
@@ -1394,9 +1288,6 @@ AFRAME.registerComponent('controller', {
 	    if (packet["arp"]
 		&& packet["arp"]["arp.opcode"] == "2") // ARP response
 	    {		
-	console.log("sendingARPResponse")
-	console.log("eth_dst: " + eth_dst)
-	console.log("eth_src: " + eth_src)	
 		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_src))
 		var node = nodeList.find(o => o.name === connectionLink.from)               
 		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
@@ -1404,10 +1295,6 @@ AFRAME.registerComponent('controller', {
 		var ipaddr = packet["arp"]["arp.dst.proto_ipv4"]
 
 		node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_dst}
-		console.log("adding ipaddr: " + ipaddr)
-		console.log("adding iface: " + "eth"+i)
-		console.log("adding hwaddr: " + eth_dst)
-
 	    }
 	    
 	}
@@ -1435,7 +1322,7 @@ AFRAME.registerComponent('controller', {
 		    // delete from the sender of the ARP request the
 		    // requested IP
 		    deleteARPCache(next_packet)
-	
+		    
 		    
 		    let promise = Promise.resolve()
 		    let nextIPPacket = finalPackets[next_ip_position].newPacket.components.packet
@@ -1462,7 +1349,6 @@ AFRAME.registerComponent('controller', {
 			})
 		    
 		    return
-		    
 		}
 		else {
 		    let newPacket = finalPackets[next_packet].newPacket.components.packet
@@ -1485,23 +1371,19 @@ AFRAME.registerComponent('controller', {
 		    next_packet += 1		    
 		    packets_ready = true
 		}}
-		
+	    
 	}
-	
     },
     
     
     init: function() {
-
-    
+	latest_start = -2
+	CURRENT_TIME = 0
+	
 	let PERIOD=this.data.PERIOD
 	let do_animate=this.do_animate
-
-
 	
 	function event_listener_function(event) {
-
-	    
             switch(animationState) {
             case 'INIT':
 		hideViews()
@@ -1520,9 +1402,6 @@ AFRAME.registerComponent('controller', {
 		
 		animationState = "MOVING"
 
-		// Initiate animation
-		//setTimeout(do_animate(0), 500)
-
 		// inform controller
 		playButton = document.querySelector("#playButton");
 		setTimeout(()=>{playButton.emit("next", {start: -1}, false)}, 500)
@@ -1536,7 +1415,7 @@ AFRAME.registerComponent('controller', {
 		playButton.setAttribute('color', 'gray')
 
 		
-		// Enviar a los paquetes en vuelo animation-pause
+		// Send to packets flying an animation-pause
 
 		for (const packet of flying){
 		    // pause animations of the packet and animations of the children
@@ -1553,7 +1432,7 @@ AFRAME.registerComponent('controller', {
 
 		playButton.setAttribute('color', 'gray')
 
-		// Enviar a los paquetes en vuelo animation-resume
+		// Send to packets flying an animation-resume
 
 		for (const packet of flying){
 		    // resume animations of the packet and animations of the children
@@ -1640,9 +1519,10 @@ AFRAME.registerComponent('controller', {
 	scene.appendChild(resetButton);
 
 	function reset(){
+     	    scene.removeAttribute("network")
 	    animationState="INIT"
 	    showViews()
-     	    scene.removeAttribute("network")
+
 	    if (viewing_mode == "vr")
 		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	    else
@@ -1694,16 +1574,13 @@ AFRAME.registerComponent('controller', {
     }
     
 });
-			 
+
 
 
 function createNetwork(filename, elementScale){
     // initialize global variables
     nodeList.length = 0
     finalConnectionsLinks.length = 0
-
-
-
     
     // request netgui.nkp
     file = filename
@@ -1717,13 +1594,13 @@ function createNetwork(filename, elementScale){
         response.split('<nodes>')
         nodes = response.split('position')
 
-        // Establecemos los diferentes nodos de la escena que quedan almacenados en nodeList
+        // Establish nodes in the scene that will be stored in nodeList
         createNodes(nodes, nodeList, elementScale)
 
 
 	// Request and process machineNames.json
 	
-        // Asociamos a cada nodo su nombre de máquina
+        // Associate a name to each machine
         machineNamesFile = 'machineNames.json'
         requestMachineNames = new XMLHttpRequest();
         requestMachineNames.open('GET', machineNamesFile);
@@ -1906,8 +1783,6 @@ function deleteNodes(nodeList){
 	    // Not all nodes are in the scene
 	    continue
 	
-
-
 	// Destroy node's text
 	scene.removeChild(nodeList[i].text)
 
@@ -2204,7 +2079,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 		    y: data.height * 0.8,
 		    z: coords.z
 		});
-		
+	    
 
 
 
@@ -2245,7 +2120,6 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
     newText.setAttribute('scale', {x: 20, y: 20, z: 20});
     
     newText.setAttribute('html', '#' + id_text + "-template");
-    // newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
     newText.setAttribute('look-at', "[camera]");
     newText.setAttribute('visible', false);
 
@@ -2391,9 +2265,6 @@ function  readPackets(responseParse) {
 
 
 function animateEndToEndPackets(packets, connectionsLinks, data){
-    //    var finalPackets = []
-
-
     for (var j = 0; j < packets.length; j++) {
 
 	
@@ -2432,9 +2303,6 @@ function animateEndToEndPackets(packets, connectionsLinks, data){
 
 
 function animatePackets(packets, connectionsLinks, data){
-    //    var finalPackets = []
-
-
     let latest_arp_requests = {}
 
     for (var j = 0; j < packets.length; j++) {
@@ -2470,7 +2338,8 @@ function animatePackets(packets, connectionsLinks, data){
 	    }
 	    
 	    
-            if (from.to.includes(to.from)){ // hwaddr destino del paquete es vecino del nodo que estamos considerando (from)
+            if (from.to.includes(to.from)){
+		// eth_dst is neighbor of the node we are considering (from)
                 packetDelay = TICK * j
 
                 finalPackets.push({
@@ -2495,10 +2364,9 @@ function animatePackets(packets, connectionsLinks, data){
 		    'http': packets[j].http
                 })
 		
-            } else
-	    { // hwaddr destino del paquete NO es vecina del
-		// nodo que estamos considerando (from). Es
-   		// decir, hay un hub o un switch intermedio
+            } else {
+		// eth_dst is NOT neighbor of the node we are considering
+		// (from). i.e., there is a hub or a switch in between
 		
 		var i = from.hwaddr.findIndex(o => o == packets[j].src)
 		nodeName = from.to[i]
@@ -2560,7 +2428,7 @@ function animatePackets(packets, connectionsLinks, data){
 		    }
                 }
 	    }
-        } else { // paquete de broadcast
+        } else { // broadcast frame
 	    
             var from = connectionsLinks.find(o => o.hwaddr.includes(packets[j].src))
 	    
