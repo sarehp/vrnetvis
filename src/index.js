@@ -119,10 +119,8 @@ AFRAME.registerComponent('escena', {
 
 	    //Add camera
 	    let camera = document.createElement('a-camera')
-	    camera.setAttribute('position', {x: 25, y: 9, z: 45})
+	    camera.setAttribute('position', {x: 25, y: 7, z: 45})
 	    scene.appendChild(camera)
-
-
 
 	    
 	    controller = document.querySelector("#controller")
@@ -162,8 +160,8 @@ AFRAME.registerComponent('inmersiveMode', {
         scene.appendChild(ambientLight);
 
 	
-//	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
-// 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	//	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	// 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
 	// network = document.querySelector('#network')
 	// network.components["network"].update()
 
@@ -451,7 +449,7 @@ function showRoutingTable(newInfoText, newBox){
 function showARPCacheInfoText(newInfoText, arpCache){
     var infotext = formatARPCache(arpCache)
 
-    newInfoText.setAttribute('visible', true);
+
     newInfoText.removeAttribute('html');
 
     var textTemplate = document.getElementById(newInfoText.id + '-template');
@@ -462,6 +460,7 @@ function showARPCacheInfoText(newInfoText, arpCache){
     newInfoText.setAttribute('html', '#' + newInfoText.id + '-template');
     newInfoText.setAttribute('visible', true);
 }
+
 
 function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
@@ -895,7 +894,7 @@ AFRAME.registerComponent('packet', {
 			    .then(() => wait(1000))
 			    .then(() => node.routingTableText.setAttribute('visible', false))
 			    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-			    .then(() => wait(2000))
+			    .then(() => wait(3000))
 			    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
 		    }
 		    
@@ -1137,7 +1136,7 @@ AFRAME.registerComponent('packet', {
 	    
 	    Promise.resolve()
 		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-		.then(() => wait(2000))
+		.then(() => wait(3000))
 		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
 		.then(() => {
 		    newInfoText = packet.querySelector("#infotext" + packet.id)
@@ -1442,7 +1441,7 @@ AFRAME.registerComponent('controller', {
             case 'INIT':
 		hideViews()
 		
-//		scene.removeAttribute("network")
+		//		scene.removeAttribute("network")
 		// if (viewing_mode == "vr")
 		//     scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 		// else // "desktop"
@@ -1657,74 +1656,71 @@ function createNetwork(filename, machineNamesFile, elementScale){
 
         // Establish nodes in the scene that will be stored in nodeList
         createNodes(nodes, nodeList, elementScale)
+    }
 
 
-	// Request and process machineNames.json
-
-        // Associate a name to each machine
-        requestMachineNames = new XMLHttpRequest();
-        requestMachineNames.open('GET', machineNamesFile);
-        requestMachineNames.responseType = 'text';
-        requestMachineNames.send();
-        requestMachineNames.onload = function() {
-            response = requestMachineNames.response;
-            responseParse = JSON.parse(response);
-
-            for (const interface_index in responseParse.interfaces) {
-                for (const currentNode in responseParse.interfaces[interface_index]) {
-                    node = nodeList.find(o => o.name === currentNode)
-		    node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
-		    node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
-		    node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
-		    node.iface.push("eth" + interface_index)
-                }
+    // Request and process machineNames.json
+    // Associate a name to each machine
+    requestMachineNames = new XMLHttpRequest();
+    requestMachineNames.open('GET', machineNamesFile);
+    requestMachineNames.responseType = 'text';
+    requestMachineNames.send();
+    requestMachineNames.onload = function() {
+        response = requestMachineNames.response;
+	responseParse = JSON.parse(response);
+	
+        for (const interface_index in responseParse.interfaces) {
+            for (const currentNode in responseParse.interfaces[interface_index]) {
+                node = nodeList.find(o => o.name === currentNode)
+		node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
+		node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
+		node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
+		node.iface.push("eth" + interface_index)
             }
+        }
 
-	    for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
-                node = nodeList.find(o => o.name === machineName)
-		node.routing_table = value.routing_table
-            }
+	for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
+            node = nodeList.find(o => o.name === machineName)
+	    node.routing_table = value.routing_table
+        }
+
+	
+        // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
+        connections = nodesInfo[1].split('link')
 
 
+        finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
+
+
+
+	// show routing tables + ARPCaches
+	for (var k=0; k < nodeList.length; k++) {
+	    node = nodeList[k];
 	    
-            // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
-            connections = nodesInfo[1].split('link')
+	    if(!node.name.startsWith('hub')){
+		coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
 
 
-            finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
-
-
-
-	    // show routing tables + ARPCaches
-	    for (var k=0; k < nodeList.length; k++) {
-		node = nodeList[k];
+		console.log("coords de routing y arp")
+		console.log(coords)		    
 		
-		if(!node.name.startsWith('hub')){
-		    coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		node.routingTableText =
+		    createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
 
 
-		    console.log("coords de routing y arp")
-		    console.log(coords)		    
-		    
-		    node.routingTableText =
-			createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
+		// ARPCache contents
+		node.ARPCache = {}
+		// ARPCache panel
+		node.ARPCacheInfoText =
+		    createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 
-
-		    // ARPCache contents
-		    node.ARPCache = {}
-		    // ARPCache panel
-		    node.ARPCacheInfoText =
-			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
-
-		}
 	    }
-
-
-	    loadAndAnimatePackets(finalConnectionsLinks);
 	}
 
 
+	loadAndAnimatePackets(finalConnectionsLinks);
     }
+    
 }
 
 function loadAndAnimatePackets(finalConnectionsLinks){
@@ -1764,14 +1760,14 @@ function formatARPCache(ARPCache){
 
 
     
-    text = '<h1>ARP cache</h1>' +
+    text = h1+'ARP cache</h1>' + h2 +
 	'<table style="border-spacing: 1rem; text-align: center">' +
         '<tr><th>IP address</th>' +
         '<th>hwaddr</th>' +
         '<th>Iface</th>' +
         '</tr>'
     
-    text += "<h2>"    
+
     for (const ip in ARPCache){
 	text += "<tr>" +
             "<td>" + ip + "</td> " +
@@ -1794,8 +1790,8 @@ function formatRoutingTable(routing_table){
     let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
         'font-family: monospace; text-align: left;">'
 
-    text = '<h1>Routing table</h1>' +
-	'<h2>' +
+    text = h1 + 'Routing table</h1>' +
+	h2 +
 	'<table style="border-spacing: 1rem; text-align: center">' +
         '<tr><th>Destination</th>' +
         '<th>Mask</th>' +
@@ -1804,7 +1800,7 @@ function formatRoutingTable(routing_table){
         '</tr>'
 	+'</h2>'
     
-    text += '<h2>'
+    text += h2
     for (var i = 0; i < routing_table.length; i++){
 	text += "<tr>" +
             "<td>" + routing_table[i][0] + "</td> " +
@@ -1916,11 +1912,11 @@ function createNodes(nodes, nodeList, elementsScale) {
 	
         newNodeElement.addEventListener('click', function () {
 	    if  (isEndToEndVIEW()){
-
 		return;
 	    }
 
             node = nodeList.find(o => o.name === newNodeElement.id)
+
             if(isClosedRoutingTableInfo == false){
 	    	isClosedRoutingTableInfo = true
 
@@ -2228,12 +2224,12 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
     console.log(coords)
 
     let c = Object.assign({}, coords)
-    c.y = c.y + 8
+    c.y = c.y + 10
     newText.setAttribute('position', c)
-    newText.setAttribute('scale', {x: 30, y: 30, z: 30});
+    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
     
     newText.setAttribute('html', '#' + id_text + "-template");
-    newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
+//    newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
     newText.setAttribute('look-at', "[camera]");
     newText.setAttribute('visible', false);
     
