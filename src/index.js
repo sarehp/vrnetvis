@@ -121,11 +121,15 @@ AFRAME.registerComponent('scene', {
 	    scene.appendChild(camera)
 
 	    // Add controller
-	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+//	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
 
-	    // Add network
-            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+	    //	    Add network
+            scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
 
+	    network = document.querySelector('#network')
+	    network.components["network"].update()
+
+	    
         });
 
 
@@ -156,9 +160,11 @@ AFRAME.registerComponent('inmersiveMode', {
         scene.appendChild(ambientLight);
 
 	
-	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
- 	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
-	
+//	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+ 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	network = document.querySelector('#network')
+	network.components["network"].update()
+
     }
 });
 
@@ -186,7 +192,7 @@ function hideViews()
 
 
 // Creates a box for each menu option in VIEWS_MENU
-function createViewSelector(position) {
+function createViewSelector(parent, position) {
     
     for (var i = 0; i < VIEWS_MENU.length; i++) {
 
@@ -238,15 +244,18 @@ function createViewSelector(position) {
 
 	    scene.removeAttribute("network")
 	    if (viewing_mode == "vr")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	    else // "desktop"
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+	    	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+	    network = document.querySelector('#network')
+	    network.components.update()
+	    
 	}
 
 
         viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i]));
 	
-        scene.appendChild(viewSelectorApp);
+        parent.appendChild(viewSelectorApp);
 
 	// add text to menu
         let text = document.createElement('a-text');
@@ -262,7 +271,7 @@ function createViewSelector(position) {
 	VIEWS_MENU[i].text = text
 
 	
-	scene.appendChild(text)
+	parent.appendChild(text)
 
 
 	// Header text
@@ -274,7 +283,7 @@ function createViewSelector(position) {
 	pos.y += 0.2 + 2*VIEWS_MENU.length
 	viewText.setAttribute('position', pos)
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	parent.appendChild(viewText)
 	
 	
     }
@@ -291,7 +300,9 @@ function createViewSelector(position) {
 
 AFRAME.registerComponent('network', {
     schema: {
-        filename: {type: 'string', default: ''},
+	position: {type: 'vec3', default:'2 2 2'},
+        topology: {type: 'string', default:'netgui.nkp'},
+	machineNames: {type: 'string', default:'machineNames.json'}
     },
 
     remove: function() {
@@ -320,15 +331,28 @@ AFRAME.registerComponent('network', {
     },
     
     init: function() {	
+	console.log("network init")
+
+	nodeList.length = 0
+	finalConnectionsLinks.length = 0
+
+	finalPackets.length = 0
+	flying.length = 0
+
 	// request netgui.nkp
         data = this.data
         scene = this.el
 	
 	// Store in globals
-	nkp_filename  = this.data.filename
+	nkp_filename  = this.data.topology
 	elementsScale = this.data.elementsScale
+	machineNamesFile = this.data.machineNames
+
+	console.log("nkp_filename: " + nkp_filename)
+	console.log("elementsScale: " + elementsScale)
+	console.log("machineNamesFile: " + machineNamesFile)
 	
-	createNetwork(nkp_filename, elementsScale)
+	createNetwork(nkp_filename, machineNamesFile, elementsScale)
     }
 });
 
@@ -1158,9 +1182,9 @@ AFRAME.registerComponent('packet', {
 	let packetParams = this.data
 	
 	if (viewing_mode == "vr")
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 	else
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
+	    scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
     }
 });
 
@@ -1257,6 +1281,13 @@ AFRAME.registerComponent('controller', {
 	position: {type: 'vec3'}
     },
 
+    update: function(event)
+    {
+	latest_start = -2
+	CURRENT_TIME = 0
+    },
+    
+    
     do_animate: function(event)
     {
 	if (latest_start == event.detail.start)
@@ -1396,9 +1427,9 @@ AFRAME.registerComponent('controller', {
 		
 		scene.removeAttribute("network")
 		if (viewing_mode == "vr")
-		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+		    scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
 		else // "desktop"
-		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+		    scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
 		
 		playButton.setAttribute('color', 'gray')
 		
@@ -1479,8 +1510,8 @@ AFRAME.registerComponent('controller', {
 	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
         });
 
-	let scene = document.querySelector("#escena")
-	scene.appendChild(playButton);
+	let scene = document.querySelector("#scene")
+	this.el.appendChild(playButton);
 
 	playButton.addEventListener('click', event_listener_function)
 
@@ -1495,7 +1526,7 @@ AFRAME.registerComponent('controller', {
 	position.x -= 3
 	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	this.el.appendChild(viewText)
 
 
 
@@ -1522,17 +1553,37 @@ AFRAME.registerComponent('controller', {
 	    resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });	    
         });
 
-	scene.appendChild(resetButton);
+	this.el.appendChild(resetButton);
 
 	function reset(){
-     	    scene.removeAttribute("network")
+
 	    animationState="INIT"
 	    showViews()
 
-	    if (viewing_mode == "vr")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-	    else
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+	    // network = scene.querySelector('#network')
+	    // network.components["network"].update()
+	    
+     	    scene.removeAttribute("network")
+
+	    controller = document.querySelector('#controller')
+	    controller.components["controller"].update()
+	    
+		
+	    scene.removeAttribute("controller")
+	    if (viewing_mode == "vr"){
+//		scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+		scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+
+		network = document.querySelector('#network')
+		network.components["network"].init()
+	    }
+	    else{
+//		scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+		scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+		// network = document.querySelector('#network')
+		// network.components["network"].init()
+
+	    }
 	}
 	resetButton.addEventListener('click', reset)
 
@@ -1544,7 +1595,7 @@ AFRAME.registerComponent('controller', {
 	position.y += 3
 	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	this.el.appendChild(viewText)
 
 
 	
@@ -1558,7 +1609,7 @@ AFRAME.registerComponent('controller', {
 	position = Object.assign({}, this.data.position)
 	position.x += 15
 	position.y -= 1
-	let f = createViewSelector.bind(null, position)
+	let f = createViewSelector.bind(null, this.el, position)
         requestViewsMenuFile.onload = function() {
             response = requestViewsMenuFile.response;
             VIEWS_MENU = JSON.parse(response);
@@ -1574,7 +1625,7 @@ AFRAME.registerComponent('controller', {
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
         infoPanel.setAttribute('look-at', "[camera]");
-        scene.appendChild(infoPanel);
+        this.el.appendChild(infoPanel);
 	
 	
     }
@@ -1583,11 +1634,10 @@ AFRAME.registerComponent('controller', {
 
 
 
-function createNetwork(filename, elementScale){
+function createNetwork(filename, machineNamesFile, elementScale){
     // initialize global variables
     nodeList.length = 0
     finalConnectionsLinks.length = 0
-    
     // request netgui.nkp
     file = filename
     request = new XMLHttpRequest();
@@ -1605,9 +1655,8 @@ function createNetwork(filename, elementScale){
 
 
 	// Request and process machineNames.json
-	
+
         // Associate a name to each machine
-        machineNamesFile = 'machineNames.json'
         requestMachineNames = new XMLHttpRequest();
         requestMachineNames.open('GET', machineNamesFile);
         requestMachineNames.responseType = 'text';
@@ -1778,7 +1827,7 @@ function deleteLinks(finalConnectionsLinks){
 
 
 function deleteNodes(nodeList){
-    scene = document.querySelector('#escena');
+    scene = document.querySelector('#scene');
 
     
     for (var i = 0; i < nodeList.length; i++){
@@ -1807,7 +1856,6 @@ function deleteNodes(nodeList){
 
 
 function createNodes(nodes, nodeList, elementsScale) {
-
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1908,7 +1956,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 	newNode.text=newText
 	
-        scene = document.querySelector('#escena');
+        scene = document.querySelector('#scene');
         scene.appendChild(newText);
 
 
@@ -2093,7 +2141,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
             newText.setAttribute('look-at', "[camera]");
 	    
-            scene = document.querySelector('#escena');
+            scene = document.querySelector('#scene');
 
             scene.appendChild(newText);
 	    connectionsLinksStandard[k].ipaddrs.push(newText)	    
@@ -2131,7 +2179,7 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
 
     newText.setAttribute('id', id_text);    
     
-    scene = document.querySelector('#escena');
+    scene = document.querySelector('#scene');
 
     scene.appendChild(newText);
 
@@ -2168,7 +2216,7 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
     newText.setAttribute('look-at', "[camera]");
     newText.setAttribute('visible', false);
     
-    scene = document.querySelector('#escena');
+    scene = document.querySelector('#scene');
 
     scene.appendChild(newText);
 
@@ -2544,7 +2592,7 @@ function create_animations(finalPackets){
     last_packet_id = finalPackets.length - 1
     
     // --------- Create animations ----------
-    escena = document.querySelector('#escena');
+    scene = document.querySelector('#scene');
     for (var currentPacket = 0; currentPacket < finalPackets.length; currentPacket++) {
         var newPacket = document.createElement('a-entity');
         newPacket.setAttribute('packet','from', finalPackets[currentPacket].from.from);
@@ -2593,7 +2641,7 @@ function create_animations(finalPackets){
 	    newPacket.setAttribute('packet','http', finalPackets[currentPacket].http);
         }
 	
-        escena.appendChild(newPacket);
+        scene.appendChild(newPacket);
 
 	finalPackets[currentPacket].newPacket = newPacket
     }

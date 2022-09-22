@@ -43,13 +43,21 @@
         <!-- 360-degree image. -->
         <a-sky id="background" src="#skyTexture" theta-length="90" radius="300"></a-sky>
 
-        <a-entity id="escena" cursor="rayOrigin:mouse" scene>
+        <a-entity id="scene" cursor="rayOrigin:mouse" scene>
 	  
 	</a-entity>
 
       
+	<!-- <a-entity id="network" position="0 16 20" scale="1 1 1"  network> -->
+	  
+	<!-- </a-entity> -->
 
+	<a-entity id="controller" position="0 16 20" scale="1 1 1" controller>
+	  
+	</a-entity>
 
+	
+	
         <a-entity movement-controls="fly: true" position="0 10 45" id="movementControls">
             <a-entity camera position="0 1.6 0" look-controls></a-entity>
             <a-entity cursor="rayOrigin:mouse"></a-entity>
