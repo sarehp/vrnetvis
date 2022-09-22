@@ -6,6 +6,8 @@ if (typeof AFRAME === 'undefined') {
 
 //////////
 // GLOBALS
+var SHIFT_Y = 2
+
 var viewing_mode = ""
 
 var nodeList = []
@@ -115,11 +117,14 @@ AFRAME.registerComponent('escena', {
 	    movementControls = document.querySelector('#movementControls')
 	    movementControls.parentNode.removeChild(movementControls)
 
-	    // Add camera
+	    //Add camera
 	    let camera = document.createElement('a-camera')
 	    camera.setAttribute('position', {x: 25, y: 9, z: 45})
 	    scene.appendChild(camera)
 
+
+
+	    
 	    controller = document.querySelector("#controller")
 	    controller.setAttribute('visible', true)
 
@@ -375,14 +380,14 @@ function hex_with_colons_to_ascii(str1)
 function dns_info (packetParams)
 {
     color = getColor("dns")
-    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+    let h1 ='<h1 style="padding: 0rem ; font-size: 1.4rem; font-weight: 900; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' +
+    let h2 ='<h2 style="padding: 0rem ; font-size: 1.2rem; font-weight: 800; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
+    let h3 ='<h3 style="padding: 0rem ; font-size: 1rem; font-weight: 700; ' + 
         'font-family: monospace; text-align: left; color: ' + color+ '">'
 
-    info = '<p>' + h1 +  'Nivel DNS' + ' </h1> </p>'
+    info = h1 +  'Nivel DNS' + ' </h1> <br>'
 
     // It's a pure query
     if (packetParams.dns["dns.count.add_rr"] == 0 && packetParams.dns["dns.count.answers"] == 0){
@@ -393,28 +398,28 @@ function dns_info (packetParams)
         else
             query_type= "(recursive)"
 
-	info += '<p>' + h2 + 'Queries ' +  query_type + ': </h2></p>'
+	info += h2 + 'Queries ' +  query_type + ': </h2><br>'
 
 	for (const [key, value] of Object.entries(packetParams.dns.Queries))
-	    info += '<p>' + h3 + 'Query: ' + key + ' </h3> </p>';
+	    info += h3 + 'Query: ' + key + ' </h3> <br>';
     }
     
 
     if (packetParams.dns["dns.count.answers"] != 0){
-	info += '<p>' + h2 + 'Answers: <h2> </p>'	
+	info += h2 + 'Answers: <h2> <br>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Answers"]))
-    	    info += '<p>' + h3 + key + '</h3></p>';
+    	    info += h3 + key + '</h3><br>';
     }
 
     if (packetParams.dns["dns.count.add_rr"] != 0){
 	
-	info += '<p>' + h2 + 'Authoritative nameservers: </h2></p>'	
+	info += h2 + 'Authoritative nameservers: </h2><br>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Authoritative nameservers"]))
-    	    info += '<p>' + h3 + key + ' </h3></p>';
+    	    info += h3 + key + ' </h3><br>';
 	
-	info += '<p>' + h2 + 'Additional records: </h2></p>'		
+	info += h2 + 'Additional records: </h2><br>'		
 	for (const [key, value] of Object.entries(packetParams.dns["Additional records"]))
-            info += '<p>' + h3 + key + '</h3></p>';
+            info += h3 + key + '</h3>';
     }
     return info;
 }
@@ -462,11 +467,11 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     let infoText = ""
     color = getColor(protocol)
-    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+    let h1 ='<h1 style="padding: 0rem; font-size: 1.4rem; font-weight: 900; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' + 
+    let h2 ='<h2 style="padding: 0rem; font-size: 1.2rem; font-weight: 800; ' + 
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' +
+    let h3 ='<h3 style="padding: 0rem; font-size: 1rem; font-weight: 700; ' +
         'font-family: monospace;  text-align: left; color: ' + color+ '">'
 
     switch (protocol){
@@ -475,34 +480,34 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	break;
 
     case 'http':
-	infoText += '<p>' + h2 + ' Nivel HTTP:</h2></p>' 
+	infoText += h2 + ' Nivel HTTP:</h2>' 
 	break;
 
     case 'dataInfo':
-	infoText += '<p>' + h2 + 
-            'DATOS:</h2></p>' + h3 + '<p>' + 
-            'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' +
-            'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</p></h3>'
+	infoText += h2 + 
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '<br>' +
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</h3>'
 	break;
 
     case 'data':
 	if (packetParams.tcp != null)
-	    infoText += '<p>' + h2 +
-            'DATOS:</h2></p>' + h3 + '<p>' +
-            'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' + 
-            'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '</p></h3>'
+	    infoText += h2 +
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '<br>' + 
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '<br></h3>'
 	else if (packetParams.udp != null)
-	    infoText += '<p>' + h2 + 
-            'DATOS:</h2></p>' + h3 + '<p>' +
-            'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '</p><p>' +  
-            'Longitud de datos: ' + packetParams.udp['udp.length']              + '</p></h3>'
+	    infoText += h2 + 
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '<br>' +  
+            'Longitud de datos: ' + packetParams.udp['udp.length']              + '</h3>'
 	break;
 
     case 'tcp':
-	infoText += '<p>' + h2 + 
-            'Nivel TCP:</h2></p>' + h3 + '<p>' +
-            'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
-            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p><p>'
+	infoText +=  h2 + 
+            'Nivel TCP:</h2><br>' + h3 + 
+            'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '<br>' + 
+            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '<br>'
 
         let tcp_flags_str =""
 
@@ -517,32 +522,32 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.push"] == "1")
             tcp_flags_str += "PSH "
 
-        infoText += 'Flags: ' + tcp_flags_str + '</p><p>'
-        infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '</p><p>' +
-            'Ack: ' +  packetParams.tcp['tcp.ack'] + '</p><p>' +
-            'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</p></h3>' 
+        infoText += 'Flags: ' + tcp_flags_str + '<br>'
+        infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '<br>' +
+            'Ack: ' +  packetParams.tcp['tcp.ack'] + '<br>' +
+            'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</h3>' 
 	break;
 
     case 'udp':
-	infoText += '<p>' + h2 + 
-            'Nivel UDP:</h2></p>' + h3 + '<p>' + 
-            'Puerto origen: '  + packetParams.udp['udp.srcport'] + '</p><p>' + 
-            'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel UDP:</h2>' + h3 + 
+            'Puerto origen: '  + packetParams.udp['udp.srcport'] + '<br>' + 
+            'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</h3>'
 	break;
 
     case 'icmp':
-	infoText += '<p>' + h2 + 
-            'Nivel ICMP:</h2></p>' + h3 + '<p>' +
-            'Type: ' + packetParams.icmp['icmp.type'] + '</p><p>' +  
-            'Code: ' + packetParams.icmp['icmp.code'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel ICMP:</h2>' + h3 + 
+            'Type: ' + packetParams.icmp['icmp.type'] + '<br>' +  
+            'Code: ' + packetParams.icmp['icmp.code'] + '</h3>'
 	break;
 
     case 'ip':
-	infoText += '<p>' + h2 + 
-            'Nivel IP:</h2></p>' + h3 + '<p>' + 
-            'Origen: '  + packetParams.ip['ip.src']  + '</p><p>' + 
-            'Destino: ' + packetParams.ip['ip.dst']  + '</p><p>' + 
-            'TTL: '     + packetParams.ip['ip.ttl']  + '</p></h3>'
+	infoText += h2 + 
+            'Nivel IP:</h2>' + h3 +
+            'Origen: '  + packetParams.ip['ip.src']  + '<br>' + 
+            'Destino: ' + packetParams.ip['ip.dst']  + '<br>' + 
+            'TTL: '     + packetParams.ip['ip.ttl']  + '</h3>'
 	break;
 
     case 'arp': 
@@ -554,12 +559,12 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         else
             operation="Respuesta"
 
-	infoText += '<p>' + h2 + 
-            'Nivel ARP:</h2></p>' + h3 + '<p>' + 
-            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '</p><p>' + 
-            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '</p><p>' +  
-            'Operación: ' + operation                              + '</p><p>' +
-            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel ARP:</h2>' + h3 + 
+            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '<br>' + 
+            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '<br>' +  
+            'Operación: ' + operation                              + '<br>' +
+            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</h3>'
 	break;
 
     case 'eth':
@@ -568,13 +573,13 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	}
 	else
 	    ethDst = packetParams.eth['eth.dst'] 
-	infoText += '<p>' + h2 + 
-            'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
-            'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
-            'Destino: ' + ethDst + '</p><p>' +  
-            'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
-
+	infoText += h2 + 
+            'Nivel Ethernet:</h2>' + h3 +
+            'Origen: '  + packetParams.eth['eth.src']  + '<br>' +  
+            'Destino: ' + ethDst + '<br>' +
+            'Tipo: '    + packetParams.eth['eth.type'] + '</h3>'
 	break;
+
     }
     
     
@@ -584,7 +589,7 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     textTemplate.innerHTML = infoText
 
-    textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
+    textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 0.5em; padding: 0.5em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
@@ -598,10 +603,11 @@ AFRAME.registerComponent('packet', {
         from: {default: null},
         to: {default: null},
         xPosition: {type: 'number', default: 0},
-        yPosition: {type: 'number', default: 1},
+        yPosition: {type: 'number', default: 0},
+	SHIFT_Y: {type: 'number', default: 2},
         zPosition: {type: 'number', default: 0},
         toXPosition: {type: 'string', default: ''},
-        toYPosition: {type: 'string', default:  ' 1 '},
+        toYPosition: {type: 'string', default: ''},
         toZPosition: {type: 'string', default: ''},
         duration: {type: 'number', default: 0},
         elementsScale: {type: 'number', default: 0},
@@ -630,7 +636,6 @@ AFRAME.registerComponent('packet', {
         sphere.setAttribute('id', 'sphere'+packet.id)
         sphere.setAttribute('geometry', {primitive: 'sphere',  radius: 0.1/packetParams.elementsScale });
         sphere.setAttribute('visible', false)
-
 	packet.appendChild(sphere)
 
 	
@@ -639,14 +644,15 @@ AFRAME.registerComponent('packet', {
 
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
-        newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 1em; margin:0;"
+        newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 0em; margin:0;"
         newSectionTemplate.id = packetParams.id + '-template'
         htmltemplates.appendChild(newSectionTemplate);
 
 
 	let newInfoText = document.createElement('a-entity');
         
-        newInfoText.setAttribute('position', { x: 5 , y: 3, z: 0 });
+	//        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + packetParams.SHIFT_Y, z: 0 });
+        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + 0.5 * packetParams.SHIFT_Y, z: 0 });	
         newInfoText.setAttribute('look-at', "[camera]");
         newInfoText.setAttribute('visible', false);
         newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
@@ -687,7 +693,7 @@ AFRAME.registerComponent('packet', {
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
 
 	    
-	    newBox.setAttribute('position', { x: 0, y:  2 + (level_index), z: 0 });
+	    newBox.setAttribute('position', { x: 0, y:  packetParams.SHIFT_Y + (level_index), z: 0 });
             newBox.setAttribute('color', getColor(level.protocol));
             newBox.setAttribute('visible', false); 
 
@@ -745,7 +751,7 @@ AFRAME.registerComponent('packet', {
 
         packet.setAttribute('animation__park', {
             property: 'position',
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 3.5*packetParams.SHIFT_Y, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -819,7 +825,7 @@ AFRAME.registerComponent('packet', {
 		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
 		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
 		data.elementsScale,
-		0.2
+		0.1
 	    ),
             dur: packetParams.duration,
             easing: 'easeInOutCubic',
@@ -1238,6 +1244,14 @@ function finish_packet(packet, packetParams){
 	// Animation is finished, clean up
 	animationState = "INIT";
 	showViews()
+
+	controller = document.querySelector('#controller')
+	controller.components["controller"].update()
+	
+	network = document.querySelector('#network')
+	network.components["network"].update()
+	
+	
     }
     destroy(packet)
 }
@@ -1282,7 +1296,6 @@ AFRAME.registerComponent('controller', {
 
     update: function(event)
     {
-	console.log("controller update")
 	latest_start = -2
 	CURRENT_TIME = 0
     },
@@ -1687,7 +1700,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		node = nodeList[k];
 		
 		if(!node.name.startsWith('hub')){
-		    coords = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
 
 
 		    console.log("coords de routing y arp")
@@ -1949,7 +1962,7 @@ function createNodes(nodes, nodeList, elementsScale) {
         htmltemplates.appendChild(newSectionTemplate);
 
         let newText = document.createElement('a-entity');
-        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: 3 + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: 2.5 + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
         newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
@@ -2097,9 +2110,9 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    if (nodeFrom.from.startsWith("hub"))
 		continue;
 	    
-	    label_id = "<p>" + connectionsLinksStandard[k].iface[j] + ": "
-	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "</p>";
-	    label_id += "<p>" + "      " + connectionsLinksStandard[k].hwaddr[j] + "</p>"
+	    label_id = connectionsLinksStandard[k].iface[j] + ": "
+	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "<br>";
+	    label_id += "      " + connectionsLinksStandard[k].hwaddr[j] 
 
 	    
 
@@ -2163,8 +2176,7 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
 
-    
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
     
@@ -2175,10 +2187,11 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
 
     let newText = document.createElement('a-entity');
 
-    coords.y=coords.y + 1
-    newText.setAttribute('position', coords)
+    let c = Object.assign({}, coords)
+    c.y = c.y + 4
+    newText.setAttribute('position', c)
     
-    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
+    newText.setAttribute('scale', {x: 25, y: 25, z: 25});
     
     newText.setAttribute('html', '#' + id_text + "-template");
     newText.setAttribute('look-at', "[camera]");
@@ -2200,7 +2213,7 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
     var newSectionTemplate = document.createElement("section");
 
     
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
     
@@ -2214,9 +2227,10 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
     console.log("coords:")
     console.log(coords)
 
-    coords.y=coords.y + 4
-    newText.setAttribute('position', coords)
-    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
+    let c = Object.assign({}, coords)
+    c.y = c.y + 8
+    newText.setAttribute('position', c)
+    newText.setAttribute('scale', {x: 30, y: 30, z: 30});
     
     newText.setAttribute('html', '#' + id_text + "-template");
     newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
@@ -2605,11 +2619,11 @@ function create_animations(finalPackets){
         newPacket.setAttribute('packet','from', finalPackets[currentPacket].from.from);
         newPacket.setAttribute('packet','to', finalPackets[currentPacket].to.from);	
         newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
-        newPacket.setAttribute('packet','yPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','yPosition', ' ' + SHIFT_Y + ' ');
         newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
         newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
         newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
-        newPacket.setAttribute('packet','toYPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','toYPosition', ' ' + SHIFT_Y + ' ');
         newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','elementsScale', data.elementsScale);
         newPacket.setAttribute('packet','class', 'packetClass')
