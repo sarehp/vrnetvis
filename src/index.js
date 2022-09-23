@@ -57,84 +57,86 @@ function isEndToEndVIEW() {
 
 AFRAME.registerComponent('escena', {
     init: function() {
-        let scene = this.el
+        // let scene = this.el
 
-	// Header text
-	let viewText = document.createElement('a-text');
-	viewText.setAttribute('value', "VRNetVis")
-	viewText.setAttribute('scale', '7 7 7');
-	viewText.setAttribute('position', {x: -4, y: 27, z: 21 });
-	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	// // Header text
+	// let viewText = document.createElement('a-text');
+	// viewText.setAttribute('value', "VRNetVis")
+	// viewText.setAttribute('scale', '7 7 7');
+	// viewText.setAttribute('position', {x: -4, y: 27, z: 21 });
+	// viewText.setAttribute("color", "white")	
+	// scene.appendChild(viewText)
 
-        let inmersiveText = document.createElement('a-entity');
-        inmersiveText.setAttribute('html', '#inmersive-mode');
-        inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
-        inmersiveText.setAttribute('scale', '30 30 30');
-        inmersiveText.setAttribute('look-at', "[camera]");
-        scene.appendChild(inmersiveText);
+        // let inmersiveText = document.createElement('a-entity');
+        // inmersiveText.setAttribute('html', '#inmersive-mode');
+        // inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
+        // inmersiveText.setAttribute('scale', '30 30 30');
 
-        let desktopText = document.createElement('a-entity');
-        desktopText.setAttribute('html', '#web-mode');
-        desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
-        desktopText.setAttribute('scale', '30 30 30');
-        desktopText.setAttribute('look-at', "[camera]");
-        scene.appendChild(desktopText);
+
+        // inmersiveText.setAttribute('look-at', "[camera]");
+
+
+        // scene.appendChild(inmersiveText);
+
+        // let desktopText = document.createElement('a-entity');
+        // desktopText.setAttribute('html', '#web-mode');
+        // desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
+        // desktopText.setAttribute('scale', '30 30 30');
+        // desktopText.setAttribute('look-at', "[camera]");
+        // scene.appendChild(desktopText);
 
 	
-        let inmersiveElement = document.createElement('a-entity');
+        // let inmersiveElement = document.createElement('a-entity');
 
-        inmersiveElement.setAttribute('gltf-model', '#inmersive');
-        inmersiveElement.setAttribute('position', '-7 7 30');
-        inmersiveElement.setAttribute('scale', '10 10 10');
-        scene.appendChild(inmersiveElement);
-        inmersiveElement.addEventListener('click', function () {
-	    viewing_mode = "vr"
+        // inmersiveElement.setAttribute('gltf-model', '#inmersive');
+        // inmersiveElement.setAttribute('position', '-7 7 30');
+        // inmersiveElement.setAttribute('scale', '10 10 10');
+        // scene.appendChild(inmersiveElement);
+        // inmersiveElement.addEventListener('click', function () {
+	//     viewing_mode = "vr"
 
-	    desktopText.parentNode.removeChild(desktopText);
-            inmersiveText.parentNode.removeChild(inmersiveText);
-            desktopElement.parentNode.removeChild(desktopElement);
-            inmersiveElement.parentNode.removeChild(inmersiveElement);
-            scene.setAttribute('inmersiveMode', '');
+	//     desktopText.parentNode.removeChild(desktopText);
+        //     inmersiveText.parentNode.removeChild(inmersiveText);
+        //     desktopElement.parentNode.removeChild(desktopElement);
+        //     inmersiveElement.parentNode.removeChild(inmersiveElement);
+        //     scene.setAttribute('inmersiveMode', '');
 
-        });
+        // });
 
-        let desktopElement = document.createElement('a-entity');
+        // let desktopElement = document.createElement('a-entity');
 
-        desktopElement.setAttribute('gltf-model', '#desktop');
-        desktopElement.setAttribute('position', '7 6 30');
-        desktopElement.setAttribute('rotation', '0 -90 0');
-        scene.appendChild(desktopElement);
-        desktopElement.addEventListener('click', function () {
-	    viewing_mode = "desktop"
+        // desktopElement.setAttribute('gltf-model', '#desktop');
+        // desktopElement.setAttribute('position', '7 6 30');
+        // desktopElement.setAttribute('rotation', '0 -90 0');
+        // scene.appendChild(desktopElement);
+        // desktopElement.addEventListener('click', function () {
+	//     viewing_mode = "desktop"
 
-	    desktopText.parentNode.removeChild(desktopText);
-            inmersiveText.parentNode.removeChild(inmersiveText);
-            inmersiveElement.parentNode.removeChild(inmersiveElement);
-            desktopElement.parentNode.removeChild(desktopElement);
+	//     desktopText.parentNode.removeChild(desktopText);
+        //     inmersiveText.parentNode.removeChild(inmersiveText);
+        //     inmersiveElement.parentNode.removeChild(inmersiveElement);
+        //     desktopElement.parentNode.removeChild(desktopElement);
 
-	    // Remove AR movement-controls
-	    movementControls = document.querySelector('#movementControls')
-	    movementControls.parentNode.removeChild(movementControls)
+	//     // Remove AR movement-controls
+	//     movementControls = document.querySelector('#movementControls')
+	//     movementControls.parentNode.removeChild(movementControls)
 
-	    //Add camera
-	    let camera = document.createElement('a-camera')
-	    camera.setAttribute('position', {x: 25, y: 7, z: 45})
-	    scene.appendChild(camera)
+	//     //Add camera
+	//     let camera = document.createElement('a-camera')
+	//     camera.setAttribute('position', {x: 25, y: 7, z: 45})
+	//     scene.appendChild(camera)
+
+	//     controller = document.querySelector("#controller")
+	//     controller.setAttribute('visible', true)
+
+	//     network = document.querySelector("#network")
+	//     network.setAttribute('visible', true)
 
 	    
-	    controller = document.querySelector("#controller")
-	    controller.setAttribute('visible', true)
-
-	    network = document.querySelector("#network")
-	    network.setAttribute('visible', true)
-
-	    
-        });
-
-
+        // });
     }
 });
+
 
 AFRAME.registerComponent('inmersiveMode', {
     init: function() {
@@ -1427,9 +1429,6 @@ AFRAME.registerComponent('controller', {
     
     init: function() {
 
-	console.log("controller:init() this.data.position:")
-	console.log(this.data.position)
-
 	latest_start = -2
 	CURRENT_TIME = 0
 	
@@ -1510,9 +1509,6 @@ AFRAME.registerComponent('controller', {
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
 
 
-	console.log("2 controller:init() this.data.position:")
-	console.log(this.data.position)
-
 	
 	let position = Object.assign({}, this.data.position)
 	position.x = position.x + 35
@@ -1537,6 +1533,14 @@ AFRAME.registerComponent('controller', {
 
 	playButton.addEventListener('click', event_listener_function)
 
+	// Play button controlled by space key
+	document.addEventListener('keydown', (event) => {
+	    const keyName = event.key;
+	    
+	    if (keyName === 'Spacebar' || keyName === ' ') {
+		playButton.emit('click', null ,false)
+	    }
+	}, false);
 
 
 	
@@ -1626,7 +1630,11 @@ AFRAME.registerComponent('controller', {
         infoPanel.setAttribute('position', position);
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
-        infoPanel.setAttribute('look-at', "[camera]");
+
+
+	infoPanel.setAttribute('look-at', "[camera]");
+
+	
         this.el.appendChild(infoPanel);
 	
 	
@@ -1637,7 +1645,6 @@ AFRAME.registerComponent('controller', {
 
 
 function createNetwork(filename, machineNamesFile, elementScale){
-    console.log("machineNamesFile: " + machineNamesFile)
 
     // initialize global variables
     nodeList.length = 0
@@ -1701,9 +1708,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
 
 
-		console.log("coords de routing y arp")
-		console.log(coords)		    
-		
 		node.routingTableText =
 		    createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
 
@@ -1847,9 +1851,10 @@ function deleteNodes(nodeList){
 	// Destroy node's text
 	scene.removeChild(nodeList[i].text)
 
-	// Destroy node's routingTableText
+	// Destroy node's routingTableText and ARPCache
 	if(!nodeList[i].name.startsWith('hub')){
             scene.removeChild(nodeList[i].routingTableText)
+            scene.removeChild(nodeList[i].ARPCacheInfoText)	    
 	}
 
 	// Destroy node
@@ -1886,8 +1891,6 @@ function createNodes(nodes, nodeList, elementsScale) {
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
-	    console.log(newNode.name + " position: ")
-	    console.log(newNodeElement.getAttribute('position'))	    
 	    
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 0.006/elementsScale, y: 0.006/elementsScale, z: 0.006/elementsScale});
@@ -2094,7 +2097,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             nodeToPosition = nodeTo.position.split('"')
 
             let newLine = document.createElement('a-entity');
-	    console.log("en línea, SHIFT_Y: " + data.SHIFT_Y)
+
             newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.SHIFT_Y + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.SHIFT_Y + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
             scene.appendChild(newLine);
 
@@ -2220,8 +2223,6 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
 
     let newText = document.createElement('a-entity');
 
-    console.log("coords:")
-    console.log(coords)
 
     let c = Object.assign({}, coords)
     c.y = c.y + 10
