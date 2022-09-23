@@ -6,6 +6,8 @@ if (typeof AFRAME === 'undefined') {
 
 //////////
 // GLOBALS
+consoles=null
+
 var SHIFT_Y = 2
 
 var viewing_mode = ""
@@ -463,6 +465,23 @@ function showARPCacheInfoText(newInfoText, arpCache){
     newInfoText.setAttribute('visible', true);
 }
 
+function showConsoleInfoText(newInfoText, console_data){
+    console.log("showConsoleInfoText")
+    console.log(console_data)    
+    
+    var infotext = console_data
+
+    newInfoText.removeAttribute('html');
+
+    var textTemplate = document.getElementById(newInfoText.id + '-template');
+    
+    textTemplate.innerHTML = infotext
+
+    textTemplate.style = "display: inline-block; background: #5f6a76; color: white; border-radius: 1em; padding: 1em; margin:0;"
+    newInfoText.setAttribute('html', '#' + newInfoText.id + '-template');
+    newInfoText.setAttribute('visible', true);
+}
+
 
 function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
@@ -839,10 +858,21 @@ AFRAME.registerComponent('packet', {
     
     // returns promise
     animate_birth: function(packetParams, packet, noEth=false){
-	let promise = Promise.resolve()
-	
 	let nodeName = packetParams.from
 	node = nodeList.find(o => o.name === nodeName)
+
+
+	
+	if (node.console){
+	    console_data = this.console(nodeName, packetParams, "sending")
+	    if (console_data != ""){
+		node.console_log += console_data
+		showConsoleInfoText(node.consoleInfoText, node.console_log)
+	    }
+	}
+	
+	let promise = Promise.resolve()
+	
 	
 	if (packetParams.from.startsWith('hub')){
 	    packet.setAttribute('visible', true)
@@ -919,7 +949,64 @@ AFRAME.registerComponent('packet', {
 	return promise
     },
 
+    console: function(nodeName, packetParams, sending_or_receiving){
+	let h1 = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+            'font-family: monospace; text-align: left">'
+	
+	console.log("console " + nodeName)
+
+	var node = nodeList.find(o => o.name === nodeName)               
+	
+	console.log(packetParams)
+	
+	text = ""
+	for (e of node.console[sending_or_receiving])
+	{
+	    pass = true;
+	    for (c of e["conditions"]){
+		pass = (pass
+			&& packetParams[c.protocol] 			
+			&& packetParams[c.protocol][c.protocol+"."+c.field] == c.value)
+
+		// console.log("packetParams[c.protocol]")
+		// console.log(packetParams[c.protocol])
+		// console.log('packetParams[c.protocol][c.protocol+"."+c.field]')
+		// console.log(packetParams[c.protocol][c.protocol+"."+c.field])
+	    }
+
+	    if (! pass) continue
+	    else{
+		for (var i = 0; i < e.actions.length ; i++){
+		    text += h1
+		    protocol = e.actions[i]["protocol"]
+		    field = e.actions[i]["field"]		    
+		    if (protocol == "null"
+			&& field == "null")
+			text += e.actions[i]["value"] + "</h1>"
+		    else
+			text += packetParams[protocol][protocol+"."+field] + "</h1>"
+		    
+		}
+	    }
+	}
+	
+	
+	return text
+		
+    },
+    
     animate_packet_arrives: function (nodeAnimation, packetParams, packet){
+	let nodeName = packetParams.to
+	var node = nodeList.find(o => o.name === nodeName)
+
+	if (node.console){
+	    console_data = this.console(nodeName, packetParams, "receiving")
+	    if (console_data != ""){
+		node.console_log += console_data
+		showConsoleInfoText(node.consoleInfoText, node.console_log)
+	    }
+	}
+	
 	let receivingARPResponse = function(packet){
 	    // to be called when an arp response is received:
 	    // add in the receiver's ARPCache the eth_src
@@ -939,10 +1026,8 @@ AFRAME.registerComponent('packet', {
 
 	    }
 	}
+
 	
-
-
-	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
 	let frameIsForMe = function(packetParams){
@@ -1242,6 +1327,23 @@ const anime = (target, animation_name) =>
 
 function finish_packet(packet, packetParams){
     if (packet.id == finalPackets.length - 1) {
+
+	
+	let finishPanel = document.createElement('a-text');
+	finishPanel.setAttribute("value", 'FIN: pulse Reset para reiniciar')
+	finishPanel.setAttribute('position', "0 10 20")
+	finishPanel.setAttribute('width', "100")		
+	scene.appendChild(finishPanel);
+	let playButton = document.querySelector("#playButton");
+	playButton.emit("click", {}, false)
+	wait(3000)
+	    .then( ()=> scene.removeChild(finishPanel) )
+
+
+
+	  
+	
+
 	// Animation is finished, clean up
 	animationState = "INIT";
 	showViews()
@@ -1528,17 +1630,17 @@ AFRAME.registerComponent('controller', {
 	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
         });
 
-	let scene = document.querySelector("#escena")
-	this.el.appendChild(playButton);
-
 	playButton.addEventListener('click', event_listener_function)
+	let scene = document.querySelector("#escena")
+	scene.appendChild(playButton);
 
-	// Play button controlled by space key
+
+	// Play button also can be clicked with space key
 	document.addEventListener('keydown', (event) => {
 	    const keyName = event.key;
 	    
 	    if (keyName === 'Spacebar' || keyName === ' ') {
-		playButton.emit('click', null ,false)
+		playButton.emit('click', {}, false)
 	    }
 	}, false);
 
@@ -1655,77 +1757,114 @@ function createNetwork(filename, machineNamesFile, elementScale){
     request.open('GET', file);
     request.responseType = 'text';
     request.send();
-
-    request.onload = function() {
-        response = request.response;
-        response.split('<nodes>')
-        nodes = response.split('position')
-
-        // Establish nodes in the scene that will be stored in nodeList
-        createNodes(nodes, nodeList, elementScale)
-    }
-
-
+    
+    let promise1 =
+	new Promise((resolve) =>
+		    request.onload = function() {
+			response = request.response;
+			response.split('<nodes>')
+			nodes = response.split('position')
+			
+			
+			// Establish nodes in the scene that will be stored in nodeList
+			createNodes(nodes, nodeList, elementScale)
+			
+			resolve()
+		    })
+    
+    
     // Request and process machineNames.json
     // Associate a name to each machine
     requestMachineNames = new XMLHttpRequest();
     requestMachineNames.open('GET', machineNamesFile);
     requestMachineNames.responseType = 'text';
     requestMachineNames.send();
-    requestMachineNames.onload = function() {
-        response = requestMachineNames.response;
-	responseParse = JSON.parse(response);
-	
-        for (const interface_index in responseParse.interfaces) {
-            for (const currentNode in responseParse.interfaces[interface_index]) {
-                node = nodeList.find(o => o.name === currentNode)
-		node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
-		node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
-		node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
-		node.iface.push("eth" + interface_index)
-            }
-        }
 
-	for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
-            node = nodeList.find(o => o.name === machineName)
-	    node.routing_table = value.routing_table
-        }
-
-	
-        // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
-        connections = nodesInfo[1].split('link')
-
-
-        finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
-
-
-
-	// show routing tables + ARPCaches
-	for (var k=0; k < nodeList.length; k++) {
-	    node = nodeList[k];
-	    
-	    if(!node.name.startsWith('hub')){
-		coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
-
-
-		node.routingTableText =
-		    createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
-
-
-		// ARPCache contents
-		node.ARPCache = {}
-		// ARPCache panel
-		node.ARPCacheInfoText =
-		    createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
-
-	    }
-	}
-
-
-	loadAndAnimatePackets(finalConnectionsLinks);
-    }
+    promise1 = promise1
+	.then(() => {return new Promise
+		     ((resolve) =>
+		      requestMachineNames.onload = function() {
+			  response = requestMachineNames.response;
+			  responseParse = JSON.parse(response);
+			  
+			  for (const interface_index in responseParse.interfaces) {
+			      for (const currentNode in responseParse.interfaces[interface_index]) {
+				  node = nodeList.find(o => o.name === currentNode)
+				  node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
+				  node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
+				  node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
+				  node.iface.push("eth" + interface_index)
+			      }
+			  }
+			  
+			  for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
+			      node = nodeList.find(o => o.name === machineName)
+			      node.routing_table = value.routing_table
+			  }
+			  // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
+			  connections = nodesInfo[1].split('link')
+			  
+			  
+			  finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
+			  
+			  resolve()	    
+		      }
+		     )})
     
+    
+    //
+    // Request and process consoles.json
+    requestConsoles = new XMLHttpRequest();
+    requestConsoles.open('GET', 'consoles.json');
+    requestConsoles.responseType = 'text';
+    requestConsoles.send();
+    promise1 = promise1
+	.then(() => {return new Promise
+		     ((resolve) =>
+		      requestConsoles.onload = function() {
+			  response = requestConsoles.response;
+			  consoles = JSON.parse(response);
+			  console.log("consoles")
+			  console.log(consoles)
+			  resolve()	    
+		      }
+		     )})
+
+    
+    
+    promise1
+	.then(() =>{
+	    // create panels for routing tables + ARPCaches + console
+	    for (var k=0; k < nodeList.length; k++) {
+		node = nodeList[k];
+		
+		if(!node.name.startsWith('hub')){
+		    coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    
+		    
+		    node.routingTableText =
+			createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
+		    
+		    
+		    // ARPCache contents
+		    node.ARPCache = {}
+		    // ARPCache panel
+		    node.ARPCacheInfoText =
+			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
+		    
+		    console.log("consoles")
+		    console.log(consoles)
+		    node.console = consoles[node.name]
+		    node.console_log = ""
+		    node.consoleInfoText = 
+			createConsoleInfoText("ConsoleInfoText" + node.name, coords, data.elementsScale, node.name)
+		}
+	    }
+	    
+	    loadAndAnimatePackets(finalConnectionsLinks);	    
+	})
 }
+
 
 function loadAndAnimatePackets(finalConnectionsLinks){
     var filePackets = 'new_file.json'
@@ -1752,6 +1891,7 @@ function loadAndAnimatePackets(finalConnectionsLinks){
 	}
     }
 }
+
 
 function formatARPCache(ARPCache){
     color = "white"
@@ -1854,7 +1994,8 @@ function deleteNodes(nodeList){
 	// Destroy node's routingTableText and ARPCache
 	if(!nodeList[i].name.startsWith('hub')){
             scene.removeChild(nodeList[i].routingTableText)
-            scene.removeChild(nodeList[i].ARPCacheInfoText)	    
+            scene.removeChild(nodeList[i].ARPCacheInfoText)
+            scene.removeChild(nodeList[i].consoleInfoText)	    	    
 	}
 
 	// Destroy node
@@ -2170,6 +2311,40 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 }
 
 
+function createConsoleInfoText(id_text, coords, elementsScale, info){
+    var htmltemplates = document.getElementById("htmltemplates");
+    var newSectionTemplate = document.createElement("section");
+    
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
+    newSectionTemplate.innerHTML = templateText;
+        
+    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
+    newSectionTemplate.id = id_text + "-template";
+    htmltemplates.appendChild(newSectionTemplate);
+
+    let newText = document.createElement('a-entity');
+
+    let c = Object.assign({}, coords)
+    c.y = c.y +  4
+    c.z = c.z + -4
+    c.x = c.x +  4    
+    newText.setAttribute('position', c)
+    
+    newText.setAttribute('scale', {x: 25, y: 25, z: 25});
+    
+    newText.setAttribute('html', '#' + id_text + "-template");
+    newText.setAttribute('look-at', "[camera]");
+    newText.setAttribute('visible', false);
+
+    newText.setAttribute('id', id_text);    
+    
+    scene = document.querySelector('#escena');
+
+    scene.appendChild(newText);
+
+    return newText;
+}
+
 
 function createARPCacheInfoText(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
@@ -2203,8 +2378,8 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
     scene.appendChild(newText);
 
     return newText;
-
 }
+
 
 
 function createRoutingTableInfo(id_text, coords, elementsScale, info){
