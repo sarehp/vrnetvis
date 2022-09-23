@@ -861,17 +861,17 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.from
 	node = nodeList.find(o => o.name === nodeName)
 
-
-	
-	if (node.console){
-	    console_data = this.console(nodeName, packetParams, "sending")
-	    if (console_data != ""){
-		node.console_log += console_data
-		showConsoleInfoText(node.consoleInfoText, node.console_log)
-	    }
-	}
-	
 	let promise = Promise.resolve()
+	    .then(() => {
+		if (node.console){
+		    console_data = this.console(nodeName, packetParams, "sending")
+		    if (console_data != ""){
+			node.console_log += console_data
+			showConsoleInfoText(node.consoleInfoText, node.console_log)
+		    }
+		}
+	    })
+	    .then(() => wait(3000))
 	
 	
 	if (packetParams.from.startsWith('hub')){
@@ -962,6 +962,7 @@ AFRAME.registerComponent('packet', {
 	text = ""
 	for (e of node.console[sending_or_receiving])
 	{
+	    console.log("for")
 	    pass = true;
 	    for (c of e["conditions"]){
 		pass = (pass
@@ -974,8 +975,12 @@ AFRAME.registerComponent('packet', {
 		// console.log(packetParams[c.protocol][c.protocol+"."+c.field])
 	    }
 
-	    if (! pass) continue
+	    if (! pass){
+		console.log("!pass")
+		continue
+	    }
 	    else{
+		console.log("pass")
 		for (var i = 0; i < e.actions.length ; i++){
 		    text += h1
 		    protocol = e.actions[i]["protocol"]
@@ -998,15 +1003,20 @@ AFRAME.registerComponent('packet', {
     animate_packet_arrives: function (nodeAnimation, packetParams, packet){
 	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
-
-	if (node.console){
-	    console_data = this.console(nodeName, packetParams, "receiving")
-	    if (console_data != ""){
-		node.console_log += console_data
-		showConsoleInfoText(node.consoleInfoText, node.console_log)
-	    }
-	}
 	
+	Promise.resolve()
+	    .then(() => {
+		if (node.console){
+		    console_data = this.console(nodeName, packetParams, "receiving")
+		    if (console_data != ""){
+			node.console_log += console_data
+			showConsoleInfoText(node.consoleInfoText, node.console_log)
+		    }
+		}
+	    })
+	    .then(() => wait(2000))
+	
+		  
 	let receivingARPResponse = function(packet){
 	    // to be called when an arp response is received:
 	    // add in the receiver's ARPCache the eth_src
@@ -1326,9 +1336,9 @@ const anime = (target, animation_name) =>
 
 
 function finish_packet(packet, packetParams){
-    if (packet.id == finalPackets.length - 1) {
+    let promise1 = Promise.resolve()
 
-	
+    if (packet.id == finalPackets.length - 1) {
 	let finishPanel = document.createElement('a-text');
 	finishPanel.setAttribute("value", 'FIN: pulse Reset para reiniciar')
 	finishPanel.setAttribute('position', "0 10 20")
@@ -1336,27 +1346,25 @@ function finish_packet(packet, packetParams){
 	scene.appendChild(finishPanel);
 	let playButton = document.querySelector("#playButton");
 	playButton.emit("click", {}, false)
-	wait(3000)
-	    .then( ()=> scene.removeChild(finishPanel) )
 
-
-
-	  
-	
-
-	// Animation is finished, clean up
-	animationState = "INIT";
-	showViews()
-
-	controller = document.querySelector('#controller')
-	controller.components["controller"].update()
-	
-	network = document.querySelector('#network')
-	network.components["network"].update()
-	
-	
+	promise1 = promise1
+	    .then (() =>  wait(3000))
+	    .then( ()=> {
+		scene.removeChild(finishPanel) 
+		
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+		
+		controller = document.querySelector('#controller')
+		controller.components["controller"].update()
+		
+		network = document.querySelector('#network')
+		network.components["network"].update()
+	    })
+			  
     }
-    destroy(packet)
+    promise1.then (() => destroy(packet))
 }
 
 
@@ -1780,7 +1788,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
     requestMachineNames.responseType = 'text';
     requestMachineNames.send();
 
-    promise1 = promise1
+    let promise2 = promise1
 	.then(() => {return new Promise
 		     ((resolve) =>
 		      requestMachineNames.onload = function() {
@@ -1818,7 +1826,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
     requestConsoles.open('GET', 'consoles.json');
     requestConsoles.responseType = 'text';
     requestConsoles.send();
-    promise1 = promise1
+    let promise3 = promise2
 	.then(() => {return new Promise
 		     ((resolve) =>
 		      requestConsoles.onload = function() {
@@ -1832,7 +1840,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
 
     
     
-    promise1
+    promise3
 	.then(() =>{
 	    // create panels for routing tables + ARPCaches + console
 	    for (var k=0; k < nodeList.length; k++) {
@@ -1852,8 +1860,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		    node.ARPCacheInfoText =
 			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 		    
-		    console.log("consoles")
-		    console.log(consoles)
 		    node.console = consoles[node.name]
 		    node.console_log = ""
 		    node.consoleInfoText = 
@@ -2314,7 +2320,7 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 function createConsoleInfoText(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
-    
+
     templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
         
@@ -2325,9 +2331,9 @@ function createConsoleInfoText(id_text, coords, elementsScale, info){
     let newText = document.createElement('a-entity');
 
     let c = Object.assign({}, coords)
-    c.y = c.y +  4
-    c.z = c.z + -4
-    c.x = c.x +  4    
+    c.y = c.y +  2
+    c.z = c.z +  0
+    c.x = c.x -  4    
     newText.setAttribute('position', c)
     
     newText.setAttribute('scale', {x: 25, y: 25, z: 25});
