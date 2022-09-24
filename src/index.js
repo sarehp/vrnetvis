@@ -465,22 +465,7 @@ function showARPCacheInfoText(newInfoText, arpCache){
     newInfoText.setAttribute('visible', true);
 }
 
-function showConsoleInfoText(newInfoText, console_data){
-    console.log("showConsoleInfoText")
-    console.log(console_data)    
-    
-    var infotext = console_data
 
-    newInfoText.removeAttribute('html');
-
-    var textTemplate = document.getElementById(newInfoText.id + '-template');
-    
-    textTemplate.innerHTML = infotext
-
-    textTemplate.style = "display: inline-block; background: #5f6a76; color: white; border-radius: 1em; padding: 1em; margin:0;"
-    newInfoText.setAttribute('html', '#' + newInfoText.id + '-template');
-    newInfoText.setAttribute('visible', true);
-}
 
 
 function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
@@ -1224,7 +1209,9 @@ AFRAME.registerComponent('packet', {
 
 	    	    flying.push(nodeFromAnimation)
 		    nodeFromAnimation.removeAttribute("animation__grow")
-	    	    nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
+	    	    nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'grow'})
+		    nodeFromAnimation.setAttribute('animation__grow', {'enabled': true})
+		    return anime(nodeFromAnimation, 'grow')
 		})
 		.then(() =>
 		      wait(3000))
@@ -1236,8 +1223,10 @@ AFRAME.registerComponent('packet', {
 		    return wait(2000)
 		})
 		.then(() => {
-		    nodeFromAnimation.removeAttribute('animation')
-		    nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })
+		    nodeFromAnimation.removeAttribute('animation__ungrow')
+		    nodeFromAnimation.setAttribute('animation__ungrow', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'ungrow' })
+		    nodeFromAnimation.setAttribute('animation__ungrow', {'enabled': true})
+		    return anime(nodeFromAnimation, 'ungrow')
 		})
 		.then(() => wait(5000))
 	}
@@ -1811,9 +1800,12 @@ AFRAME.registerComponent('controller', {
 
 
 function createNetwork(filename, machineNamesFile, elementScale){
-
+    console.log("create network")
+    
     // initialize global variables
     nodeList.length = 0
+    var nodes = null
+
     finalConnectionsLinks.length = 0
     // request netgui.nkp
     file = filename
@@ -1825,17 +1817,24 @@ function createNetwork(filename, machineNamesFile, elementScale){
     let promise1 =
 	new Promise((resolve) =>
 		    request.onload = function() {
+			console.log("cargados netkit.nkp")
+			nodeList.length=0 // need to reinitialize
+					  // because this handler is
+					  // called twice sometimes
+					  // and if not you would end
+					  // up with a corrupt
+					  // nodeList
+			
 			response = request.response;
 			response.split('<nodes>')
 			nodes = response.split('position')
-			
-			
-			// Establish nodes in the scene that will be stored in nodeList
-			createNodes(nodes, nodeList, elementScale)
+
+			createNodes(nodes, nodeList, elementsScale)
 			
 			resolve()
 		    })
-    
+
+
     
     // Request and process machineNames.json
     // Associate a name to each machine
@@ -1848,6 +1847,8 @@ function createNetwork(filename, machineNamesFile, elementScale){
 	.then(() => {return new Promise
 		     ((resolve) =>
 		      requestMachineNames.onload = function() {
+			  console.log("cargados machineNames")
+
 			  response = requestMachineNames.response;
 			  responseParse = JSON.parse(response);
 			  
@@ -1868,6 +1869,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
 			  // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
 			  connections = nodesInfo[1].split('link')
 			  
+
 			  
 			  finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
 			  
@@ -2058,7 +2060,6 @@ function deleteNodes(nodeList){
 	if(!nodeList[i].name.startsWith('hub')){
             scene.removeChild(nodeList[i].routingTableText)
             scene.removeChild(nodeList[i].ARPCacheInfoText)
-            scene.removeChild(nodeList[i].consoleInfoText)	    	    
 	}
 
 	// Destroy node
@@ -2087,11 +2088,16 @@ function createNodes(nodes, nodeList, elementsScale) {
 	    node_a_entity:""
         }
 
+
+
+	
         let newNodeElement = document.createElement('a-entity');
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-
+	console.log("createNodes newNode")
+	console.log(newNode)
+	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
@@ -2321,7 +2327,11 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    label_id += "      " + connectionsLinksStandard[k].hwaddr[j] 
 
 	    
-
+	    console.log("writeConnections")
+	    console.log("k: " + k)
+	    console.log("j: " + j)
+	    console.log(connectionsLinksStandard)
+	    
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
 	    
@@ -2376,40 +2386,6 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
     return connectionsLinksStandard
 }
 
-
-function createConsoleInfoText(id_text, coords, elementsScale, info){
-    var htmltemplates = document.getElementById("htmltemplates");
-    var newSectionTemplate = document.createElement("section");
-
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
-    newSectionTemplate.innerHTML = templateText;
-        
-    newSectionTemplate.style = "display: inline-block; background: black; color: orange; border-radius: 1em; padding: 1em; margin:0;"
-    newSectionTemplate.id = id_text + "-template";
-    htmltemplates.appendChild(newSectionTemplate);
-
-    let newText = document.createElement('a-entity');
-
-    let c = Object.assign({}, coords)
-    c.y = c.y +  2
-    c.z = c.z +  0
-    c.x = c.x -  4    
-    newText.setAttribute('position', c)
-    
-    newText.setAttribute('scale', {x: 25, y: 25, z: 25});
-    
-    newText.setAttribute('html', '#' + id_text + "-template");
-    newText.setAttribute('look-at', "[camera]");
-    newText.setAttribute('visible', false);
-
-    newText.setAttribute('id', id_text);    
-    
-    scene = document.querySelector('#escena');
-
-    scene.appendChild(newText);
-
-    return newText;
-}
 
 
 function createARPCacheInfoText(id_text, coords, elementsScale, info){
