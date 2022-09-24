@@ -863,48 +863,13 @@ AFRAME.registerComponent('packet', {
 
         var nodeFromAnimation = document.getElementById(nodeName);
 
-	let showConsole = function(consoleText, the_text){
-	    if (node.consoleText)
-		nodeFromAnimation.removeChild(node.consoleText)
-	    else
-		node.consoleText = document.createElement('a-entity');
-	    
-	    node.consoleText.setAttribute("text", "value", the_text)
-	    node.consoleText.setAttribute("text", "color", "white")
-	    node.consoleText.setAttribute("text", "width", 250)	    
-            node.consoleText.setAttribute('rotation', '0 88 0');
-	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
-            node.consoleText.setAttribute('scale', "1 1 1")
-            node.consoleText.setAttribute('text', 'wrapCount', 40)
-	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
 
-	    nodeFromAnimation.appendChild(node.consoleText)
-	}
-
-	let promise = Promise.resolve()
-	    .then(()=> wait(2000))
-	    .then(()=> {if (nodeName.startsWith("pc")){
-	    	flying.push(nodeFromAnimation)
-	    	nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
-	    }})
-	    .then(() => {if (nodeName.startsWith("pc")) {console.log("en wait 2000"); return wait(3000)}})
-	    .then(() => {
-		if (node.console){
-		    console_data = this.console(nodeName, packetParams, "sending")
-		    if (console_data != ""){
-			node.console_log += console_data
-			showConsole(node.consoleText, node.console_log)
-		    }
-		}
-		return wait(2000)
-	    })
-	    .then(() => {if (nodeName.startsWith("pc")){
-		nodeFromAnimation.removeAttribute('animation')
-		nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })}})
-	    .then(() => {if (nodeName.startsWith("pc")) return wait(5000)})
-
+	var promise = Promise.resolve()
 	
-		  
+	if (nodeName.startsWith("pc") && node.console)
+	    promise = this.check_console(promise, "sending", node, packetParams)
+	
+
 	if (packetParams.from.startsWith('hub')){
 	    packet.setAttribute('visible', true)
 	    
@@ -914,7 +879,8 @@ AFRAME.registerComponent('packet', {
 	    }
 	    
 	    packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-	    promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
+	    promise = promise
+		.then(() => anime(packet, 'out_of_node_immediate'))
 	}
 	else{ // not hub
 	    promise=promise
@@ -1023,53 +989,10 @@ AFRAME.registerComponent('packet', {
 	var node = nodeList.find(o => o.name === nodeName)
 	
 
-        var nodeFromAnimation = document.getElementById(nodeName);
 
-	let showConsole = function(consoleText, the_text){
-	    if (node.consoleText)
-		nodeFromAnimation.removeChild(node.consoleText)
 
-	    node.consoleText = document.createElement('a-entity');	    
-	    
-	    node.consoleText.setAttribute("text", "value", the_text)
-	    node.consoleText.setAttribute("text", "color", "white")
-	    node.consoleText.setAttribute("text", "width", 250)	    
-            node.consoleText.setAttribute('rotation', '0 88 0');
-	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
-            node.consoleText.setAttribute('scale', "1 1 1")
-            node.consoleText.setAttribute('text', 'wrapCount', 40)
-	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
-
-	    nodeFromAnimation.appendChild(node.consoleText)
-	}
-	
-	
 	let promise = Promise.resolve()
-	    .then(()=> wait(2000))
-	    .then(()=> {if (nodeName.startsWith("pc")){
-	    	flying.push(nodeFromAnimation)
-		nodeFromAnimation.removeAttribute("animation__grow")
-	    	nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
-	    }})
-	    .then(() => {if (nodeName.startsWith("pc")) {console.log("en wait 2000"); return wait(3000)}})
-	    .then(() => {
-		if (node.console){
-		    console_data = this.console(nodeName, packetParams, "receiving")
-		    if (console_data != ""){
-			node.console_log += console_data
-			console.log("new.console_log: " + node.console_log)
-			showConsole(node.consoleText, node.console_log)
-		    }
-		}
-		return wait(2000)
-	    })
-	    .then(() => {if (nodeName.startsWith("pc")){
-		nodeFromAnimation.removeAttribute('animation')
-		nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })}})
-	    .then(() => {if (nodeName.startsWith("pc")) return wait(5000)})
-
-
-		  
+	
 	let receivingARPResponse = function(packet){
 	    // to be called when an arp response is received:
 	    // add in the receiver's ARPCache the eth_src
@@ -1112,7 +1035,6 @@ AFRAME.registerComponent('packet', {
 	if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
 	   && VIEW=="ALL"){
 
-
 	    if (! frameIsForMe(packetParams)){
 		let fadeoutChildren = function(packet){
 		    for (const child of packet.children) {
@@ -1124,16 +1046,19 @@ AFRAME.registerComponent('packet', {
 		
 		// fadeout packet and children and then destroy packet
 		packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		Promise.all([anime(packet, 'fadeout'),
-			     fadeoutChildren(packet)])
-		    .then(() => finish_packet(packet, packetParams))
-		
+		promise = promise
+		    .then(() =>
+			  Promise.all([anime(packet, 'fadeout'),
+				       fadeoutChildren(packet)])
+			  .then(() => finish_packet(packet, packetParams))
+			 )
+			  
 		return	    
 	    }
 
 
 	    // Frame is for us => consume layers from bottom to top
-	    let promise = Promise.resolve()
+	    promise = Promise.resolve()
 	    promise = promise
 		.then(() => wait(500))
 	    
@@ -1201,6 +1126,7 @@ AFRAME.registerComponent('packet', {
 			promise=promise
 			    .then(()=> {Promise.all([anime(packet, 'fadeout'),
 	 					     fadeoutChildren(packet)])
+					.then(() => this.check_console(promise, "receiving", node, packetParams))
 	 				.then(() => finish_packet(packet, packetParams))
 				       })
 		    }
@@ -1251,7 +1177,73 @@ AFRAME.registerComponent('packet', {
 	    finish_packet(packet, packetParams)
 	    next_packet_anim(packetParams);
 	}
+
+	    
+
 	
+    },
+
+    check_console: function(promise, sending_receiving, node, packetParams) {
+	var nodeName = node.name
+	console.log("check_console: " + nodeName)
+
+	var nodeFromAnimation = document.getElementById(nodeName);
+	
+	// Process console if it exists
+	let showConsole = function(consoleText, the_text){
+	    if (node.consoleText)
+		nodeFromAnimation.removeChild(node.consoleText)
+
+	    node.consoleText = document.createElement('a-entity');	    
+	    
+	    node.consoleText.setAttribute("text", "value", the_text)
+	    node.consoleText.setAttribute("text", "color", "white")
+	    node.consoleText.setAttribute("text", "width", 250)	    
+            node.consoleText.setAttribute('rotation', '0 88 0');
+	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
+            node.consoleText.setAttribute('scale', "1 1 1")
+            node.consoleText.setAttribute('text', 'wrapCount', 40)
+	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
+
+	    nodeFromAnimation.appendChild(node.consoleText)
+	}
+	
+	
+	// Only some pcs have console
+	if (nodeName.startsWith("pc") && node.console){
+	    console_data = this.console(nodeName, packetParams, sending_receiving)
+
+	    if (console_data != '')
+
+		promise = promise
+		.then(()=> {
+		    console.log("aqui console_data: " + console_data)
+		    wait(2000)
+		})
+		.then(()=> {
+
+	    	    flying.push(nodeFromAnimation)
+		    nodeFromAnimation.removeAttribute("animation__grow")
+	    	    nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
+		})
+		.then(() =>
+		      wait(3000))
+		.then(() => {
+		    console_data = this.console(nodeName, packetParams, sending_receiving)
+		    node.console_log += console_data
+		    console.log("new.console_log: " + node.console_log)
+		    showConsole(node.consoleText, node.console_log)
+		    return wait(2000)
+		})
+		.then(() => {
+		    nodeFromAnimation.removeAttribute('animation')
+		    nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })
+		})
+		.then(() => wait(5000))
+	}
+
+	return promise
+
     },
     
     startAnimation: function (anim) {
@@ -1397,6 +1389,7 @@ function finish_packet(packet, packetParams){
 	finishPanel.setAttribute('position', "0 10 20")
 	finishPanel.setAttribute('width', "100")		
 	scene.appendChild(finishPanel);
+
 	let playButton = document.querySelector("#playButton");
 	playButton.emit("click", {}, false)
 
@@ -1415,7 +1408,18 @@ function finish_packet(packet, packetParams){
 		network = document.querySelector('#network')
 		network.components["network"].update()
 	    })
-			  
+
+		// // Animation is finished, clean up
+		// animationState = "INIT";
+		// showViews()
+		
+		// controller = document.querySelector('#controller')
+		// controller.components["controller"].update()
+		
+		// network = document.querySelector('#network')
+		// network.components["network"].update()
+
+	
     }
     promise1.then (() => destroy(packet))
 }
@@ -1913,8 +1917,10 @@ function createNetwork(filename, machineNamesFile, elementScale){
 			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 		    
 		    // console
-		    node.console = consoles[node.name]
-		    node.console_log = node.name + "$"
+		    if (consoles[node.name]){
+			node.console = consoles[node.name]
+			node.console_log = node.name + "$"
+		    }
 		}
 	    }
 	    
