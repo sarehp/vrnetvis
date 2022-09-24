@@ -861,22 +861,53 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.from
 	node = nodeList.find(o => o.name === nodeName)
 
+        var nodeFromAnimation = document.getElementById(nodeName);
+
+	let showConsole = function(consoleText, the_text){
+	    if (node.consoleText)
+		nodeFromAnimation.removeChild(node.consoleText)
+	    else
+		node.consoleText = document.createElement('a-entity');
+	    
+	    node.consoleText.setAttribute("text", "value", the_text)
+	    node.consoleText.setAttribute("text", "color", "white")
+	    node.consoleText.setAttribute("text", "width", 250)	    
+            node.consoleText.setAttribute('rotation', '0 88 0');
+	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
+            node.consoleText.setAttribute('scale', "1 1 1")
+            node.consoleText.setAttribute('text', 'wrapCount', 40)
+	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
+
+	    nodeFromAnimation.appendChild(node.consoleText)
+	}
+
 	let promise = Promise.resolve()
+	    .then(()=> wait(2000))
+	    .then(()=> {if (nodeName.startsWith("pc")){
+	    	flying.push(nodeFromAnimation)
+	    	nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
+	    }})
+	    .then(() => {if (nodeName.startsWith("pc")) {console.log("en wait 2000"); return wait(3000)}})
 	    .then(() => {
 		if (node.console){
 		    console_data = this.console(nodeName, packetParams, "sending")
 		    if (console_data != ""){
 			node.console_log += console_data
-			showConsoleInfoText(node.consoleInfoText, node.console_log)
+			showConsole(node.consoleText, node.console_log)
 		    }
 		}
+		return wait(2000)
 	    })
-	    .then(() => wait(3000))
+	    .then(() => {if (nodeName.startsWith("pc")){
+		nodeFromAnimation.removeAttribute('animation')
+		nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })}})
+	    .then(() => {if (nodeName.startsWith("pc")) return wait(5000)})
+
 	
-	
+		  
 	if (packetParams.from.startsWith('hub')){
 	    packet.setAttribute('visible', true)
-
+	    
 	    for (var i = packet.levels.length-1; i >= 0; i--){
 		let box = packet.levels[i]["box"]
 		box.setAttribute('visible', true)
@@ -886,7 +917,7 @@ AFRAME.registerComponent('packet', {
 	    promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
 	}
 	else{ // not hub
-	    promise
+	    promise=promise
  		.then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
 		.then(() =>	anime(packet, 'out_of_node'))
 
@@ -950,29 +981,17 @@ AFRAME.registerComponent('packet', {
     },
 
     console: function(nodeName, packetParams, sending_or_receiving){
-	let h1 = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
-            'font-family: monospace; text-align: left">'
-	
-	console.log("console " + nodeName)
-
 	var node = nodeList.find(o => o.name === nodeName)               
 	
-	console.log(packetParams)
 	
 	text = ""
 	for (e of node.console[sending_or_receiving])
 	{
-	    console.log("for")
 	    pass = true;
 	    for (c of e["conditions"]){
 		pass = (pass
 			&& packetParams[c.protocol] 			
 			&& packetParams[c.protocol][c.protocol+"."+c.field] == c.value)
-
-		// console.log("packetParams[c.protocol]")
-		// console.log(packetParams[c.protocol])
-		// console.log('packetParams[c.protocol][c.protocol+"."+c.field]')
-		// console.log(packetParams[c.protocol][c.protocol+"."+c.field])
 	    }
 
 	    if (! pass){
@@ -982,14 +1001,13 @@ AFRAME.registerComponent('packet', {
 	    else{
 		console.log("pass")
 		for (var i = 0; i < e.actions.length ; i++){
-		    text += h1
 		    protocol = e.actions[i]["protocol"]
 		    field = e.actions[i]["field"]		    
 		    if (protocol == "null"
 			&& field == "null")
-			text += e.actions[i]["value"] + "</h1>"
+			text += e.actions[i]["value"] + "\n"
 		    else
-			text += packetParams[protocol][protocol+"."+field] + "</h1>"
+			text += packetParams[protocol][protocol+"."+field] + "\n"
 		    
 		}
 	    }
@@ -1004,18 +1022,53 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
-	Promise.resolve()
+
+        var nodeFromAnimation = document.getElementById(nodeName);
+
+	let showConsole = function(consoleText, the_text){
+	    if (node.consoleText)
+		nodeFromAnimation.removeChild(node.consoleText)
+
+	    node.consoleText = document.createElement('a-entity');	    
+	    
+	    node.consoleText.setAttribute("text", "value", the_text)
+	    node.consoleText.setAttribute("text", "color", "white")
+	    node.consoleText.setAttribute("text", "width", 250)	    
+            node.consoleText.setAttribute('rotation', '0 88 0');
+	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
+            node.consoleText.setAttribute('scale', "1 1 1")
+            node.consoleText.setAttribute('text', 'wrapCount', 40)
+	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
+
+	    nodeFromAnimation.appendChild(node.consoleText)
+	}
+	
+	
+	let promise = Promise.resolve()
+	    .then(()=> wait(2000))
+	    .then(()=> {if (nodeName.startsWith("pc")){
+	    	flying.push(nodeFromAnimation)
+		nodeFromAnimation.removeAttribute("animation__grow")
+	    	nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume'})
+	    }})
+	    .then(() => {if (nodeName.startsWith("pc")) {console.log("en wait 2000"); return wait(3000)}})
 	    .then(() => {
 		if (node.console){
 		    console_data = this.console(nodeName, packetParams, "receiving")
 		    if (console_data != ""){
 			node.console_log += console_data
-			showConsoleInfoText(node.consoleInfoText, node.console_log)
+			console.log("new.console_log: " + node.console_log)
+			showConsole(node.consoleText, node.console_log)
 		    }
 		}
+		return wait(2000)
 	    })
-	    .then(() => wait(2000))
-	
+	    .then(() => {if (nodeName.startsWith("pc")){
+		nodeFromAnimation.removeAttribute('animation')
+		nodeFromAnimation.setAttribute('animation', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume' })}})
+	    .then(() => {if (nodeName.startsWith("pc")) return wait(5000)})
+
+
 		  
 	let receivingARPResponse = function(packet){
 	    // to be called when an arp response is received:
@@ -1578,7 +1631,6 @@ AFRAME.registerComponent('controller', {
 
 		
 		// Send to packets flying an animation-pause
-
 		for (const packet of flying){
 		    // pause animations of the packet and animations of the children
 		    packet.emit("animation-pause", null, false)
@@ -1860,10 +1912,9 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		    node.ARPCacheInfoText =
 			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 		    
+		    // console
 		    node.console = consoles[node.name]
-		    node.console_log = ""
-		    node.consoleInfoText = 
-			createConsoleInfoText("ConsoleInfoText" + node.name, coords, data.elementsScale, node.name)
+		    node.console_log = node.name + "$"
 		}
 	    }
 	    
@@ -2042,6 +2093,9 @@ function createNodes(nodes, nodeList, elementsScale) {
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 0.006/elementsScale, y: 0.006/elementsScale, z: 0.006/elementsScale});
             newNodeElement.setAttribute('rotation', '0 -90 0');
+
+
+	    
         }else if(newNode.name.startsWith('hub')){
             newNodeElement.setAttribute('gltf-model', '#hub');
             newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
@@ -2076,7 +2130,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 		node.ARPCacheInfoText.removeAttribute('html')
 		node.ARPCacheInfoText.setAttribute('visible', false);
-		
+
 		newNodeElement.removeAttribute('sound');
 
 
