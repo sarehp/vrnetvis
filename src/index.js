@@ -852,7 +852,7 @@ AFRAME.registerComponent('packet', {
 	var promise = Promise.resolve()
 	
 	if (nodeName.startsWith("pc") && node.console)
-	    promise = this.check_console(promise, "sending", node, packetParams)
+	    promise = this.check_console("sending", node, packetParams)
 	
 
 	if (packetParams.from.startsWith('hub')){
@@ -973,7 +973,7 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
-
+        console.log("packet arrived at node " + nodeName)
 
 
 	let promise = Promise.resolve()
@@ -1016,32 +1016,41 @@ AFRAME.registerComponent('packet', {
 	    return false
 	}
 
-        
+
+
+	
 	if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
 	   && VIEW=="ALL"){
 
 	    if (! frameIsForMe(packetParams)){
+		console.log(nodeName + " is not for me")
+
 		let fadeoutChildren = function(packet){
+		    var promises = []
 		    for (const child of packet.children) {
 			child.setAttribute('animation__fadeout', {enabled: 'true'})
 
-			anime(child, 'fadeout')
+			promises.push(anime(child, 'fadeout'))
 		    }
+		    return promises
 		}
 		
 		// fadeout packet and children and then destroy packet
 		packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		promise = promise
-		    .then(() =>
-			  Promise.all([anime(packet, 'fadeout'),
-				       fadeoutChildren(packet)])
-			  .then(() => finish_packet(packet, packetParams))
-			 )
-			  
+
+		console.log("1 Promise.all " + nodeName)
+		var promises = fadeoutChildren(packet)
+
+		anime(packet, 'fadeout')
+		    .then(() => {console.log("1 finish_packet" + nodeName)
+				 finish_packet(packet, packetParams)
+				})
+		
+		
 		return	    
 	    }
-
-
+	    
+	    
 	    // Frame is for us => consume layers from bottom to top
 	    promise = Promise.resolve()
 	    promise = promise
@@ -1097,23 +1106,30 @@ AFRAME.registerComponent('packet', {
 	 		    .then(() => anime(box, 'blink'))
 			
 			let fadeoutChildren = function(packet){
+			    let promises = []
+			    
 			    for (const child of packet.children) {
 				child.setAttribute('animation__fadeout', {enabled: 'true'})
 				
-				anime(child, 'fadeout')
+
 				newInfoText = packet.querySelector("#infotext" + packet.id)
 				newInfoText.setAttribute('visible', false)
-				
+				promises.push(anime(child, 'fadeout'))				
 			    }
+			    return promises
 			}
 			
 			packet.setAttribute('animation__fadeout', {enabled: 'true'})
 			promise=promise
-			    .then(()=> {Promise.all([anime(packet, 'fadeout'),
+			    .then(()=> Promise.all([anime(packet, 'fadeout'),
 	 					     fadeoutChildren(packet)])
-					.then(() => this.check_console(promise, "receiving", node, packetParams))
-	 				.then(() => finish_packet(packet, packetParams))
-				       })
+					.then(() => {console.log("2")
+						     return this.check_console("receiving", node, packetParams)
+						    })
+	 				.then(() => { console.log("2")
+						      finish_packet(packet, packetParams)
+						    })
+				 )
 		    }
 		    
 		    
@@ -1140,39 +1156,53 @@ AFRAME.registerComponent('packet', {
 	    isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
 	    if (isNotIPDestination)
 	    {
-		// It's an IP datagram is being routed => show the datagram on
+		// It's an IP datagram being routed => show the datagram on
 		// next link before destroying the incoming datagram,
 		// then move it towards destination 
 		promise = promise
 		    .then(() => wait(1000))
 	    	    .then(() => next_packet_anim(packetParams))
 		    .then(() => wait(1000))
-		    .then(() => finish_packet(packet, packetParams))
+		    .then(() => {console.log("3")
+				 this.check_console("receiving", node, packetParams)
+				})
+		    .then(() => { console.log("3")
+				  return finish_packet(packet, packetParams)
+				})
 	    }
-	    else{
+	    else{ // it was the destination
 		promise = promise
 		    .then(() => wait(1000))
-		    .then(() => finish_packet(packet, packetParams))
+		    .then(() => {console.log("4 check_console")
+				 return this.check_console("receiving", node, packetParams)
+			    })
+		    .then(() => { console.log("4 finish packet")
+			finish_packet(packet, packetParams)
+		    })
 		    .then(() => wait(1000))
 		    .then(() => next_packet_anim(packetParams))
 	    }
-
+	    
 	    
 	}else{ // hub
+	    console.log("5")
 	    finish_packet(packet, packetParams)
 	    next_packet_anim(packetParams);
 	}
-
-	    
-
+	
+	
+	
 	
     },
-
-    check_console: function(promise, sending_receiving, node, packetParams) {
+    
+    check_console: function(sending_receiving, node, packetParams) {
 	var nodeName = node.name
 	console.log("check_console: " + nodeName)
+	console.log(sending_receiving)	
 
 	var nodeFromAnimation = document.getElementById(nodeName);
+
+	let promise = Promise.resolve()
 	
 	// Process console if it exists
 	let showConsole = function(consoleText, the_text){
@@ -1183,11 +1213,11 @@ AFRAME.registerComponent('packet', {
 	    
 	    node.consoleText.setAttribute("text", "value", the_text)
 	    node.consoleText.setAttribute("text", "color", "white")
-	    node.consoleText.setAttribute("text", "width", 250)	    
+	    node.consoleText.setAttribute("text", "width", 370)	    
             node.consoleText.setAttribute('rotation', '0 88 0');
-	    node.consoleText.setAttribute('position', "101.08 283.08 6.875")
+	    node.consoleText.setAttribute('position', "105.19 277.81 -50.52")
             node.consoleText.setAttribute('scale', "1 1 1")
-            node.consoleText.setAttribute('text', 'wrapCount', 40)
+            node.consoleText.setAttribute('text', 'wrapCount', 80)
 	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
 
 	    nodeFromAnimation.appendChild(node.consoleText)
@@ -1203,7 +1233,7 @@ AFRAME.registerComponent('packet', {
 		promise = promise
 		.then(()=> {
 		    console.log("aqui console_data: " + console_data)
-		    wait(2000)
+		    wait(500)
 		})
 		.then(()=> {
 
@@ -1213,8 +1243,6 @@ AFRAME.registerComponent('packet', {
 		    nodeFromAnimation.setAttribute('animation__grow', {'enabled': true})
 		    return anime(nodeFromAnimation, 'grow')
 		})
-		.then(() =>
-		      wait(3000))
 		.then(() => {
 		    console_data = this.console(nodeName, packetParams, sending_receiving)
 		    node.console_log += console_data
@@ -1224,11 +1252,10 @@ AFRAME.registerComponent('packet', {
 		})
 		.then(() => {
 		    nodeFromAnimation.removeAttribute('animation__ungrow')
-		    nodeFromAnimation.setAttribute('animation__ungrow', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '4000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'ungrow' })
+		    nodeFromAnimation.setAttribute('animation__ungrow', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'ungrow' })
 		    nodeFromAnimation.setAttribute('animation__ungrow', {'enabled': true})
 		    return anime(nodeFromAnimation, 'ungrow')
 		})
-		.then(() => wait(5000))
 	}
 
 	return promise
@@ -1372,19 +1399,25 @@ const anime = (target, animation_name) =>
 function finish_packet(packet, packetParams){
     let promise1 = Promise.resolve()
 
+    console.log("finish_packet")
+    console.log("packet.id: " + packet.id)
+    console.log("finalPackets.length - 1")
+    console.log(finalPackets.length - 1)        
+    
     if (packet.id == finalPackets.length - 1) {
-	let finishPanel = document.createElement('a-text');
-	finishPanel.setAttribute("value", 'FIN: pulse Reset para reiniciar')
-	finishPanel.setAttribute('position', "0 10 20")
-	finishPanel.setAttribute('width', "100")		
-	scene.appendChild(finishPanel);
-
-	let playButton = document.querySelector("#playButton");
-	playButton.emit("click", {}, false)
-
+	console.log("finish_packet: thie is the end")
+	
 	promise1 = promise1
-	    .then (() =>  wait(3000))
+	    .then (() =>  wait(12000)) // Give some time for final
+				      // animations still alive
 	    .then( ()=> {
+
+		let finishPanel = document.createElement('a-text');
+		finishPanel.setAttribute("value", 'FIN: pulse Reset para reiniciar')
+		finishPanel.setAttribute('position', "0 10 20")
+		finishPanel.setAttribute('width', "100")		
+		scene.appendChild(finishPanel);
+		
 		scene.removeChild(finishPanel) 
 		
 		// Animation is finished, clean up
@@ -1577,7 +1610,10 @@ AFRAME.registerComponent('controller', {
 
 		    next_packet += 1		    
 		    packets_ready = true
-		}}
+		}
+		console.log("--------------- do_animate")
+	    }
+
 	    
 	}
     },
