@@ -6,6 +6,10 @@ if (typeof AFRAME === 'undefined') {
 
 //////////
 // GLOBALS
+consoles=null
+
+var SHIFT_Y = 2
+
 var viewing_mode = ""
 
 var nodeList = []
@@ -53,84 +57,88 @@ function isEndToEndVIEW() {
 }
 
 
-AFRAME.registerComponent('scene', {
+AFRAME.registerComponent('escena', {
     init: function() {
-        let scene = this.el
+        // let scene = this.el
 
-	// Header text
-	let viewText = document.createElement('a-text');
-	viewText.setAttribute('value', "VRNetVis")
-	viewText.setAttribute('scale', '7 7 7');
-	viewText.setAttribute('position', {x: -4, y: 27, z: 21 });
-	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	// // Header text
+	// let viewText = document.createElement('a-text');
+	// viewText.setAttribute('value', "VRNetVis")
+	// viewText.setAttribute('scale', '7 7 7');
+	// viewText.setAttribute('position', {x: -4, y: 27, z: 21 });
+	// viewText.setAttribute("color", "white")	
+	// scene.appendChild(viewText)
 
-        let inmersiveText = document.createElement('a-entity');
-        inmersiveText.setAttribute('html', '#inmersive-mode');
-        inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
-        inmersiveText.setAttribute('scale', '30 30 30');
-        inmersiveText.setAttribute('look-at', "[camera]");
-        scene.appendChild(inmersiveText);
+        // let inmersiveText = document.createElement('a-entity');
+        // inmersiveText.setAttribute('html', '#inmersive-mode');
+        // inmersiveText.setAttribute('position', { x: -7 , y: 16, z: 30 });
+        // inmersiveText.setAttribute('scale', '30 30 30');
 
-        let desktopText = document.createElement('a-entity');
-        desktopText.setAttribute('html', '#web-mode');
-        desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
-        desktopText.setAttribute('scale', '30 30 30');
-        desktopText.setAttribute('look-at', "[camera]");
-        scene.appendChild(desktopText);
+
+        // inmersiveText.setAttribute('look-at', "[camera]");
+
+
+        // scene.appendChild(inmersiveText);
+
+        // let desktopText = document.createElement('a-entity');
+        // desktopText.setAttribute('html', '#web-mode');
+        // desktopText.setAttribute('position', { x: 7 , y: 16, z: 30 });
+        // desktopText.setAttribute('scale', '30 30 30');
+        // desktopText.setAttribute('look-at', "[camera]");
+        // scene.appendChild(desktopText);
 
 	
-        let inmersiveElement = document.createElement('a-entity');
+        // let inmersiveElement = document.createElement('a-entity');
 
-        inmersiveElement.setAttribute('gltf-model', '#inmersive');
-        inmersiveElement.setAttribute('position', '-7 7 30');
-        inmersiveElement.setAttribute('scale', '10 10 10');
-        scene.appendChild(inmersiveElement);
-        inmersiveElement.addEventListener('click', function () {
-	    viewing_mode = "vr"
+        // inmersiveElement.setAttribute('gltf-model', '#inmersive');
+        // inmersiveElement.setAttribute('position', '-7 7 30');
+        // inmersiveElement.setAttribute('scale', '10 10 10');
+        // scene.appendChild(inmersiveElement);
+        // inmersiveElement.addEventListener('click', function () {
+	//     viewing_mode = "vr"
 
-	    desktopText.parentNode.removeChild(desktopText);
-            inmersiveText.parentNode.removeChild(inmersiveText);
-            desktopElement.parentNode.removeChild(desktopElement);
-            inmersiveElement.parentNode.removeChild(inmersiveElement);
-            scene.setAttribute('inmersiveMode', '');
+	//     desktopText.parentNode.removeChild(desktopText);
+        //     inmersiveText.parentNode.removeChild(inmersiveText);
+        //     desktopElement.parentNode.removeChild(desktopElement);
+        //     inmersiveElement.parentNode.removeChild(inmersiveElement);
+        //     scene.setAttribute('inmersiveMode', '');
 
-        });
+        // });
 
-        let desktopElement = document.createElement('a-entity');
+        // let desktopElement = document.createElement('a-entity');
 
-        desktopElement.setAttribute('gltf-model', '#desktop');
-        desktopElement.setAttribute('position', '7 6 30');
-        desktopElement.setAttribute('rotation', '0 -90 0');
-        scene.appendChild(desktopElement);
-        desktopElement.addEventListener('click', function () {
-	    viewing_mode = "desktop"
+        // desktopElement.setAttribute('gltf-model', '#desktop');
+        // desktopElement.setAttribute('position', '7 6 30');
+        // desktopElement.setAttribute('rotation', '0 -90 0');
+        // scene.appendChild(desktopElement);
+        // desktopElement.addEventListener('click', function () {
+	//     viewing_mode = "desktop"
 
-	    desktopText.parentNode.removeChild(desktopText);
-            inmersiveText.parentNode.removeChild(inmersiveText);
-            inmersiveElement.parentNode.removeChild(inmersiveElement);
-            desktopElement.parentNode.removeChild(desktopElement);
+	//     desktopText.parentNode.removeChild(desktopText);
+        //     inmersiveText.parentNode.removeChild(inmersiveText);
+        //     inmersiveElement.parentNode.removeChild(inmersiveElement);
+        //     desktopElement.parentNode.removeChild(desktopElement);
 
-	    // Remove AR movement-controls
-	    movementControls = document.querySelector('#movementControls')
-	    movementControls.parentNode.removeChild(movementControls)
+	//     // Remove AR movement-controls
+	//     movementControls = document.querySelector('#movementControls')
+	//     movementControls.parentNode.removeChild(movementControls)
 
-	    // Add camera
-	    let camera = document.createElement('a-camera')
-	    camera.setAttribute('position', {x: 0, y: 10, z: 45})
-	    scene.appendChild(camera)
+	//     //Add camera
+	//     let camera = document.createElement('a-camera')
+	//     camera.setAttribute('position', {x: 25, y: 7, z: 45})
+	//     scene.appendChild(camera)
 
-	    // Add controller
-	    scene.setAttribute('controller', {'look-at': '[camera]', position: {x: 0, y: 16, z: 20 },  scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	//     controller = document.querySelector("#controller")
+	//     controller.setAttribute('visible', true)
 
-	    // Add network
-            scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+	//     network = document.querySelector("#network")
+	//     network.setAttribute('visible', true)
 
-        });
-
-
+	    
+        // });
     }
 });
+
 
 AFRAME.registerComponent('inmersiveMode', {
     init: function() {
@@ -156,9 +164,11 @@ AFRAME.registerComponent('inmersiveMode', {
         scene.appendChild(ambientLight);
 
 	
-	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
- 	scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
-	
+	//	scene.setAttribute('controller', {'look-at': '[camera]', position: {x: -10, y: 16, z: -10 }, scale: "5 5 5", id: "controller", sound: {on: 'click', src: '#playPause', volume: 5}})
+	// 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'blue'});
+	// network = document.querySelector('#network')
+	// network.components["network"].update()
+
     }
 });
 
@@ -186,7 +196,7 @@ function hideViews()
 
 
 // Creates a box for each menu option in VIEWS_MENU
-function createViewSelector(position) {
+function createViewSelector(parent, position) {
     
     for (var i = 0; i < VIEWS_MENU.length; i++) {
 
@@ -237,16 +247,19 @@ function createViewSelector(position) {
 
 
 	    scene.removeAttribute("network")
-	    if (viewing_mode == "vr")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-	    else // "desktop"
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+	    // if (viewing_mode == "vr")
+	    // 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	    // else // "desktop"
+	    // 	scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'blue'});
+	    // network = document.querySelector('#network')
+	    // network.components.update()
+	    
 	}
 
 
         viewSelectorApp.addEventListener('click', eventHandler.bind(null, VIEWS_MENU[i]));
 	
-        scene.appendChild(viewSelectorApp);
+        parent.appendChild(viewSelectorApp);
 
 	// add text to menu
         let text = document.createElement('a-text');
@@ -262,7 +275,7 @@ function createViewSelector(position) {
 	VIEWS_MENU[i].text = text
 
 	
-	scene.appendChild(text)
+	parent.appendChild(text)
 
 
 	// Header text
@@ -274,7 +287,7 @@ function createViewSelector(position) {
 	pos.y += 0.2 + 2*VIEWS_MENU.length
 	viewText.setAttribute('position', pos)
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	parent.appendChild(viewText)
 	
 	
     }
@@ -291,10 +304,16 @@ function createViewSelector(position) {
 
 AFRAME.registerComponent('network', {
     schema: {
-        filename: {type: 'string', default: ''},
+	height: {type: 'number'},
+	position: {type: 'vec3'},
+        topology: {type: 'string'},
+	machineNames: {type: 'string'},
+	connectionscolor: {type: 'string', default:'red'},
+	elementsScale: {type: 'number', default: 1},
+	SHIFT_Y: {type: 'number', default: 2}
     },
 
-    remove: function() {
+    update: function() {
 	for (packet of flying)
 	    packet.emit("animation-pause", null, false)
 	
@@ -317,18 +336,27 @@ AFRAME.registerComponent('network', {
 
 	finalPackets.length = 0
 	flying.length = 0
+
+	createNetwork(this.data.topology, this.data.machineNames, this.data.elementsScale)	
     },
     
     init: function() {	
+	nodeList.length = 0
+	finalConnectionsLinks.length = 0
+
+	finalPackets.length = 0
+	flying.length = 0
+
 	// request netgui.nkp
         data = this.data
         scene = this.el
 	
 	// Store in globals
-	nkp_filename  = this.data.filename
+	nkp_filename  = this.data.topology
 	elementsScale = this.data.elementsScale
-	
-	createNetwork(nkp_filename, elementsScale)
+	machineNamesFile = this.data.machineNames
+
+	createNetwork(this.data.topology, this.data.machineNames, this.data.elementsScale)
     }
 });
 
@@ -354,14 +382,14 @@ function hex_with_colons_to_ascii(str1)
 function dns_info (packetParams)
 {
     color = getColor("dns")
-    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+    let h1 ='<h1 style="padding: 0rem ; font-size: 1.4rem; font-weight: 900; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' +
+    let h2 ='<h2 style="padding: 0rem ; font-size: 1.2rem; font-weight: 800; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
+    let h3 ='<h3 style="padding: 0rem ; font-size: 1rem; font-weight: 700; ' + 
         'font-family: monospace; text-align: left; color: ' + color+ '">'
 
-    info = '<p>' + h1 +  'Nivel DNS' + ' </h1> </p>'
+    info = h1 +  'Nivel DNS' + ' </h1> <br>'
 
     // It's a pure query
     if (packetParams.dns["dns.count.add_rr"] == 0 && packetParams.dns["dns.count.answers"] == 0){
@@ -372,28 +400,28 @@ function dns_info (packetParams)
         else
             query_type= "(recursive)"
 
-	info += '<p>' + h2 + 'Queries ' +  query_type + ': </h2></p>'
+	info += h2 + 'Queries ' +  query_type + ': </h2><br>'
 
 	for (const [key, value] of Object.entries(packetParams.dns.Queries))
-	    info += '<p>' + h3 + 'Query: ' + key + ' </h3> </p>';
+	    info += h3 + 'Query: ' + key + ' </h3> <br>';
     }
     
 
     if (packetParams.dns["dns.count.answers"] != 0){
-	info += '<p>' + h2 + 'Answers: <h2> </p>'	
+	info += h2 + 'Answers: <h2> <br>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Answers"]))
-    	    info += '<p>' + h3 + key + '</h3></p>';
+    	    info += h3 + key + '</h3><br>';
     }
 
     if (packetParams.dns["dns.count.add_rr"] != 0){
 	
-	info += '<p>' + h2 + 'Authoritative nameservers: </h2></p>'	
+	info += h2 + 'Authoritative nameservers: </h2><br>'	
 	for (const [key, value] of Object.entries(packetParams.dns["Authoritative nameservers"]))
-    	    info += '<p>' + h3 + key + ' </h3></p>';
+    	    info += h3 + key + ' </h3><br>';
 	
-	info += '<p>' + h2 + 'Additional records: </h2></p>'		
+	info += h2 + 'Additional records: </h2><br>'		
 	for (const [key, value] of Object.entries(packetParams.dns["Additional records"]))
-            info += '<p>' + h3 + key + '</h3></p>';
+            info += h3 + key + '</h3>';
     }
     return info;
 }
@@ -414,6 +442,7 @@ function showRoutingTable(newInfoText, newBox){
     newInfoText.setAttribute('html', '#' + newBox.id +  "routing_table" + '-template');
 
     newInfoText.setAttribute('visible', true);
+
     newBox.removeAttribute('sound');
     newBox.setAttribute('sound', {src: '#showLevels', volume: 5, autoplay: "true"});
 }
@@ -424,7 +453,7 @@ function showRoutingTable(newInfoText, newBox){
 function showARPCacheInfoText(newInfoText, arpCache){
     var infotext = formatARPCache(arpCache)
 
-    newInfoText.setAttribute('visible', true);
+
     newInfoText.removeAttribute('html');
 
     var textTemplate = document.getElementById(newInfoText.id + '-template');
@@ -436,15 +465,18 @@ function showARPCacheInfoText(newInfoText, arpCache){
     newInfoText.setAttribute('visible', true);
 }
 
+
+
+
 function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     let infoText = ""
     color = getColor(protocol)
-    let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
+    let h1 ='<h1 style="padding: 0rem; font-size: 1.4rem; font-weight: 900; ' +
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h2 ='<h2 style="padding: 0rem 1rem; font-size: 1.2rem; font-weight: 800; ' + 
+    let h2 ='<h2 style="padding: 0rem; font-size: 1.2rem; font-weight: 800; ' + 
         'font-family: monospace; text-align: left; color: ' + color + '">'
-    let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' +
+    let h3 ='<h3 style="padding: 0rem; font-size: 1rem; font-weight: 700; ' +
         'font-family: monospace;  text-align: left; color: ' + color+ '">'
 
     switch (protocol){
@@ -453,34 +485,34 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	break;
 
     case 'http':
-	infoText += '<p>' + h2 + ' Nivel HTTP:</h2></p>' 
+	infoText += h2 + ' Nivel HTTP:</h2>' 
 	break;
 
     case 'dataInfo':
-	infoText += '<p>' + h2 + 
-            'DATOS:</h2></p>' + h3 + '<p>' + 
-            'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' +
-            'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</p></h3>'
+	infoText += h2 + 
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '<br>' +
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                               + '</h3>'
 	break;
 
     case 'data':
 	if (packetParams.tcp != null)
-	    infoText += '<p>' + h2 +
-            'DATOS:</h2></p>' + h3 + '<p>' +
-            'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '</p><p>' + 
-            'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '</p></h3>'
+	    infoText += h2 +
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: ' + hex_with_colons_to_ascii(packetParams.tcp['tcp.payload']) + '<br>' + 
+            'Longitud de datos: ' + packetParams.tcp['tcp.len']                        + '<br></h3>'
 	else if (packetParams.udp != null)
-	    infoText += '<p>' + h2 + 
-            'DATOS:</h2></p>' + h3 + '<p>' +
-            'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '</p><p>' +  
-            'Longitud de datos: ' + packetParams.udp['udp.length']              + '</p></h3>'
+	    infoText += h2 + 
+            'DATOS:</h2><br>' + h3 + 
+            'Info datos: '        + hex_with_colons_to_ascii(packetParams.data) + '<br>' +  
+            'Longitud de datos: ' + packetParams.udp['udp.length']              + '</h3>'
 	break;
 
     case 'tcp':
-	infoText += '<p>' + h2 + 
-            'Nivel TCP:</h2></p>' + h3 + '<p>' +
-            'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '</p><p>' + 
-            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '</p><p>'
+	infoText +=  h2 + 
+            'Nivel TCP:</h2><br>' + h3 + 
+            'Puerto origen: '  + packetParams.tcp['tcp.srcport'] + '<br>' + 
+            'Puerto destino: ' + packetParams.tcp['tcp.dstport'] + '<br>'
 
         let tcp_flags_str =""
 
@@ -495,32 +527,32 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         if (packetParams.tcp["tcp.flags_tree"]["tcp.flags.push"] == "1")
             tcp_flags_str += "PSH "
 
-        infoText += 'Flags: ' + tcp_flags_str + '</p><p>'
-        infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '</p><p>' +
-            'Ack: ' +  packetParams.tcp['tcp.ack'] + '</p><p>' +
-            'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</p></h3>' 
+        infoText += 'Flags: ' + tcp_flags_str + '<br>'
+        infoText += 'Seq: ' +  packetParams.tcp['tcp.seq'] + '<br>' +
+            'Ack: ' +  packetParams.tcp['tcp.ack'] + '<br>' +
+            'Window Size: ' +  packetParams.tcp['tcp.window_size'] + '</h3>' 
 	break;
 
     case 'udp':
-	infoText += '<p>' + h2 + 
-            'Nivel UDP:</h2></p>' + h3 + '<p>' + 
-            'Puerto origen: '  + packetParams.udp['udp.srcport'] + '</p><p>' + 
-            'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel UDP:</h2>' + h3 + 
+            'Puerto origen: '  + packetParams.udp['udp.srcport'] + '<br>' + 
+            'Puerto destino: ' + packetParams.udp['udp.dstport'] + '</h3>'
 	break;
 
     case 'icmp':
-	infoText += '<p>' + h2 + 
-            'Nivel ICMP:</h2></p>' + h3 + '<p>' +
-            'Type: ' + packetParams.icmp['icmp.type'] + '</p><p>' +  
-            'Code: ' + packetParams.icmp['icmp.code'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel ICMP:</h2>' + h3 + 
+            'Type: ' + packetParams.icmp['icmp.type'] + '<br>' +  
+            'Code: ' + packetParams.icmp['icmp.code'] + '</h3>'
 	break;
 
     case 'ip':
-	infoText += '<p>' + h2 + 
-            'Nivel IP:</h2></p>' + h3 + '<p>' + 
-            'Origen: '  + packetParams.ip['ip.src']  + '</p><p>' + 
-            'Destino: ' + packetParams.ip['ip.dst']  + '</p><p>' + 
-            'TTL: '     + packetParams.ip['ip.ttl']  + '</p></h3>'
+	infoText += h2 + 
+            'Nivel IP:</h2>' + h3 +
+            'Origen: '  + packetParams.ip['ip.src']  + '<br>' + 
+            'Destino: ' + packetParams.ip['ip.dst']  + '<br>' + 
+            'TTL: '     + packetParams.ip['ip.ttl']  + '</h3>'
 	break;
 
     case 'arp': 
@@ -532,12 +564,12 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         else
             operation="Respuesta"
 
-	infoText += '<p>' + h2 + 
-            'Nivel ARP:</h2></p>' + h3 + '<p>' + 
-            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '</p><p>' + 
-            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '</p><p>' +  
-            'Operación: ' + operation                              + '</p><p>' +
-            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</p></h3>'
+	infoText += h2 + 
+            'Nivel ARP:</h2>' + h3 + 
+            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '<br>' + 
+            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '<br>' +  
+            'Operación: ' + operation                              + '<br>' +
+            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</h3>'
 	break;
 
     case 'eth':
@@ -546,13 +578,13 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	}
 	else
 	    ethDst = packetParams.eth['eth.dst'] 
-	infoText += '<p>' + h2 + 
-            'Nivel Ethernet:</h2></p>' + h3 + '<p>' + 
-            'Origen: '  + packetParams.eth['eth.src']  + '</p><p>' +  
-            'Destino: ' + ethDst + '</p><p>' +  
-            'Tipo: '    + packetParams.eth['eth.type'] + '</p></h3>'
-
+	infoText += h2 + 
+            'Nivel Ethernet:</h2>' + h3 +
+            'Origen: '  + packetParams.eth['eth.src']  + '<br>' +  
+            'Destino: ' + ethDst + '<br>' +
+            'Tipo: '    + packetParams.eth['eth.type'] + '</h3>'
 	break;
+
     }
     
     
@@ -562,7 +594,7 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     textTemplate.innerHTML = infoText
 
-    textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 1em; padding: 1em; margin:0;"
+    textTemplate.style = "display: inline-block; background: #5f6a76; color: purple; border-radius: 0.5em; padding: 0.5em; margin:0;"
     newInfoText.setAttribute('html', '#' + packetParams.id + '-template');
     newInfoText.setAttribute('visible', true);
     newBox.removeAttribute('sound');
@@ -576,10 +608,11 @@ AFRAME.registerComponent('packet', {
         from: {default: null},
         to: {default: null},
         xPosition: {type: 'number', default: 0},
-        yPosition: {type: 'number', default: 1},
+        yPosition: {type: 'number', default: 0},
+	SHIFT_Y: {type: 'number', default: 2},
         zPosition: {type: 'number', default: 0},
         toXPosition: {type: 'string', default: ''},
-        toYPosition: {type: 'string', default:  ' 1 '},
+        toYPosition: {type: 'string', default: ''},
         toZPosition: {type: 'string', default: ''},
         duration: {type: 'number', default: 0},
         elementsScale: {type: 'number', default: 0},
@@ -608,7 +641,6 @@ AFRAME.registerComponent('packet', {
         sphere.setAttribute('id', 'sphere'+packet.id)
         sphere.setAttribute('geometry', {primitive: 'sphere',  radius: 0.1/packetParams.elementsScale });
         sphere.setAttribute('visible', false)
-
 	packet.appendChild(sphere)
 
 	
@@ -617,14 +649,15 @@ AFRAME.registerComponent('packet', {
 
         var htmltemplates = document.getElementById("htmltemplates");
         var newSectionTemplate = document.createElement("section");
-        newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 1em; margin:0;"
+        newSectionTemplate.style = "display: inline-block; background: #EEEEEE; color: purple; border-radius: 1em; padding: 0em; margin:0;"
         newSectionTemplate.id = packetParams.id + '-template'
         htmltemplates.appendChild(newSectionTemplate);
 
 
 	let newInfoText = document.createElement('a-entity');
         
-        newInfoText.setAttribute('position', { x: 5 , y: 3, z: 0 });
+	//        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + packetParams.SHIFT_Y, z: 0 });
+        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + 0.5 * packetParams.SHIFT_Y, z: 0 });	
         newInfoText.setAttribute('look-at', "[camera]");
         newInfoText.setAttribute('visible', false);
         newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
@@ -665,7 +698,7 @@ AFRAME.registerComponent('packet', {
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
 
 	    
-	    newBox.setAttribute('position', { x: 0, y:  2 + (level_index), z: 0 });
+	    newBox.setAttribute('position', { x: 0, y:  packetParams.SHIFT_Y + (level_index), z: 0 });
             newBox.setAttribute('color', getColor(level.protocol));
             newBox.setAttribute('visible', false); 
 
@@ -723,7 +756,7 @@ AFRAME.registerComponent('packet', {
 
         packet.setAttribute('animation__park', {
             property: 'position',
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 7, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 3.5*packetParams.SHIFT_Y, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -797,7 +830,7 @@ AFRAME.registerComponent('packet', {
 		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
 		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
 		data.elementsScale,
-		0.2
+		0.1
 	    ),
             dur: packetParams.duration,
             easing: 'easeInOutCubic',
@@ -810,24 +843,32 @@ AFRAME.registerComponent('packet', {
     
     // returns promise
     animate_birth: function(packetParams, packet, noEth=false){
-	let promise = Promise.resolve()
-	
 	let nodeName = packetParams.from
 	node = nodeList.find(o => o.name === nodeName)
+
+        var nodeFromAnimation = document.getElementById(nodeName);
+
+
+	var promise = Promise.resolve()
 	
+	if (nodeName.startsWith("pc") && node.console)
+	    promise = this.check_console("sending", node, packetParams)
+	
+
 	if (packetParams.from.startsWith('hub')){
 	    packet.setAttribute('visible', true)
-
+	    
 	    for (var i = packet.levels.length-1; i >= 0; i--){
 		let box = packet.levels[i]["box"]
 		box.setAttribute('visible', true)
 	    }
 	    
 	    packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-	    promise = promise.then(() => anime(packet, 'out_of_node_immediate'))
+	    promise = promise
+		.then(() => anime(packet, 'out_of_node_immediate'))
 	}
 	else{ // not hub
-	    promise
+	    promise=promise
  		.then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
 		.then(() =>	anime(packet, 'out_of_node'))
 
@@ -867,7 +908,7 @@ AFRAME.registerComponent('packet', {
 			    .then(() => wait(1000))
 			    .then(() => node.routingTableText.setAttribute('visible', false))
 			    .then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-			    .then(() => wait(2000))
+			    .then(() => wait(3000))
 			    .then(() => node.ARPCacheInfoText.setAttribute('visible', false))
 		    }
 		    
@@ -890,7 +931,53 @@ AFRAME.registerComponent('packet', {
 	return promise
     },
 
+    console: function(nodeName, packetParams, sending_or_receiving){
+	var node = nodeList.find(o => o.name === nodeName)               
+	
+	
+	text = ""
+	for (e of node.console[sending_or_receiving])
+	{
+	    pass = true;
+	    for (c of e["conditions"]){
+		pass = (pass
+			&& packetParams[c.protocol] 			
+			&& packetParams[c.protocol][c.protocol+"."+c.field] == c.value)
+	    }
+
+	    if (! pass){
+		console.log("!pass")
+		continue
+	    }
+	    else{
+		console.log("pass")
+		for (var i = 0; i < e.actions.length ; i++){
+		    protocol = e.actions[i]["protocol"]
+		    field = e.actions[i]["field"]		    
+		    if (protocol == "null"
+			&& field == "null")
+			text += e.actions[i]["value"] + "\n"
+		    else
+			text += packetParams[protocol][protocol+"."+field] + "\n"
+		    
+		}
+	    }
+	}
+	
+	
+	return text
+		
+    },
+    
     animate_packet_arrives: function (nodeAnimation, packetParams, packet){
+	let nodeName = packetParams.to
+	var node = nodeList.find(o => o.name === nodeName)
+	
+        console.log("packet arrived at node " + nodeName)
+
+
+	let promise = Promise.resolve()
+	
 	let receivingARPResponse = function(packet){
 	    // to be called when an arp response is received:
 	    // add in the receiver's ARPCache the eth_src
@@ -910,10 +997,8 @@ AFRAME.registerComponent('packet', {
 
 	    }
 	}
+
 	
-
-
-	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
 	let frameIsForMe = function(packetParams){
@@ -931,32 +1016,43 @@ AFRAME.registerComponent('packet', {
 	    return false
 	}
 
-        
+
+
+	
 	if((nodeName.startsWith('pc') || nodeName.startsWith('dns') || nodeName.startsWith('r'))
 	   && VIEW=="ALL"){
 
-
 	    if (! frameIsForMe(packetParams)){
+		console.log(nodeName + " is not for me")
+
 		let fadeoutChildren = function(packet){
+		    var promises = []
 		    for (const child of packet.children) {
 			child.setAttribute('animation__fadeout', {enabled: 'true'})
 
-			anime(child, 'fadeout')
+			promises.push(anime(child, 'fadeout'))
 		    }
+		    return promises
 		}
 		
 		// fadeout packet and children and then destroy packet
 		packet.setAttribute('animation__fadeout', {enabled: 'true'})
-		Promise.all([anime(packet, 'fadeout'),
-			     fadeoutChildren(packet)])
-		    .then(() => finish_packet(packet, packetParams))
+
+		console.log("1 Promise.all " + nodeName)
+		var promises = fadeoutChildren(packet)
+
+		anime(packet, 'fadeout')
+		    .then(() => {console.log("1 finish_packet" + nodeName)
+				 finish_packet(packet, packetParams)
+				})
+		
 		
 		return	    
 	    }
-
-
+	    
+	    
 	    // Frame is for us => consume layers from bottom to top
-	    let promise = Promise.resolve()
+	    promise = Promise.resolve()
 	    promise = promise
 		.then(() => wait(500))
 	    
@@ -1010,22 +1106,30 @@ AFRAME.registerComponent('packet', {
 	 		    .then(() => anime(box, 'blink'))
 			
 			let fadeoutChildren = function(packet){
+			    let promises = []
+			    
 			    for (const child of packet.children) {
 				child.setAttribute('animation__fadeout', {enabled: 'true'})
 				
-				anime(child, 'fadeout')
+
 				newInfoText = packet.querySelector("#infotext" + packet.id)
 				newInfoText.setAttribute('visible', false)
-				
+				promises.push(anime(child, 'fadeout'))				
 			    }
+			    return promises
 			}
 			
 			packet.setAttribute('animation__fadeout', {enabled: 'true'})
 			promise=promise
-			    .then(()=> {Promise.all([anime(packet, 'fadeout'),
+			    .then(()=> Promise.all([anime(packet, 'fadeout'),
 	 					     fadeoutChildren(packet)])
-	 				.then(() => finish_packet(packet, packetParams))
-				       })
+					.then(() => {console.log("2")
+						     return this.check_console("receiving", node, packetParams)
+						    })
+	 				.then(() => { console.log("2")
+						      finish_packet(packet, packetParams)
+						    })
+				 )
 		    }
 		    
 		    
@@ -1052,29 +1156,110 @@ AFRAME.registerComponent('packet', {
 	    isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
 	    if (isNotIPDestination)
 	    {
-		// It's an IP datagram is being routed => show the datagram on
+		// It's an IP datagram being routed => show the datagram on
 		// next link before destroying the incoming datagram,
 		// then move it towards destination 
 		promise = promise
 		    .then(() => wait(1000))
 	    	    .then(() => next_packet_anim(packetParams))
 		    .then(() => wait(1000))
-		    .then(() => finish_packet(packet, packetParams))
+		    .then(() => {console.log("3")
+				 this.check_console("receiving", node, packetParams)
+				})
+		    .then(() => { console.log("3")
+				  return finish_packet(packet, packetParams)
+				})
 	    }
-	    else{
+	    else{ // it was the destination
 		promise = promise
 		    .then(() => wait(1000))
-		    .then(() => finish_packet(packet, packetParams))
+		    .then(() => {console.log("4 check_console")
+				 return this.check_console("receiving", node, packetParams)
+			    })
+		    .then(() => { console.log("4 finish packet")
+			finish_packet(packet, packetParams)
+		    })
 		    .then(() => wait(1000))
 		    .then(() => next_packet_anim(packetParams))
 	    }
-
+	    
 	    
 	}else{ // hub
+	    console.log("5")
 	    finish_packet(packet, packetParams)
 	    next_packet_anim(packetParams);
 	}
 	
+	
+	
+	
+    },
+    
+    check_console: function(sending_receiving, node, packetParams) {
+	var nodeName = node.name
+	console.log("check_console: " + nodeName)
+	console.log(sending_receiving)	
+
+	var nodeFromAnimation = document.getElementById(nodeName);
+
+	let promise = Promise.resolve()
+	
+	// Process console if it exists
+	let showConsole = function(consoleText, the_text){
+	    if (node.consoleText)
+		nodeFromAnimation.removeChild(node.consoleText)
+
+	    node.consoleText = document.createElement('a-entity');	    
+	    
+	    node.consoleText.setAttribute("text", "value", the_text)
+	    node.consoleText.setAttribute("text", "color", "white")
+	    node.consoleText.setAttribute("text", "width", 370)	    
+            node.consoleText.setAttribute('rotation', '0 88 0');
+	    node.consoleText.setAttribute('position', "105.19 277.81 -50.52")
+            node.consoleText.setAttribute('scale', "1 1 1")
+            node.consoleText.setAttribute('text', 'wrapCount', 80)
+	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
+
+	    nodeFromAnimation.appendChild(node.consoleText)
+	}
+	
+	
+	// Only some pcs have console
+	if (nodeName.startsWith("pc") && node.console){
+	    console_data = this.console(nodeName, packetParams, sending_receiving)
+
+	    if (console_data != '')
+
+		promise = promise
+		.then(()=> {
+		    console.log("aqui console_data: " + console_data)
+		    wait(500)
+		})
+		.then(()=> {
+
+	    	    flying.push(nodeFromAnimation)
+		    nodeFromAnimation.removeAttribute("animation__grow")
+	    	    nodeFromAnimation.setAttribute('animation__grow', {property: 'scale', from: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, to: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale},  dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'grow'})
+		    nodeFromAnimation.setAttribute('animation__grow', {'enabled': true})
+		    return anime(nodeFromAnimation, 'grow')
+		})
+		.then(() => {
+		    console_data = this.console(nodeName, packetParams, sending_receiving)
+		    node.console_log += console_data
+		    console.log("new.console_log: " + node.console_log)
+		    showConsole(node.consoleText, node.console_log)
+		    return wait(2000)
+		})
+		.then(() => {
+		    nodeFromAnimation.removeAttribute('animation__ungrow')
+		    nodeFromAnimation.setAttribute('animation__ungrow', {property: 'scale', from: {x: 0.06/packetParams.elementsScale, y: 0.06/packetParams.elementsScale, z: 0.06/packetParams.elementsScale}, to: {x: 0.006/packetParams.elementsScale, y: 0.006/packetParams.elementsScale, z: 0.006/packetParams.elementsScale}, dur: '2000', easing: 'linear', pauseEvents:'animation-pause',  resumeEvents:'animation-resume', 'enabled': false, startEvents: 'ungrow' })
+		    nodeFromAnimation.setAttribute('animation__ungrow', {'enabled': true})
+		    return anime(nodeFromAnimation, 'ungrow')
+		})
+	}
+
+	return promise
+
     },
     
     startAnimation: function (anim) {
@@ -1109,7 +1294,7 @@ AFRAME.registerComponent('packet', {
 	    
 	    Promise.resolve()
 		.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
-		.then(() => wait(2000))
+		.then(() => wait(3000))
 		.then(() => node.ARPCacheInfoText.setAttribute('visible', false))	    
 		.then(() => {
 		    newInfoText = packet.querySelector("#infotext" + packet.id)
@@ -1157,10 +1342,10 @@ AFRAME.registerComponent('packet', {
 	let packet = this.el
 	let packetParams = this.data
 	
-	if (viewing_mode == "vr")
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-	else
-	    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
+	// if (viewing_mode == "vr")
+	//     scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+	// else
+	//     scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})		    
     }
 });
 
@@ -1212,12 +1397,53 @@ const anime = (target, animation_name) =>
 
 
 function finish_packet(packet, packetParams){
+    let promise1 = Promise.resolve()
+
+    console.log("finish_packet")
+    console.log("packet.id: " + packet.id)
+    console.log("finalPackets.length - 1")
+    console.log(finalPackets.length - 1)        
+    
     if (packet.id == finalPackets.length - 1) {
-	// Animation is finished, clean up
-	animationState = "INIT";
-	showViews()
+	console.log("finish_packet: thie is the end")
+	
+	promise1 = promise1
+	    .then (() =>  wait(12000)) // Give some time for final
+				      // animations still alive
+	    .then( ()=> {
+
+		let finishPanel = document.createElement('a-text');
+		finishPanel.setAttribute("value", 'FIN: pulse Reset para reiniciar')
+		finishPanel.setAttribute('position', "0 10 20")
+		finishPanel.setAttribute('width', "100")		
+		scene.appendChild(finishPanel);
+		
+		scene.removeChild(finishPanel) 
+		
+		// Animation is finished, clean up
+		animationState = "INIT";
+		showViews()
+		
+		controller = document.querySelector('#controller')
+		controller.components["controller"].update()
+		
+		network = document.querySelector('#network')
+		network.components["network"].update()
+	    })
+
+		// // Animation is finished, clean up
+		// animationState = "INIT";
+		// showViews()
+		
+		// controller = document.querySelector('#controller')
+		// controller.components["controller"].update()
+		
+		// network = document.querySelector('#network')
+		// network.components["network"].update()
+
+	
     }
-    destroy(packet)
+    promise1.then (() => destroy(packet))
 }
 
 
@@ -1253,10 +1479,18 @@ AFRAME.registerComponent('model-opacity', {
 AFRAME.registerComponent('controller', {
 
     schema: {
+	scale: {type: 'vec3'},
         PERIOD: {type: 'int', default: '500'},
 	position: {type: 'vec3'}
     },
 
+    update: function(event)
+    {
+	latest_start = -2
+	CURRENT_TIME = 0
+    },
+    
+    
     do_animate: function(event)
     {
 	if (latest_start == event.detail.start)
@@ -1354,7 +1588,7 @@ AFRAME.registerComponent('controller', {
 			    
 			})
 		    
-		    return
+		    return promise
 		}
 		else {
 		    let newPacket = finalPackets[next_packet].newPacket.components.packet
@@ -1366,6 +1600,8 @@ AFRAME.registerComponent('controller', {
 			newPacket.startAnimation("birth")
 		    }
 		    else{
+			let promise = Promise.resolve()
+
 			// This is an IP datagram that was created
 			// when the Request ARP appeared in the
 			// capture, so only animate it, don't create
@@ -1376,13 +1612,17 @@ AFRAME.registerComponent('controller', {
 
 		    next_packet += 1		    
 		    packets_ready = true
-		}}
+		}
+		console.log("--------------- do_animate")
+	    }
+
 	    
 	}
     },
     
     
     init: function() {
+
 	latest_start = -2
 	CURRENT_TIME = 0
 	
@@ -1394,11 +1634,11 @@ AFRAME.registerComponent('controller', {
             case 'INIT':
 		hideViews()
 		
-		scene.removeAttribute("network")
-		if (viewing_mode == "vr")
-		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-		else // "desktop"
-		    scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
+		//		scene.removeAttribute("network")
+		// if (viewing_mode == "vr")
+		//     scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
+		// else // "desktop"
+		//     scene.setAttribute('network', {id: 'network', filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'})
 		
 		playButton.setAttribute('color', 'gray')
 		
@@ -1422,7 +1662,6 @@ AFRAME.registerComponent('controller', {
 
 		
 		// Send to packets flying an animation-pause
-
 		for (const packet of flying){
 		    // pause animations of the packet and animations of the children
 		    packet.emit("animation-pause", null, false)
@@ -1451,7 +1690,7 @@ AFRAME.registerComponent('controller', {
 		break
 	    } // switch
 
-	}
+	} // event_listener_function
 
 
 	// play button
@@ -1461,6 +1700,9 @@ AFRAME.registerComponent('controller', {
 	
         playButton.setAttribute('gltf-model', '#play_button');
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
+
+
+	
 	let position = Object.assign({}, this.data.position)
 	position.x = position.x + 35
         playButton.setAttribute('position', position);
@@ -1479,11 +1721,19 @@ AFRAME.registerComponent('controller', {
 	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
         });
 
+	playButton.addEventListener('click', event_listener_function)
 	let scene = document.querySelector("#escena")
 	scene.appendChild(playButton);
 
-	playButton.addEventListener('click', event_listener_function)
 
+	// Play button also can be clicked with space key
+	document.addEventListener('keydown', (event) => {
+	    const keyName = event.key;
+	    
+	    if (keyName === 'Spacebar' || keyName === ' ') {
+		playButton.emit('click', {}, false)
+	    }
+	}, false);
 
 
 	
@@ -1495,7 +1745,7 @@ AFRAME.registerComponent('controller', {
 	position.x -= 3
 	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	this.el.appendChild(viewText)
 
 
 
@@ -1522,17 +1772,17 @@ AFRAME.registerComponent('controller', {
 	    resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });	    
         });
 
-	scene.appendChild(resetButton);
+	this.el.appendChild(resetButton);
 
+	var el = this.el
 	function reset(){
-     	    scene.removeAttribute("network")
 	    animationState="INIT"
 	    showViews()
 
-	    if (viewing_mode == "vr")
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 4, height: 6, connectionscolor: 'red'})
-	    else
-		scene.setAttribute('network', {filename: 'netgui.nkp', elementsScale: 1, height: 1, connectionscolor: 'red'});
+	    el.components["controller"].update()
+
+	    network = document.querySelector('#network')
+	    network.components["network"].update()
 	}
 	resetButton.addEventListener('click', reset)
 
@@ -1544,7 +1794,7 @@ AFRAME.registerComponent('controller', {
 	position.y += 3
 	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
-	scene.appendChild(viewText)
+	this.el.appendChild(viewText)
 
 
 	
@@ -1558,7 +1808,7 @@ AFRAME.registerComponent('controller', {
 	position = Object.assign({}, this.data.position)
 	position.x += 15
 	position.y -= 1
-	let f = createViewSelector.bind(null, position)
+	let f = createViewSelector.bind(null, this.el, position)
         requestViewsMenuFile.onload = function() {
             response = requestViewsMenuFile.response;
             VIEWS_MENU = JSON.parse(response);
@@ -1573,8 +1823,12 @@ AFRAME.registerComponent('controller', {
         infoPanel.setAttribute('position', position);
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
-        infoPanel.setAttribute('look-at', "[camera]");
-        scene.appendChild(infoPanel);
+
+
+	infoPanel.setAttribute('look-at', "[camera]");
+
+	
+        this.el.appendChild(infoPanel);
 	
 	
     }
@@ -1583,90 +1837,137 @@ AFRAME.registerComponent('controller', {
 
 
 
-function createNetwork(filename, elementScale){
+function createNetwork(filename, machineNamesFile, elementScale){
+    console.log("create network")
+    
     // initialize global variables
     nodeList.length = 0
+    var nodes = null
+
     finalConnectionsLinks.length = 0
-    
     // request netgui.nkp
     file = filename
     request = new XMLHttpRequest();
     request.open('GET', file);
     request.responseType = 'text';
     request.send();
+    
+    let promise1 =
+	new Promise((resolve) =>
+		    request.onload = function() {
+			console.log("cargados netkit.nkp")
+			nodeList.length=0 // need to reinitialize
+					  // because this handler is
+					  // called twice sometimes
+					  // and if not you would end
+					  // up with a corrupt
+					  // nodeList
+			
+			response = request.response;
+			response.split('<nodes>')
+			nodes = response.split('position')
 
-    request.onload = function() {
-        response = request.response;
-        response.split('<nodes>')
-        nodes = response.split('position')
-
-        // Establish nodes in the scene that will be stored in nodeList
-        createNodes(nodes, nodeList, elementScale)
-
-
-	// Request and process machineNames.json
-	
-        // Associate a name to each machine
-        machineNamesFile = 'machineNames.json'
-        requestMachineNames = new XMLHttpRequest();
-        requestMachineNames.open('GET', machineNamesFile);
-        requestMachineNames.responseType = 'text';
-        requestMachineNames.send();
-        requestMachineNames.onload = function() {
-            response = requestMachineNames.response;
-            responseParse = JSON.parse(response);
-
-            for (const interface_index in responseParse.interfaces) {
-                for (const currentNode in responseParse.interfaces[interface_index]) {
-                    node = nodeList.find(o => o.name === currentNode)
-		    node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
-		    node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
-		    node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
-		    node.iface.push("eth" + interface_index)
-                }
-            }
-
-	    for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
-                node = nodeList.find(o => o.name === machineName)
-		node.routing_table = value.routing_table
-            }
+			createNodes(nodes, nodeList, elementsScale)
+			
+			resolve()
+		    })
 
 
-	    
-            // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
-            connections = nodesInfo[1].split('link')
+    
+    // Request and process machineNames.json
+    // Associate a name to each machine
+    requestMachineNames = new XMLHttpRequest();
+    requestMachineNames.open('GET', machineNamesFile);
+    requestMachineNames.responseType = 'text';
+    requestMachineNames.send();
 
+    let promise2 = promise1
+	.then(() => {return new Promise
+		     ((resolve) =>
+		      requestMachineNames.onload = function() {
+			  console.log("cargados machineNames")
 
-            finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
+			  response = requestMachineNames.response;
+			  responseParse = JSON.parse(response);
+			  
+			  for (const interface_index in responseParse.interfaces) {
+			      for (const currentNode in responseParse.interfaces[interface_index]) {
+				  node = nodeList.find(o => o.name === currentNode)
+				  node.hwaddr.push(responseParse.interfaces[interface_index][currentNode]["hwaddr"])
+				  node.ipaddr.push(responseParse.interfaces[interface_index][currentNode]["ipaddr"])
+				  node.mask.push(responseParse.interfaces[interface_index][currentNode]["mask"])
+				  node.iface.push("eth" + interface_index)
+			      }
+			  }
+			  
+			  for (const [machineName, value] of Object.entries(responseParse.nodes_info)){
+			      node = nodeList.find(o => o.name === machineName)
+			      node.routing_table = value.routing_table
+			  }
+			  // Process netgui.nkp though the variable in the closure. nodesInfo is a variable defined in createNodes() !!
+			  connections = nodesInfo[1].split('link')
+			  
 
+			  
+			  finalConnectionsLinks = setConnectionsLinks(connections, nodeList, data)
+			  
+			  resolve()	    
+		      }
+		     )})
+    
+    
+    //
+    // Request and process consoles.json
+    requestConsoles = new XMLHttpRequest();
+    requestConsoles.open('GET', 'consoles.json');
+    requestConsoles.responseType = 'text';
+    requestConsoles.send();
+    let promise3 = promise2
+	.then(() => {return new Promise
+		     ((resolve) =>
+		      requestConsoles.onload = function() {
+			  response = requestConsoles.response;
+			  consoles = JSON.parse(response);
+			  console.log("consoles")
+			  console.log(consoles)
+			  resolve()	    
+		      }
+		     )})
 
-
-	    // show routing tables + ARPCaches
+    
+    
+    promise3
+	.then(() =>{
+	    // create panels for routing tables + ARPCaches + console
 	    for (var k=0; k < nodeList.length; k++) {
 		node = nodeList[k];
 		
 		if(!node.name.startsWith('hub')){
-		    coords = { x: ((node.position.split(',')[0] / 15) -1.5)/data.elementsScale, y: data.height + 4, z: (node.position.split(',')[1] / 15)/data.elementsScale }
-
+		    coords = { x: ((node.position.split(',')[0] / 15) -3.5)/data.elementsScale, y: data.SHIFT_Y, z: (node.position.split(',')[1] / 15)/data.elementsScale }
+		    
+		    
 		    node.routingTableText =
 			createRoutingTableInfo(node.name + "routing_table", coords, data.elementsScale, formatRoutingTable(node.routing_table))
-
-
+		    
+		    
 		    // ARPCache contents
 		    node.ARPCache = {}
 		    // ARPCache panel
 		    node.ARPCacheInfoText =
 			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
-
+		    
+		    // console
+		    if (consoles[node.name]){
+			node.console = consoles[node.name]
+			node.console_log = node.name + "$"
+		    }
 		}
 	    }
 	    
-	    loadAndAnimatePackets(finalConnectionsLinks);
-	}
-
-
-    }
+	    loadAndAnimatePackets(finalConnectionsLinks);	    
+	})
 }
+
 
 function loadAndAnimatePackets(finalConnectionsLinks){
     var filePackets = 'new_file.json'
@@ -1694,6 +1995,7 @@ function loadAndAnimatePackets(finalConnectionsLinks){
     }
 }
 
+
 function formatARPCache(ARPCache){
     color = "white"
     let h1 ='<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; ' +
@@ -1705,14 +2007,14 @@ function formatARPCache(ARPCache){
 
 
     
-    text = '<h1>ARP cache</h1>' +
+    text = h1+'ARP cache</h1>' + h2 +
 	'<table style="border-spacing: 1rem; text-align: center">' +
         '<tr><th>IP address</th>' +
         '<th>hwaddr</th>' +
         '<th>Iface</th>' +
         '</tr>'
     
-    text += "<h2>"    
+
     for (const ip in ARPCache){
 	text += "<tr>" +
             "<td>" + ip + "</td> " +
@@ -1735,8 +2037,8 @@ function formatRoutingTable(routing_table){
     let h3 ='<h3 style="padding: 0rem 1rem 0rem 2rem; font-size: 1rem; font-weight: 700; ' + 
         'font-family: monospace; text-align: left;">'
 
-    text = '<h1>Routing table</h1>' +
-	'<h2>' +
+    text = h1 + 'Routing table</h1>' +
+	h2 +
 	'<table style="border-spacing: 1rem; text-align: center">' +
         '<tr><th>Destination</th>' +
         '<th>Mask</th>' +
@@ -1745,7 +2047,7 @@ function formatRoutingTable(routing_table){
         '</tr>'
 	+'</h2>'
     
-    text += '<h2>'
+    text += h2
     for (var i = 0; i < routing_table.length; i++){
 	text += "<tr>" +
             "<td>" + routing_table[i][0] + "</td> " +
@@ -1792,9 +2094,10 @@ function deleteNodes(nodeList){
 	// Destroy node's text
 	scene.removeChild(nodeList[i].text)
 
-	// Destroy node's routingTableText
+	// Destroy node's routingTableText and ARPCache
 	if(!nodeList[i].name.startsWith('hub')){
             scene.removeChild(nodeList[i].routingTableText)
+            scene.removeChild(nodeList[i].ARPCacheInfoText)
 	}
 
 	// Destroy node
@@ -1807,7 +2110,6 @@ function deleteNodes(nodeList){
 
 
 function createNodes(nodes, nodeList, elementsScale) {
-
     for (var i = 1; i < nodes.length; i++) {
         nodesInfo = nodes[i].split(');')
         nodesName = nodesInfo[1].split('"')
@@ -1824,25 +2126,34 @@ function createNodes(nodes, nodeList, elementsScale) {
 	    node_a_entity:""
         }
 
+
+
+	
         let newNodeElement = document.createElement('a-entity');
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-	coords = { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale }	
+	console.log("createNodes newNode")
+	console.log(newNode)
+	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
-            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+	    
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 0.006/elementsScale, y: 0.006/elementsScale, z: 0.006/elementsScale});
             newNodeElement.setAttribute('rotation', '0 -90 0');
+
+
+	    
         }else if(newNode.name.startsWith('hub')){
             newNodeElement.setAttribute('gltf-model', '#hub');
-            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+            newNodeElement.setAttribute('position', { x: (newNode.position.split(',')[0] / 15)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 1/elementsScale, y: 1/elementsScale, z: 1/elementsScale});
         }else if(newNode.name.startsWith('r')){
             newNodeElement.setAttribute('gltf-model', '#router');
-            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
             newNodeElement.setAttribute('scale', {x: 0.008/elementsScale, y: 0.008/elementsScale, z: 0.008/elementsScale});
         }
@@ -1855,11 +2166,11 @@ function createNodes(nodes, nodeList, elementsScale) {
 	
         newNodeElement.addEventListener('click', function () {
 	    if  (isEndToEndVIEW()){
-
 		return;
 	    }
 
             node = nodeList.find(o => o.name === newNodeElement.id)
+
             if(isClosedRoutingTableInfo == false){
 	    	isClosedRoutingTableInfo = true
 
@@ -1869,7 +2180,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 		node.ARPCacheInfoText.removeAttribute('html')
 		node.ARPCacheInfoText.setAttribute('visible', false);
-		
+
 		newNodeElement.removeAttribute('sound');
 
 
@@ -1901,7 +2212,7 @@ function createNodes(nodes, nodeList, elementsScale) {
         htmltemplates.appendChild(newSectionTemplate);
 
         let newText = document.createElement('a-entity');
-        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: (2.5)/elementsScale + data.height, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: 2.5 + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
         newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
@@ -1982,7 +2293,8 @@ function pointInSegment (from, to, elementsScale, shift = 0.2){
 
     
     coords = {};
-
+    coords.y = from.y
+    
     if (shift >= 0)
     {
 	coords.x = from.x;
@@ -2036,7 +2348,8 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             nodeToPosition = nodeTo.position.split('"')
 
             let newLine = document.createElement('a-entity');
-            newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.height + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
+
+            newLine.setAttribute('line', 'start: ' + (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.SHIFT_Y + ' ' + (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale + '; end: ' + (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale + ' ' + data.SHIFT_Y + ' ' + (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale + '; color: ' + data.connectionscolor);
             scene.appendChild(newLine);
 
 	    connectionsLinksStandard[k].lines.push(newLine)
@@ -2047,12 +2360,16 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    if (nodeFrom.from.startsWith("hub"))
 		continue;
 	    
-	    label_id = "<p>" + connectionsLinksStandard[k].iface[j] + ": "
-	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "</p>";
-	    label_id += "<p>" + "      " + connectionsLinksStandard[k].hwaddr[j] + "</p>"
+	    label_id = connectionsLinksStandard[k].iface[j] + ": "
+	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "<br>";
+	    label_id += "      " + connectionsLinksStandard[k].hwaddr[j] 
 
 	    
-
+	    console.log("writeConnections")
+	    console.log("k: " + k)
+	    console.log("j: " + j)
+	    console.log(connectionsLinksStandard)
+	    
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
 	    
@@ -2066,29 +2383,32 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 
 
 	    coords = pointInSegment (
-		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale,  "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
-		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,    "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
+		{"x": (nodeFromPosition[0].split(',')[0] / 15)/data.elementsScale, "y": data.SHIFT_Y, "z": (nodeFromPosition[0].split(',')[1] / 15)/data.elementsScale},
+		{"x": (nodeToPosition[0].split(',')[0] / 15)/data.elementsScale,  "y": data.SHIFT_Y,  "z": (nodeToPosition[0].split(',')[1] / 15)/data.elementsScale},
 		data.elementsScale
 	    )
 
             let newText = document.createElement('a-entity');
 
-	    if (viewing_mode == "vr")
-		newText.setAttribute('position', {
-		    x: coords.x,
-		    y: data.height * 1.01,
-		    z: coords.z
-		});
-	    else // viewing_mode == "desktop"
-		newText.setAttribute('position', {
-		    x: coords.x,
-		    y: data.height * 0.8,
-		    z: coords.z
-		});
+	    // if (viewing_mode == "vr")
+	    // 	newText.setAttribute('position', {
+	    // 	    x: coords.x,
+	    // 	    y: data.height * 1.01,
+	    // 	    z: coords.z
+	    // 	});
+	    // else // viewing_mode == "desktop"
+	    // 	newText.setAttribute('position', {
+	    // 	    x: coords.x,
+	    // 	    y: data.height * 2.0 + 3,
+	    // 	    z: coords.z
+	    // 	});
+
+	    newText.setAttribute('position', coords)
+
 	    
 
 
-
+	    
             newText.setAttribute('html', '#' + id_text + "-template");
             newText.setAttribute('scale', {x: 10/data.elementsScale, y: 10/data.elementsScale, z: 10/data.elementsScale});
             newText.setAttribute('look-at', "[camera]");
@@ -2110,8 +2430,7 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
     var htmltemplates = document.getElementById("htmltemplates");
     var newSectionTemplate = document.createElement("section");
 
-    
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
     
@@ -2121,9 +2440,12 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
 
 
     let newText = document.createElement('a-entity');
-    newText.setAttribute('position', coords)
+
+    let c = Object.assign({}, coords)
+    c.y = c.y + 4
+    newText.setAttribute('position', c)
     
-    newText.setAttribute('scale', {x: 20, y: 20, z: 20});
+    newText.setAttribute('scale', {x: 25, y: 25, z: 25});
     
     newText.setAttribute('html', '#' + id_text + "-template");
     newText.setAttribute('look-at', "[camera]");
@@ -2136,8 +2458,8 @@ function createARPCacheInfoText(id_text, coords, elementsScale, info){
     scene.appendChild(newText);
 
     return newText;
-
 }
+
 
 
 function createRoutingTableInfo(id_text, coords, elementsScale, info){
@@ -2145,7 +2467,7 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
     var newSectionTemplate = document.createElement("section");
 
     
-    templateText = '<h1 style="padding: 0rem 1rem; font-size: 3rem; font-weight: 700; font-family: monospace">' + info + '</h1>'
+    templateText = '<h1 style="padding: 0rem 1rem; font-size: 1.4rem; font-weight: 900; font-family: monospace">' + info + '</h1>'
     newSectionTemplate.innerHTML = templateText;
     
     
@@ -2155,16 +2477,15 @@ function createRoutingTableInfo(id_text, coords, elementsScale, info){
 
 
     let newText = document.createElement('a-entity');
-    newText.setAttribute('position', {
-	x: coords.x,
-	y: (4.5)/elementsScale + coords.y,
-	z: coords.z
-    });
-    
+
+
+    let c = Object.assign({}, coords)
+    c.y = c.y + 10
+    newText.setAttribute('position', c)
     newText.setAttribute('scale', {x: 20, y: 20, z: 20});
     
     newText.setAttribute('html', '#' + id_text + "-template");
-    newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
+//    newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
     newText.setAttribute('look-at', "[camera]");
     newText.setAttribute('visible', false);
     
@@ -2544,17 +2865,17 @@ function create_animations(finalPackets){
     last_packet_id = finalPackets.length - 1
     
     // --------- Create animations ----------
-    escena = document.querySelector('#escena');
+    scene = document.querySelector('#escena');
     for (var currentPacket = 0; currentPacket < finalPackets.length; currentPacket++) {
         var newPacket = document.createElement('a-entity');
         newPacket.setAttribute('packet','from', finalPackets[currentPacket].from.from);
         newPacket.setAttribute('packet','to', finalPackets[currentPacket].to.from);	
         newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
-        newPacket.setAttribute('packet','yPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','yPosition', ' ' + SHIFT_Y + ' ');
         newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
         newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
         newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
-        newPacket.setAttribute('packet','toYPosition', ' ' + data.height + ' ');
+        newPacket.setAttribute('packet','toYPosition', ' ' + SHIFT_Y + ' ');
         newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','elementsScale', data.elementsScale);
         newPacket.setAttribute('packet','class', 'packetClass')
@@ -2593,7 +2914,7 @@ function create_animations(finalPackets){
 	    newPacket.setAttribute('packet','http', finalPackets[currentPacket].http);
         }
 	
-        escena.appendChild(newPacket);
+        scene.appendChild(newPacket);
 
 	finalPackets[currentPacket].newPacket = newPacket
     }

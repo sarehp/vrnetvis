@@ -5,9 +5,8 @@
     <meta name="description" content="Demo10" />
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@0d23f9b21c33ab6821046ce95835492cb84996c5/dist/aframe-master.min.js"></script>
     <script src="https://unpkg.com/aframe-event-set-component@3.0.3/dist/aframe-event-set-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script> 
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
     <script src="//cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="index.js"></script>
     <script type="text/javascript" src="index.js"></script>
     <script src="build/aframe-html.js"></script>
 
@@ -43,22 +42,31 @@
         <!-- 360-degree image. -->
         <a-sky id="background" src="#skyTexture" theta-length="90" radius="300"></a-sky>
 
-        <a-entity id="escena" cursor="rayOrigin:mouse" scene>
-	  
-	</a-entity>
 
-      
-
-
-        <a-entity movement-controls="fly: true" position="0 10 45" id="movementControls">
-            <a-entity camera position="0 1.6 0" look-controls></a-entity>
-            <a-entity cursor="rayOrigin:mouse"></a-entity>
-            <a-entity laser-controls="hand: right"></a-entity>
-        </a-entity>
+	<!-- VR -->
 	
+        <!-- <a-entity movement-controls="fly: true" position="25 7 45" id="movementControls"> -->
+        <!--     <a-entity camera position="25 7 45" movement-controls"></a-entity> -->
+        <!--     <a-entity cursor="rayOrigin:mouse"></a-entity> -->
+        <!--     <a-entity laser-controls="hand: right"></a-entity> -->
+        <!-- </a-entity> -->
 
+	<!-- Desktop -->
+	<a-entity  camera position="25 10 45" look-controls wasd-controls></a-entity>
 
-
+	  
+	<a-entity id="escena" cursor="rayOrigin:mouse" escena>
+	  <a-entity id="network" visible='true' network = 'position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
+	  </a-entity>
+	  
+	  <a-entity id="controller" visible='true' controller = 'position:0 20 20; scale:1 1 1'>
+	  </a-entity>
+	</a-entity>
+	
+	
+	  
+	  
+      
 
 
         <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="inmersive-mode">
