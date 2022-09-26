@@ -1959,7 +1959,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		    // console
 		    if (consoles[node.name]){
 			node.console = consoles[node.name]
-			node.console_log = node.name + "$"
+			node.console_log = node.name + "$ "
 		    }
 		}
 	    }

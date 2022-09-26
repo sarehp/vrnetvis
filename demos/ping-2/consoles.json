@@ -9,7 +9,7 @@
 		    {"protocol": "icmp", "field": "code", "value": "0"}
 		],
 		"actions": [
-		    {"protocol": "null", "field": "null", "value": "$ ping -c1 12.0.0.50"},
+		    {"protocol": "null", "field": "null", "value": " ping -c1 12.0.0.50"},
 		    {"protocol": "null", "field": "null", "value": "PING (12.0.0.50) 56(84) bytes of data."}
 		]
 	    }
