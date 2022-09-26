@@ -1,0 +1,33 @@
+{
+    "pc1":
+    {
+	"sending":
+	[
+	    {
+		"conditions": [
+		    {"protocol": "icmp", "field": "type", "value": "8"},
+		    {"protocol": "icmp", "field": "code", "value": "0"}
+		],
+		"actions": [
+		    {"protocol": "null", "field": "null", "value": "$ ping -c1 12.0.0.50"},
+		    {"protocol": "null", "field": "null", "value": "PING (12.0.0.50) 56(84) bytes of data."}
+		]
+	    }
+	],
+	"receiving":
+	[
+	    {
+		"conditions": [
+		    {"protocol": "icmp", "field": "type", "value": "0"},
+		    {"protocol": "icmp", "field": "code", "value": "0"}
+		],
+		"actions": [{"protocol": "null", "field": "null", "value": "64 bytes from localhost (12.0.0.50): icmp_seq=1 ttl=64 time=0.046 ms"},
+			    {"protocol": "null", "field": "null", "value": ""},
+			    {"protocol": "null", "field": "null", "value": "--- 12.0.0.50 ping statistics ---"},
+			    {"protocol": "null", "field": "null", "value": "1 packets transmitted, 1 received, 0% packet loss, time 0ms"},
+			    {"protocol": "null", "field": "null", "value": "rtt min/avg/max/mdev = 0.046/0.046/0.046/0.000 ms"}
+			   ]
+	    }
+	]     
+    }
+}
