@@ -1588,7 +1588,7 @@ AFRAME.registerComponent('controller', {
 			    
 			})
 		    
-		    return
+		    return promise
 		}
 		else {
 		    let newPacket = finalPackets[next_packet].newPacket.components.packet
@@ -1600,6 +1600,8 @@ AFRAME.registerComponent('controller', {
 			newPacket.startAnimation("birth")
 		    }
 		    else{
+			let promise = Promise.resolve()
+
 			// This is an IP datagram that was created
 			// when the Request ARP appeared in the
 			// capture, so only animate it, don't create
