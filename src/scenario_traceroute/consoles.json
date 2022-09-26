@@ -1,0 +1,36 @@
+{
+    "pc1":
+    {"sending":
+     [
+	 {
+	     "conditions": [
+		 {"protocol": "udp", "field": "dstport", "value": "33435"},
+		 {"protocol": "ip", "field": "ttl", "value": "1"}
+	     ],
+	     "actions": [{"protocol": "null", "field": "null", "value":"$ traceroute 16.0.0.10"},
+			 {"protocol": "null", "field": "null", "value":"traceroute to (16.0.0.10), 30 hops max, 60 byte packets"}]
+	 }
+     ],
+     
+     "receiving":
+     [
+	 {
+	     "conditions": [
+		 {"protocol": "icmp", "field": "type", "value": "11"},
+		 {"protocol": "icmp", "field": "code", "value": "0"}
+	     ],
+	     "actions": [{"protocol": "ip", "field": "src", "value":""}
+			]
+	 },
+	 {
+	     "conditions": [
+		 {"protocol": "icmp", "field": "type", "value": "3"},
+		 {"protocol": "icmp", "field": "code", "value": "3"}
+	     ],
+	     "actions": [{"protocol": "ip", "field": "src", "value":""}
+			]
+	 }
+	 
+     ]     
+    }
+}

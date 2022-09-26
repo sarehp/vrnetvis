@@ -1,9 +1,0 @@
-ifconfig eth0 hw ether 00:1b:63:00:00:04
-ifconfig eth0 200.2.0.4/24 up
-
-ifconfig eth1 hw ether 00:1b:63:00:01:04
-ifconfig eth1 200.5.0.4/24 up
-
-
-
-
