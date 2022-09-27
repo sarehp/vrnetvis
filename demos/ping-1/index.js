@@ -1702,10 +1702,10 @@ AFRAME.registerComponent('controller', {
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
 
 
-	let position = {x: 0, y: 0, z: 0}	
+	let position = {x: 0, y: 1.6, z: 5}	
         playButton.setAttribute('position', position);
         playButton.setAttribute('color', 'orange');
-        playButton.setAttribute('scale', '4.5 4.5 4.5');
+        playButton.setAttribute('scale', '1 1 1');
         playButton.setAttribute('id', 'playButton');
         playButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
