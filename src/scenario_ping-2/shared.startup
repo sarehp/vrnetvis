@@ -1,0 +1,6 @@
+#! /bin/bash
+
+HOST=`hostname`
+
+/etc/init.d/networking restart
+

@@ -1819,9 +1819,11 @@ AFRAME.registerComponent('controller', {
         let infoPanel = document.createElement('a-entity');
         infoPanel.setAttribute('html', '#info-panel');
 	position = Object.assign({}, this.data.position)
-	position.x -= 20
+	position.x += 15
+	position.y -= 10
+	position.z -= 10
         infoPanel.setAttribute('position', position);
-        infoPanel.setAttribute('scale', '30 30 30');
+        infoPanel.setAttribute('scale', '3 3 3');
         infoPanel.setAttribute('id', 'infoPanel');
 
 
