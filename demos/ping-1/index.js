@@ -1702,9 +1702,7 @@ AFRAME.registerComponent('controller', {
 	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
 
 
-	
-	let position = Object.assign({}, this.data.position)
-	position.x = position.x + 35
+	let position = {x: 0, y: 0, z: 0}	
         playButton.setAttribute('position', position);
         playButton.setAttribute('color', 'orange');
         playButton.setAttribute('scale', '4.5 4.5 4.5');
@@ -1723,7 +1721,7 @@ AFRAME.registerComponent('controller', {
 
 	playButton.addEventListener('click', event_listener_function)
 	let scene = document.querySelector("#escena")
-	scene.appendChild(playButton);
+	this.el.appendChild(playButton);
 
 
 	// Play button also can be clicked with space key
@@ -1772,7 +1770,7 @@ AFRAME.registerComponent('controller', {
 	    resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });	    
         });
 
-	this.el.appendChild(resetButton);
+	scene.appendChild(resetButton);
 
 	var el = this.el
 	function reset(){
@@ -1794,7 +1792,7 @@ AFRAME.registerComponent('controller', {
 	position.y += 3
 	viewText.setAttribute('position', position);
 	viewText.setAttribute("color", "white")	
-	this.el.appendChild(viewText)
+	scene.appendChild(viewText)
 
 
 	
@@ -1830,7 +1828,7 @@ AFRAME.registerComponent('controller', {
 	infoPanel.setAttribute('look-at', "[camera]");
 
 	
-        this.el.appendChild(infoPanel);
+        scene.appendChild(infoPanel);
 	
 	
     }
