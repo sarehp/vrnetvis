@@ -44,12 +44,16 @@
 
 
 	<!-- VR -->
-        <a-entity movement-controls="fly: true" position="25 7 45" id="movementControls">
-            <a-entity camera position="25 7 45" movement-controls"></a-entity>
+        <a-entity movement-controls="fly: false" position="25 7 45" id="movementControls">
+            <a-entity camera position="0 0 0" movement-controls">
+	    <a-entity id="controller" visible='true' controller = 'position:0 0 0; scale:1 1 1'>
+	    </a-entity>
+
             <a-entity cursor="rayOrigin:mouse"></a-entity>
             <a-entity laser-controls="hand: right"></a-entity>
-	  <a-entity id="controller" visible='true' controller = 'position:0 20 20; scale:1 1 1'>
-	  </a-entity>
+
+
+        </a-entity>
 
         </a-entity>
 
