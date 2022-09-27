@@ -48,6 +48,9 @@
             <a-entity camera position="25 7 45" movement-controls"></a-entity>
             <a-entity cursor="rayOrigin:mouse"></a-entity>
             <a-entity laser-controls="hand: right"></a-entity>
+	  <a-entity id="controller" visible='true' controller = 'position:0 20 20; scale:1 1 1'>
+	  </a-entity>
+
         </a-entity>
 
 	<!-- Desktop -->
@@ -58,8 +61,6 @@
 	  <a-entity id="network" visible='true' network = 'position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
 	  </a-entity>
 	  
-	  <a-entity id="controller" visible='true' controller = 'position:0 20 20; scale:1 1 1'>
-	  </a-entity>
 	</a-entity>
 	
 	
