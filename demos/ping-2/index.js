@@ -1819,7 +1819,9 @@ AFRAME.registerComponent('controller', {
         let infoPanel = document.createElement('a-entity');
         infoPanel.setAttribute('html', '#info-panel');
 	position = Object.assign({}, this.data.position)
-	position.x -= 20
+	position.x -= 25
+	position.y -= 5
+	position.z -= 20
         infoPanel.setAttribute('position', position);
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
@@ -1959,7 +1961,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		    // console
 		    if (consoles[node.name]){
 			node.console = consoles[node.name]
-			node.console_log = node.name + "$"
+			node.console_log = node.name + "$ "
 		    }
 		}
 	    }
