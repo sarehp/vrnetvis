@@ -2155,9 +2155,10 @@ function createNodes(nodes, nodeList, elementsScale) {
             newNodeElement.setAttribute('scale', {x: 1/elementsScale, y: 1/elementsScale, z: 1/elementsScale});
         }else if(newNode.name.startsWith('r')){
             newNodeElement.setAttribute('gltf-model', '#router');
-            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) -1.5)/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+            newNodeElement.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15))/elementsScale, y: data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
             newNodeElement.setAttribute('id', newNode.name);
-            newNodeElement.setAttribute('scale', {x: 0.008/elementsScale, y: 0.008/elementsScale, z: 0.008/elementsScale});
+	    //            newNodeElement.setAttribute('scale', {x: 0.008/elementsScale, y: 0.008/elementsScale, z: 0.008/elementsScale});
+            newNodeElement.setAttribute('scale', {x: 0.1/elementsScale, y: 0.1/elementsScale, z: 0.1/elementsScale});	    
         }
 
 	
