@@ -20,8 +20,10 @@
     
     <a-scene>
         <a-assets>
-            <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg" />
-            <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />
+          <!-- <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg" /> -->
+          <img id="groundTexture" src="floor.jpg" />	  
+          <!-- <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />c -->
+          <img id="skyTexture" src="sky.png" />c	  
             <audio id="packetIn" crossorigin="anonymous" src="packetIn.mp3"></audio>
             <audio id="showLevels" crossorigin="anonymous" src="showLevels.mp3"></audio>
             <audio id="showInfo" crossorigin="anonymous" src="showInfo.mp3"></audio>
@@ -29,7 +31,8 @@
             <a-asset-item id="inmersive" src="inmersive/scene.gltf"></a-asset-item>
             <a-asset-item id="desktop" src="desktop/scene.gltf"></a-asset-item>
             <a-asset-item id="computer" src="computer/scene.gltf"></a-asset-item>
-            <a-asset-item id="router" src="router/scene.gltf"></a-asset-item>
+            <!-- <a-asset-item id="router" src="router/scene.gltf"></a-asset-item> -->
+            <a-asset-item id="router" src="router-cisco/3d-model.gltf"></a-asset-item>	    
             <a-asset-item id="hub" src="hub/scene.gltf"></a-asset-item>
             <a-asset-item id="table" src="table/scene.gltf"></a-asset-item>
             <a-asset-item id="button" src="start_button/scene.gltf"></a-asset-item>
@@ -43,23 +46,15 @@
         <a-sky id="background" src="#skyTexture" theta-length="90" radius="300"></a-sky>
 
 
-	<!-- VR -->
-	
-        <!-- <a-entity movement-controls="fly: true" position="25 7 45" id="movementControls"> -->
-        <!--     <a-entity camera position="25 7 45" movement-controls"></a-entity> -->
-        <!--     <a-entity cursor="rayOrigin:mouse"></a-entity> -->
-        <!--     <a-entity laser-controls="hand: right"></a-entity> -->
-        <!-- </a-entity> -->
-
 	<!-- Desktop -->
-	<a-entity  camera position="25 10 45" look-controls wasd-controls></a-entity>
-
-	  
-	<a-entity id="escena" cursor="rayOrigin:mouse" escena>
-	  <a-entity id="network" visible='true' network = 'position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
+	<a-entity  camera position="-10 7 32" look-controls wasd-controls="fly: false">
+	  <a-entity id="controller" visible='true' controller = 'position:0 -3.8 -5.5; scale:1 1 1'>
 	  </a-entity>
-	  
-	  <a-entity id="controller" visible='true' controller = 'position:0 20 20; scale:1 1 1'>
+	</a-entity>
+	
+
+	<a-entity id="escena" cursor="rayOrigin:mouse" escena>
+	  <a-entity id="network" visible='true' network = 'SHIFT_Y:3.5; elementsScale:1; position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
 	  </a-entity>
 	</a-entity>
 	
@@ -74,37 +69,46 @@
         </section>
 
         <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="web-mode">
-            <h1>See in Web browser</h1>
+          <h1>See in Web browser</h1>
         </section>
+	
+        <section style="display: inline-block; background: orange; color: black; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
 
-        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
-            <h1><center>INSTRUCTIONS</center></h1>
-            <br>
-            <h2>Click on the Play/Pause button to play / pause </h2>
-            <br>
-            <h2>Select layers to be displayed in the Layers menu</h2>
-            <br>
-            <h2>Click on the reset button to stop and reset </h2>
-	    <br>
-	    <h2>Click on a host or router to see its routing table</h2>
-	    <br>
-	    <h2>Click on a header of a message to see/hide its fields: </h2>
-            <ul>
-               <li><h2><section style="color: khaki; padding: 5">Yellow: Ethernet</section></h2>
-               <li><h2><section style="color: sandybrown; padding: 5">Orange: ARP</section></h2>
-               <li><h2><section style="color: LightGreen; padding: 5">Green: IP</section></h2>
-               <li><h2><section style="color: red; padding: 5">Red: ICMP</section></h2>
-               <li><h2><section style="color: steelblue; padding: 5">Blue: TCP</section></h2>
-               <li><h2><section style="color: white; padding: 5">White: Data over TCP or UDP</section></h2>
-               <li><h2><section style="color: orchid; padding: 5">Pink: UDP</section></h2>
-               <li><h2><section style="color: goldenrod; padding: 5">Old gold: DNS</section></h2>
-               <li><h2><section style="color: gold; padding: 5">Gold: HTTP</section></h2>	    	    
-            </ul>
-            <h2> Move closer to an element to see it better. </h2>
-	    <h3>If you don't have VR glasses use arrow keys and click+drag with mouse.  </h3>
-        </section>
+	  <h1><center> VRNetVis: se ejecuta en pc1 ping -c1 11.0.0.40 </center></h1>
+	  
+          <h3><center>INSTRUCCIONES</center></h3>
+	  <ul>
+            <li>Puedes moverte con las flechas del teclado: explora ahora la red moviéndote, y sigue leyendo después</li>
+            <li>Haciendo click con el botón izquierdo del ratón en la cabecera de un mensaje se ven sus campos</li>
+	    <li>Haciendo click en un pc o en un router se muestra su tabla de encaminamiento y su caché de ARP</li>
+	    <li>Haciendo click en el botón rojo se pausa / continúa la animación</li>
+	      <ul>
+		<li> La barra espaciadora del teclado también pausa / continúa la animación</li>
+	      </ul>
+	    <li> Haciendo click en el botón Reset se reinicia la animación</li>
+	  </ul>
 
-        <div id="htmltemplates">
+	  <h3><center>OBJETIVO DE APRENDIZAJE</center></h3>
+	  <ul>
+	    <li> Tienes que ser capaz de explicar todo lo que ocurre en la animación:</li>
+	      <ul>
+		<li> qué contienen los campos de cada cabecera de un mensaje</li>
+		<li> por qué se genera cada uno de los mensajes (las cabeceras se van creando de arriba abajo)</li>
+		<li> por qué un mensaje que viaja por un enlace se ha podido enviar</li>
+		<li> por qué a veces un mensaje no puede salir de un nodo y queda a la espera (se eleva encima del nodo)</li>
+		<li> cuando un mensaje llega a un nodo explica:</li>
+		  <ul>
+		    <li> si el nodo lo procesa (en ese caso se ve cómo se va procesando y eliminando cada cabecera, de abajo arriba)</li>
+		    <li> o si por el contrario el nodo lo descarta (el mensaje entero se difumina y desaparece)</li>
+		  </ul>
+	      </ul>
+	    <li> Observa cómo van cambiando, y por qué lo hacen, los contenidos de las cachés de ARP</li>
+	    <li> Observa los contenidos de las tablas de encaminamiento, que no cambian durante la animación</li>
+	  </ul>
+
+	</section>
+	
+<div id="htmltemplates">
         </div>
 
 </body>

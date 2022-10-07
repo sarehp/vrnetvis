@@ -20,8 +20,10 @@
     
     <a-scene>
         <a-assets>
-            <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg" />
-            <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />
+          <!-- <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg" /> -->
+          <img id="groundTexture" src="floor.jpg" />	  
+          <!-- <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />c -->
+          <img id="skyTexture" src="sky.png" />c	  
             <audio id="packetIn" crossorigin="anonymous" src="packetIn.mp3"></audio>
             <audio id="showLevels" crossorigin="anonymous" src="showLevels.mp3"></audio>
             <audio id="showInfo" crossorigin="anonymous" src="showInfo.mp3"></audio>
@@ -29,7 +31,8 @@
             <a-asset-item id="inmersive" src="inmersive/scene.gltf"></a-asset-item>
             <a-asset-item id="desktop" src="desktop/scene.gltf"></a-asset-item>
             <a-asset-item id="computer" src="computer/scene.gltf"></a-asset-item>
-            <a-asset-item id="router" src="router/scene.gltf"></a-asset-item>
+            <!-- <a-asset-item id="router" src="router/scene.gltf"></a-asset-item> -->
+            <a-asset-item id="router" src="router-cisco/3d-model.gltf"></a-asset-item>	    
             <a-asset-item id="hub" src="hub/scene.gltf"></a-asset-item>
             <a-asset-item id="table" src="table/scene.gltf"></a-asset-item>
             <a-asset-item id="button" src="start_button/scene.gltf"></a-asset-item>
@@ -44,31 +47,25 @@
 
 
 	<!-- VR -->
-        <a-entity movement-controls="fly: false" position="25 7 45" id="movementControls">
-            <a-entity camera position="0 0 0" movement-controls">
-	    <a-entity id="controller" visible='true' controller = 'position:0 0 0; scale:1 1 1'>
+        <a-entity movement-controls="fly: false" position="-10 7 42" id="movementControls">
+          <a-entity cursor="rayOrigin:mouse"></a-entity>
+          <a-entity laser-controls="hand: right"></a-entity>
+
+          <a-entity camera position="-10 7 22">
+  	    <a-entity id="controller" visible='true' controller='position:0 -2.7 -5.5; scale:1 1 1'>
 	    </a-entity>
-
-            <a-entity cursor="rayOrigin:mouse"></a-entity>
-            <a-entity laser-controls="hand: right"></a-entity>
-
-
-        </a-entity>
-
-        </a-entity>
-
-	<!-- Desktop -->
-	<!-- <a-entity  camera position="25 10 45" look-controls wasd-controls></a-entity> -->
-
+          </a-entity>
+	</a-entity>	  
 	  
+
 	<a-entity id="escena" cursor="rayOrigin:mouse" escena>
-	  <a-entity id="network" visible='true' network = 'position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
+	  <a-entity id="network" visible='true' network = 'SHIFT_Y:3.5; elementsScale:1; position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
 	  </a-entity>
-	  
 	</a-entity>
-	
-	
-	  
+	<!-- <a-entity id="escena" escena>	     -->
+	<!--   <a-entity id="network" visible='true' network = 'SHIFT_Y:3.5; elementsScale:1; position:0 0 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' > -->
+	<!--   </a-entity> -->
+	<!-- </a-entity> -->
 	  
       
 
@@ -81,22 +78,35 @@
           <h1>See in Web browser</h1>
         </section>
 	
-        <section style="display: inline-block; background: #212223; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
-          <h1><center>INSTRUCCIONES</center></h1>
-          <h2>Haz click con el ratón en el botón Play/Pause para parar o proseguir la animación</h2>
-          <h2>También puedes pulsar la barra espaciadora para parar o proseguir la animación </h2>
-          <h2>Haz click con el ratón en las cabeceras de cada mensaje para ver los contenidos de sus campos </h2>
-	  <h2>Haciendo click en un pc o en un router verás su tabla de encaminamiento y su caché de ARP</h2>
-          <h2>Puedes moverte con las teclas que tienen flechas </h2>
-	  <h2>Puedes girar la escena moviendo el ratón mientras mantienes pulsado el botón izquierdo</h2>
+        <section style="display: inline-block; background: orange; color: black; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
+	  <h1><center> Visualización con VRNetVis: se ejecuta en pc1 ping -c1 11.0.0.40 </center></h1>
+          <h3><center>INSTRUCCIONES</center></h3>
+	  <ul>
+            <li>Puedes moverte con el joystick:  explora ahora la red moviéndote, y sigue leyendo después</li>
+            <li>Disparando con el gatillo a la cabecera de un mensaje se ven sus campos </li>
+	    <li>Disparando a un pc o a un router se ven su tabla de encaminamiento y su caché de ARP</li>
+	    <li>Disparando al botón rojo se pausa / continúa la animación</li>
+	    <li>Disparando al botón Reset se reinicia la animación</li>
+	  </ul>
+	  <h3><center>OBJETIVO DE APRENDIZAJE</center></h3>
+	  <ul>
+	    <li> Tienes que ser capaz de explicar todo lo que ocurre en la animación:</li>
+	      <ol>
+		<li> qué contienen los campos de cada cabecera de un mensaje</li>
+		<li> por qué se genera cada uno de los mensajes (las cabeceras se van creando de arriba abajo)</li>
+		<li> por qué un mensaje que viaja por un enlace se ha podido enviar</li>
+		<li> por qué a veces un mensaje no puede salir de un nodo y queda a la espera (se eleva encima del nodo)</li>
+		<li> cuando un mensaje llega a un nodo explica:</li>
+		  <ul>
+		    <li> si el nodo lo procesa (en ese caso se ve cómo se va procesando y eliminando cada cabecera, de abajo arriba)</li>
+		    <li> o si por el contrario el nodo lo descarta (el mensaje entero se difumina y desaparece)</li>
+		  </ul>
+	      </ol>
+	    <li> Observa cómo van cambiando, y por qué lo hacen, los contenidos de las cachés de ARP</li>
+	    <li> Observa los contenidos de las tablas de encaminamiento, que no cambian durante la animación</li>
+	  </ul>
+
 	  
-	  <h1><center>OBJETIVO DE APRENDIZAJE</center></h1>
-	  <h2>La animación comienza mostrando que en pc1 se ha ejecutado el comando <em>ping -c1 11.0.0.40</em> </h2>
-	  <h2>La animación concluye mostrando en pc1 la salida producida por el comando ping</h2>
-	  <h2>Trata de predecir qué es lo siguiente que va a ocurrir en cada momento, y por qué</h2>
-	  <h2>Observa los campos de las cabeceras de los mensajes que se generan a partir de entonces</h2>
-	  <h2>Observa cómo van cambiando los contenidos de las cachés de ARP</h2>
-	  <h2>Observa los contenidos de las tablas de encaminamiento, que no cambian</h2>
 	</section>
 	
 <div id="htmltemplates">
