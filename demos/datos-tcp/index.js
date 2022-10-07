@@ -1823,11 +1823,11 @@ AFRAME.registerComponent('controller', {
         infoPanel.setAttribute('html', '#info-panel');
 	position = Object.assign({}, this.data.position)
 
-	position.x = -10
-	position.y = 7.5
-	position.z = 20
+	position.x = -20
+	position.y = 10.5
+	position.z = 0
         infoPanel.setAttribute('position', position);
-        infoPanel.setAttribute('scale', '30 30 30');
+        infoPanel.setAttribute('scale', '40 40 40');
         infoPanel.setAttribute('id', 'infoPanel');
 
 
@@ -2224,7 +2224,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 	if (newNode.name.startsWith('pc'))
 	    height = 2.5
-	else height = 1.5
+	else height = 1.0
 		
 	newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: height + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');

@@ -952,11 +952,9 @@ AFRAME.registerComponent('packet', {
 	    }
 
 	    if (! pass){
-		console.log("!pass")
 		continue
 	    }
 	    else{
-		console.log("pass")
 		for (var i = 0; i < e.actions.length ; i++){
 		    protocol = e.actions[i]["protocol"]
 		    field = e.actions[i]["field"]		    
@@ -979,9 +977,6 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
-        console.log("packet arrived at node " + nodeName)
-
-
 	let promise = Promise.resolve()
 	
 	let receivingARPResponse = function(packet){
@@ -1029,7 +1024,6 @@ AFRAME.registerComponent('packet', {
 	   && VIEW=="ALL"){
 
 	    if (! frameIsForMe(packetParams)){
-		console.log(nodeName + " is not for me")
 
 		let fadeoutChildren = function(packet){
 		    var promises = []
@@ -1044,11 +1038,10 @@ AFRAME.registerComponent('packet', {
 		// fadeout packet and children and then destroy packet
 		packet.setAttribute('animation__fadeout', {enabled: 'true'})
 
-		console.log("1 Promise.all " + nodeName)
 		var promises = fadeoutChildren(packet)
 
 		anime(packet, 'fadeout')
-		    .then(() => {console.log("1 finish_packet" + nodeName)
+		    .then(() => {
 				 finish_packet(packet, packetParams)
 				})
 		
@@ -1129,10 +1122,10 @@ AFRAME.registerComponent('packet', {
 			promise=promise
 			    .then(()=> Promise.all([anime(packet, 'fadeout'),
 	 					     fadeoutChildren(packet)])
-					.then(() => {console.log("2")
+					.then(() => {
 						     return this.check_console("receiving", node, packetParams)
 						    })
-	 				.then(() => { console.log("2")
+	 				.then(() => {
 						      finish_packet(packet, packetParams)
 						    })
 				 )
@@ -1169,20 +1162,20 @@ AFRAME.registerComponent('packet', {
 		    .then(() => wait(1000))
 	    	    .then(() => next_packet_anim(packetParams))
 		    .then(() => wait(1000))
-		    .then(() => {console.log("3")
+		    .then(() => {
 				 this.check_console("receiving", node, packetParams)
 				})
-		    .then(() => { console.log("3")
+		    .then(() => { 
 				  return finish_packet(packet, packetParams)
 				})
 	    }
 	    else{ // it was the destination
 		promise = promise
 		    .then(() => wait(1000))
-		    .then(() => {console.log("4 check_console")
+		    .then(() => {
 				 return this.check_console("receiving", node, packetParams)
 			    })
-		    .then(() => { console.log("4 finish packet")
+		    .then(() => { 
 			finish_packet(packet, packetParams)
 		    })
 		    .then(() => wait(1000))
@@ -1191,7 +1184,6 @@ AFRAME.registerComponent('packet', {
 	    
 	    
 	}else{ // hub
-	    console.log("5")
 	    finish_packet(packet, packetParams)
 	    next_packet_anim(packetParams);
 	}
@@ -1203,8 +1195,6 @@ AFRAME.registerComponent('packet', {
     
     check_console: function(sending_receiving, node, packetParams) {
 	var nodeName = node.name
-	console.log("check_console: " + nodeName)
-	console.log(sending_receiving)	
 
 	var nodeFromAnimation = document.getElementById(nodeName);
 
@@ -1240,7 +1230,6 @@ AFRAME.registerComponent('packet', {
 
 		promise = promise
 		.then(()=> {
-		    console.log("aqui console_data: " + console_data)
 		    wait(500)
 		})
 		.then(()=> {
@@ -1254,7 +1243,6 @@ AFRAME.registerComponent('packet', {
 		.then(() => {
 		    console_data = this.console(nodeName, packetParams, sending_receiving)
 		    node.console_log += console_data
-		    console.log("new.console_log: " + node.console_log)
 		    showConsole(node.consoleText, node.console_log)
 		    return wait(2000)
 		})
@@ -1407,13 +1395,8 @@ const anime = (target, animation_name) =>
 function finish_packet(packet, packetParams){
     let promise1 = Promise.resolve()
 
-    console.log("finish_packet")
-    console.log("packet.id: " + packet.id)
-    console.log("finalPackets.length - 1")
-    console.log(finalPackets.length - 1)        
     
     if (packet.id == finalPackets.length - 1) {
-	console.log("finish_packet: thie is the end")
 	
 	promise1 = promise1
 	    .then (() =>  wait(12000)) // Give some time for final
@@ -1621,7 +1604,6 @@ AFRAME.registerComponent('controller', {
 		    next_packet += 1		    
 		    packets_ready = true
 		}
-		console.log("--------------- do_animate")
 	    }
 
 	    
@@ -1841,11 +1823,11 @@ AFRAME.registerComponent('controller', {
         infoPanel.setAttribute('html', '#info-panel');
 	position = Object.assign({}, this.data.position)
 
-	position.x = -10
-	position.y = 7.5
-	position.z = 20
+	position.x = -20
+	position.y = 10.5
+	position.z = 0
         infoPanel.setAttribute('position', position);
-        infoPanel.setAttribute('scale', '30 30 30');
+        infoPanel.setAttribute('scale', '40 40 40');
         infoPanel.setAttribute('id', 'infoPanel');
 
 
@@ -1862,7 +1844,6 @@ AFRAME.registerComponent('controller', {
 
 
 function createNetwork(filename, machineNamesFile, elementScale){
-    console.log("create network")
     
     // initialize global variables
     nodeList.length = 0
@@ -1879,7 +1860,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
     let promise1 =
 	new Promise((resolve) =>
 		    request.onload = function() {
-			console.log("cargados netkit.nkp")
+
 			nodeList.length=0 // need to reinitialize
 					  // because this handler is
 					  // called twice sometimes
@@ -1909,7 +1890,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 	.then(() => {return new Promise
 		     ((resolve) =>
 		      requestMachineNames.onload = function() {
-			  console.log("cargados machineNames")
 
 			  response = requestMachineNames.response;
 			  responseParse = JSON.parse(response);
@@ -1952,8 +1932,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		      requestConsoles.onload = function() {
 			  response = requestConsoles.response;
 			  consoles = JSON.parse(response);
-			  console.log("consoles")
-			  console.log(consoles)
 			  resolve()	    
 		      }
 		     )})
@@ -1981,7 +1959,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 			createARPCacheInfoText("ARPCacheInfoText" + node.name, coords, data.elementsScale, formatARPCache(node.ARPCache))
 		    
 		    // console
-		    console.log("creating console for " + node.name)
 		    if (consoles[node.name]){
 			node.console = consoles[node.name]
 			node.console_log = node.name + "$ "
@@ -2166,8 +2143,6 @@ function createNodes(nodes, nodeList, elementsScale) {
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-	console.log("createNodes newNode")
-	console.log(newNode)
 	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
@@ -2249,7 +2224,7 @@ function createNodes(nodes, nodeList, elementsScale) {
 
 	if (newNode.name.startsWith('pc'))
 	    height = 2.5
-	else height = 1.5
+	else height = 1.0
 		
 	newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: height + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
@@ -2403,11 +2378,6 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    label_id += connectionsLinksStandard[k].ipaddr[j] + "/" + connectionsLinksStandard[k].mask[j] + "<br>";
 	    label_id += "      " + connectionsLinksStandard[k].hwaddr[j] 
 
-	    
-	    console.log("writeConnections")
-	    console.log("k: " + k)
-	    console.log("j: " + j)
-	    console.log(connectionsLinksStandard)
 	    
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
