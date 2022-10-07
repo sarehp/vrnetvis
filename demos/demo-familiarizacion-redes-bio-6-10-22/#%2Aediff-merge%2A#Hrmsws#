@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <title>VRNetVis</title>
+    <meta name="description" content="Demo10" />
+    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@0d23f9b21c33ab6821046ce95835492cb84996c5/dist/aframe-master.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@3.0.3/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="//cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script type="text/javascript" src="index.js"></script>
+    <script src="build/aframe-html.js"></script>
+
+
+    <script type="text/javascript">
+      AFRAME.ASSETS_PATH = "./assets";
+    </script>    
+</head>
+
+<body>
+    
+    <a-scene>
+        <a-assets>
+          <!-- <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg" /> -->
+          <img id="groundTexture" src="floor.jpg" />	  
+          <!-- <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg" />c -->
+          <img id="skyTexture" src="sky.png" />c	  
+            <audio id="packetIn" crossorigin="anonymous" src="packetIn.mp3"></audio>
+            <audio id="showLevels" crossorigin="anonymous" src="showLevels.mp3"></audio>
+            <audio id="showInfo" crossorigin="anonymous" src="showInfo.mp3"></audio>
+            <audio id="playPause" crossorigin="anonymous" src="playPause.mp3"></audio>
+            <a-asset-item id="inmersive" src="inmersive/scene.gltf"></a-asset-item>
+            <a-asset-item id="desktop" src="desktop/scene.gltf"></a-asset-item>
+            <a-asset-item id="computer" src="computer/scene.gltf"></a-asset-item>
+            <!-- <a-asset-item id="router" src="router/scene.gltf"></a-asset-item> -->
+            <a-asset-item id="router" src="router-cisco/3d-model.gltf"></a-asset-item>	    
+            <a-asset-item id="hub" src="hub/scene.gltf"></a-asset-item>
+            <a-asset-item id="table" src="table/scene.gltf"></a-asset-item>
+            <a-asset-item id="button" src="start_button/scene.gltf"></a-asset-item>
+            <a-asset-item id="play_button" src="playback_buttons/scene.gltf"></a-asset-item>
+            <a-asset-item id="reset_button" src="reset_button/scene.gltf"></a-asset-item>	    
+        </a-assets>
+
+        <a-cylinder id="ground" src="#groundTexture" radius="300" height="0.1"></a-cylinder>
+
+        <!-- 360-degree image. -->
+        <a-sky id="background" src="#skyTexture" theta-length="90" radius="300"></a-sky>
+
+
+	<!-- VR -->
+        <a-entity movement-controls="fly: false" position="-1.5 7 40" id="movementControls">
+          <a-entity cursor="rayOrigin:mouse"></a-entity>
+          <a-entity laser-controls="hand: right"></a-entity>
+
+          <a-entity camera position="0 0 0">
+  	    <a-entity id="controller" visible='true' controller='position:0 0 0; scale:1 1 1'>
+	    </a-entity>
+          </a-entity>
+	</a-entity>	  
+	  
+<<<<<<< variant A
+
+	<!-- Desktop -->
+	<!-- <a-entity  camera position="-10 8 45" rotation="-20 0 0" look-controls wasd-controls> -->
+	<!--   <a-entity id="controller" visible='true' controller = 'position:0 5 0; scale:1 1 1'> -->
+>>>>>>> variant B
+        <!--   <a-entity camera position="0 0 0"> -->
+  	<!--     <a-entity id="controller" visible='true' controller='position:0 0 0; scale:1 1 1'> -->
+======= end
+	<!--   </a-entity> -->
+<<<<<<< variant A
+	<!-- </a-entity> -->
+>>>>>>> variant B
+        <!-- </a-entity> -->
+======= end
+	
+
+<<<<<<< variant A
+>>>>>>> variant B
+	<!-- Desktop -->
+	<a-entity  camera position="-0.3 7 47.3" look-controls wasd-controls="fly: false">
+	  <a-entity id="controller" visible='true' controller = 'position:0 0 0; scale:1 1 1'>
+	  </a-entity>
+	</a-entity>
+======= end
+	
+<<<<<<< variant A
+	<a-entity id="escena" escena>	    
+	  <a-entity id="network" visible='true' network = 'SHIFT_Y:3.5; elementsScale:1; position:0 0 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
+>>>>>>> variant B
+
+	<a-entity id="escena" cursor="rayOrigin:mouse" escena>
+	  <a-entity id="network" visible='true' network = 'SHIFT_Y:3.5; elementsScale:1; position:0 5 0; scale:1 1 1; topology:netgui.nkp; machineNames:machineNames.json' >
+======= end
+	  </a-entity>
+	</a-entity>
+<<<<<<< variant A
+>>>>>>> variant B
+	
+	
+	  
+======= end
+	  
+      
+
+
+        <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="inmersive-mode">
+            <h1>See with VR glasses</h1>
+        </section>
+
+        <section style="display: inline-block; background: SlateGray; color: SkyBlue; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="web-mode">
+          <h1>See in Web browser</h1>
+        </section>
+	
+        <section style="display: inline-block; background: orange; color: black; border-radius: 1em; padding: 1em; margin:0;" font-family: monospace; id="info-panel">
+<<<<<<< variant A
+>>>>>>> variant B
+
+======= end
+	  <h1><center>OBJETIVO DE APRENDIZAJE</center></h1>
+	  <ul>
+<<<<<<< variant A
+	    <li> La animación comenzará mostrando que en pc1 se ha ejecutado el comando <em>ping -c1 11.0.0.40</em> 
+>>>>>>> variant B
+	    <li> La animación comienza mostrando que en pc1 se ha ejecutado el comando <em>ping -c1 11.0.0.40</em> 
+======= end
+	    <li> La animación concluirá mostrando en pc1 la salida producida por el comando ping
+	    <li> En todo momento trata de predecir qué es lo siguiente que va a ocurrir en cada momento, y por qué
+	    <li> Observa los campos de las cabeceras de los mensajes
+	    <li> Observa cómo van cambiando los contenidos de las cachés de ARP
+	    <li> Observa los contenidos de las tablas de encaminamiento, que no cambian durante la animación
+	  </ul>
+
+<<<<<<< variant A
+          <h1><center>INSTRUCCIONES</center></h1>
+>>>>>>> variant B
+
+
+	  <h1><center>INSTRUCCIONES</center></h1>
+======= end
+	  <ul>
+<<<<<<< variant A
+            <li>Puedes moverte con el joystick 
+            <li>Dispara con el gatillo del mando derecho a una cabecera para ver los contenidos de sus campos 
+	    <li>Dispara a un pc o a un router para ver su tabla de encaminamiento y su caché de ARP
+	    <li>Dispara al botón rojo en cualquier momento para parar o continuar la animación	      
+>>>>>>> variant B
+            <li>Puedes moverte con las teclas de cursor del teclado
+	    <li> Haz click con el ratón en una cabecera para ver los contenidos de sus campos
+	    <li> Haz click sobre un pc o un router para ver su tabla de encaminamiento y su caché de ARP
+	    <li> Haz click con el ratón en el botón rojo para parar o continuar la animación
+            <li> También puedes pulsar la barra espaciadora para parar o continuar la animación
+	    <li> El botón Reset reinicia la animación desde el principio
+======= end
+	  </ul>
+	  
+	</section>
+	
+<div id="htmltemplates">
+        </div>
+
+</body>
+
+</html>
+
