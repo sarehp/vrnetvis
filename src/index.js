@@ -8,7 +8,7 @@ if (typeof AFRAME === 'undefined') {
 // GLOBALS
 consoles=null
 
-var SHIFT_Y = 2
+var SHIFT_Y
 
 var viewing_mode = ""
 
@@ -302,6 +302,7 @@ function createViewSelector(parent, position) {
 
 }
 
+
 AFRAME.registerComponent('network', {
     schema: {
 	height: {type: 'number'},
@@ -322,7 +323,8 @@ AFRAME.registerComponent('network', {
             longitud = packet.children.length
 	    
             for (var a=0; a < longitud; a++) {
-                packet.children[0].remove()
+		if (packet.children[0])
+                    packet.children[0].remove()
             }
 	    if (packet.parentNode)
 		packet.parentNode.removeChild(packet);
@@ -355,8 +357,10 @@ AFRAME.registerComponent('network', {
 	nkp_filename  = this.data.topology
 	elementsScale = this.data.elementsScale
 	machineNamesFile = this.data.machineNames
-
+	SHIFT_Y = this.data.SHIFT_Y
+	
 	createNetwork(this.data.topology, this.data.machineNames, this.data.elementsScale)
+
     }
 });
 
@@ -639,6 +643,7 @@ AFRAME.registerComponent('packet', {
 	// The sphere in the link representing a packet
 	let sphere = document.createElement('a-sphere');
         sphere.setAttribute('id', 'sphere'+packet.id)
+	sphere.setAttribute('color', 'red')
         sphere.setAttribute('geometry', {primitive: 'sphere',  radius: 0.1/packetParams.elementsScale });
         sphere.setAttribute('visible', false)
 	packet.appendChild(sphere)
@@ -656,8 +661,8 @@ AFRAME.registerComponent('packet', {
 
 	let newInfoText = document.createElement('a-entity');
         
-	//        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + packetParams.SHIFT_Y, z: 0 });
-        newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + 0.5 * packetParams.SHIFT_Y, z: 0 });	
+	//	newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition + packetParams.SHIFT_Y, z: 0 });
+	newInfoText.setAttribute('position', { x: 3.5 , y: packetParams.yPosition, z: 0 });	
         newInfoText.setAttribute('look-at', "[camera]");
         newInfoText.setAttribute('visible', false);
         newInfoText.setAttribute('scale', {x: 20, y: 20, z: 20});
@@ -698,7 +703,7 @@ AFRAME.registerComponent('packet', {
 	    newBox.setAttribute('id', level.protocol + "Box" + packetParams.id);
 
 	    
-	    newBox.setAttribute('position', { x: 0, y:  packetParams.SHIFT_Y + (level_index), z: 0 });
+	    newBox.setAttribute('position', { x: 0, y: packetParams.yPosition + (level_index), z: 0 });
             newBox.setAttribute('color', getColor(level.protocol));
             newBox.setAttribute('visible', false); 
 
@@ -745,7 +750,7 @@ AFRAME.registerComponent('packet', {
 	let packetColor = getColor(bottommost_protocol);
 
         packet.setAttribute('material', 'color', packetColor);
-        packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });
+	packet.setAttribute('position', { x: packetParams.xPosition, y: packetParams.yPosition, z: packetParams.zPosition });		
         packet.setAttribute('class', packetParams.class);
         packet.setAttribute('sound', {src: '#packetIn', volume: 5, autoplay: "true"});
 
@@ -756,7 +761,7 @@ AFRAME.registerComponent('packet', {
 
         packet.setAttribute('animation__park', {
             property: 'position',
-	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 3.5*packetParams.SHIFT_Y, z: packetParams.zPosition},
+	    to: {x: packetParams.xPosition, y: packetParams.yPosition + 2.1*packetParams.SHIFT_Y, z: packetParams.zPosition},
             dur: packetParams.duration,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -779,7 +784,8 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('animation__out_of_node', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
-	    to: "2 2 2",
+	    //	    to: "2 2 2",
+	    to: "1 1 1",
             dur: 0,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -791,7 +797,7 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('animation__out_of_node_immediate', {
             property: 'scale',
             from: {x: 0.5*packetParams.elementsScale, y: 0.5*packetParams.elementsScale, z: 0.5*packetParams.elementsScale},
-	    to: "2 2 2",
+	    to: "1 1 1",
             dur: 0,
             pauseEvents:'animation-pause', 
             resumeEvents:'animation-resume',
@@ -827,7 +833,7 @@ AFRAME.registerComponent('packet', {
         packet.setAttribute('animation__route', {
             property: 'position',
 	    to: pointInSegment (
-		{"x": packetParams.xPosition,  "y": packetParams.yPosition,  "z": packetParams.zPosition},
+		{"x": packetParams.xPosition, "y": packetParams.yPosition, "z": packetParams.zPosition},
 		{"x": packetParams.toXPosition, "y": packetParams.toYPosition, "z": packetParams.toZPosition},
 		data.elementsScale,
 		0.1
@@ -863,14 +869,14 @@ AFRAME.registerComponent('packet', {
 		box.setAttribute('visible', true)
 	    }
 	    
-	    packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
-	    promise = promise
-		.then(() => anime(packet, 'out_of_node_immediate'))
+	    // packet.setAttribute("animation__out_of_node_immediate", {enabled: 'true'})
+	    // promise = promise
+	    // 	.then(() => anime(packet, 'out_of_node_immediate'))
 	}
 	else{ // not hub
-	    promise=promise
- 		.then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
-		.then(() =>	anime(packet, 'out_of_node'))
+	    // promise=promise
+ 	    // 	.then(() => packet.setAttribute("animation__out_of_node", {enabled: 'true'}))
+	    // 	.then(() =>	anime(packet, 'out_of_node'))
 
 	    
 	    // Show level boxes from top to bottom
@@ -946,11 +952,9 @@ AFRAME.registerComponent('packet', {
 	    }
 
 	    if (! pass){
-		console.log("!pass")
 		continue
 	    }
 	    else{
-		console.log("pass")
 		for (var i = 0; i < e.actions.length ; i++){
 		    protocol = e.actions[i]["protocol"]
 		    field = e.actions[i]["field"]		    
@@ -973,9 +977,6 @@ AFRAME.registerComponent('packet', {
 	let nodeName = packetParams.to
 	var node = nodeList.find(o => o.name === nodeName)
 	
-        console.log("packet arrived at node " + nodeName)
-
-
 	let promise = Promise.resolve()
 	
 	let receivingARPResponse = function(packet){
@@ -1023,7 +1024,6 @@ AFRAME.registerComponent('packet', {
 	   && VIEW=="ALL"){
 
 	    if (! frameIsForMe(packetParams)){
-		console.log(nodeName + " is not for me")
 
 		let fadeoutChildren = function(packet){
 		    var promises = []
@@ -1038,11 +1038,10 @@ AFRAME.registerComponent('packet', {
 		// fadeout packet and children and then destroy packet
 		packet.setAttribute('animation__fadeout', {enabled: 'true'})
 
-		console.log("1 Promise.all " + nodeName)
 		var promises = fadeoutChildren(packet)
 
 		anime(packet, 'fadeout')
-		    .then(() => {console.log("1 finish_packet" + nodeName)
+		    .then(() => {
 				 finish_packet(packet, packetParams)
 				})
 		
@@ -1123,10 +1122,10 @@ AFRAME.registerComponent('packet', {
 			promise=promise
 			    .then(()=> Promise.all([anime(packet, 'fadeout'),
 	 					     fadeoutChildren(packet)])
-					.then(() => {console.log("2")
+					.then(() => {
 						     return this.check_console("receiving", node, packetParams)
 						    })
-	 				.then(() => { console.log("2")
+	 				.then(() => {
 						      finish_packet(packet, packetParams)
 						    })
 				 )
@@ -1163,20 +1162,20 @@ AFRAME.registerComponent('packet', {
 		    .then(() => wait(1000))
 	    	    .then(() => next_packet_anim(packetParams))
 		    .then(() => wait(1000))
-		    .then(() => {console.log("3")
+		    .then(() => {
 				 this.check_console("receiving", node, packetParams)
 				})
-		    .then(() => { console.log("3")
+		    .then(() => { 
 				  return finish_packet(packet, packetParams)
 				})
 	    }
 	    else{ // it was the destination
 		promise = promise
 		    .then(() => wait(1000))
-		    .then(() => {console.log("4 check_console")
+		    .then(() => {
 				 return this.check_console("receiving", node, packetParams)
 			    })
-		    .then(() => { console.log("4 finish packet")
+		    .then(() => { 
 			finish_packet(packet, packetParams)
 		    })
 		    .then(() => wait(1000))
@@ -1185,7 +1184,6 @@ AFRAME.registerComponent('packet', {
 	    
 	    
 	}else{ // hub
-	    console.log("5")
 	    finish_packet(packet, packetParams)
 	    next_packet_anim(packetParams);
 	}
@@ -1197,17 +1195,16 @@ AFRAME.registerComponent('packet', {
     
     check_console: function(sending_receiving, node, packetParams) {
 	var nodeName = node.name
-	console.log("check_console: " + nodeName)
-	console.log(sending_receiving)	
 
 	var nodeFromAnimation = document.getElementById(nodeName);
 
 	let promise = Promise.resolve()
 	
+
 	// Process console if it exists
 	let showConsole = function(consoleText, the_text){
 	    if (node.consoleText)
-		nodeFromAnimation.removeChild(node.consoleText)
+	    	nodeFromAnimation.removeChild(node.consoleText)
 
 	    node.consoleText = document.createElement('a-entity');	    
 	    
@@ -1221,6 +1218,7 @@ AFRAME.registerComponent('packet', {
 	    node.consoleText.setAttribute('text', 'tabSize', 2)	    
 
 	    nodeFromAnimation.appendChild(node.consoleText)
+
 	}
 	
 	
@@ -1232,7 +1230,6 @@ AFRAME.registerComponent('packet', {
 
 		promise = promise
 		.then(()=> {
-		    console.log("aqui console_data: " + console_data)
 		    wait(500)
 		})
 		.then(()=> {
@@ -1246,7 +1243,6 @@ AFRAME.registerComponent('packet', {
 		.then(() => {
 		    console_data = this.console(nodeName, packetParams, sending_receiving)
 		    node.console_log += console_data
-		    console.log("new.console_log: " + node.console_log)
 		    showConsole(node.consoleText, node.console_log)
 		    return wait(2000)
 		})
@@ -1399,13 +1395,8 @@ const anime = (target, animation_name) =>
 function finish_packet(packet, packetParams){
     let promise1 = Promise.resolve()
 
-    console.log("finish_packet")
-    console.log("packet.id: " + packet.id)
-    console.log("finalPackets.length - 1")
-    console.log(finalPackets.length - 1)        
     
     if (packet.id == finalPackets.length - 1) {
-	console.log("finish_packet: thie is the end")
 	
 	promise1 = promise1
 	    .then (() =>  wait(12000)) // Give some time for final
@@ -1429,6 +1420,7 @@ function finish_packet(packet, packetParams){
 		
 		network = document.querySelector('#network')
 		network.components["network"].update()
+
 	    })
 
 		// // Animation is finished, clean up
@@ -1474,8 +1466,6 @@ AFRAME.registerComponent('model-opacity', {
 
 
 
-
-
 AFRAME.registerComponent('controller', {
 
     schema: {
@@ -1513,7 +1503,8 @@ AFRAME.registerComponent('controller', {
 		var node = nodeList.find(o => o.name === connectionLink.from)               
 		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
 		var ipaddr = connectionLink.ipaddr[i]
-		delete node.ARPCache[ipaddr]
+		if (node.ARPCache && node.ARPCache[ipaddr])
+		    delete node.ARPCache[ipaddr]
 	    }
 
 	}
@@ -1613,7 +1604,6 @@ AFRAME.registerComponent('controller', {
 		    next_packet += 1		    
 		    packets_ready = true
 		}
-		console.log("--------------- do_animate")
 	    }
 
 	    
@@ -1699,31 +1689,34 @@ AFRAME.registerComponent('controller', {
 	playButton.addEventListener('next', do_animate)
 	
         playButton.setAttribute('gltf-model', '#play_button');
-	playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });
 
 
+
+	//	let position = {x: -1, y: -2.7, z: -5.5}
+
+ 	position = Object.assign({}, this.data.position)
+	position.x -= 1
 	
-	let position = Object.assign({}, this.data.position)
-	position.x = position.x + 35
-        playButton.setAttribute('position', position);
+	playButton.setAttribute('position', position);
         playButton.setAttribute('color', 'orange');
-        playButton.setAttribute('scale', '4.5 4.5 4.5');
+        playButton.setAttribute('scale', '0.7 0.7 0.7');
+	playButton.setAttribute('rotation', {x: -10, y: 0, z: 0 });	    	    
         playButton.setAttribute('id', 'playButton');
         playButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
 
         playButton.addEventListener('mouseenter', function () {
-	    playButton.setAttribute('scale', {x: 5, y: 5, z: 5});
-	    playButton.setAttribute('rotation', {x: -10, y: 0, z: 0 });	    
+	    playButton.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+	    playButton.setAttribute('rotation', {x: 0, y: 0, z: 0 });	    
         });
         playButton.addEventListener('mouseleave', function () {
-	    playButton.setAttribute('scale', {x: 4.5, y: 4.5, z: 4.5})
+	    playButton.setAttribute('scale', {x: 1, y: 1, z: 1})
 	    playButton.removeAttribute('animation');
-	    playButton.setAttribute('rotation', {x: -30, y: 0, z: 0 });	    	    
+	    playButton.setAttribute('rotation', {x: -10, y: 0, z: 0 });	    	    
         });
 
 	playButton.addEventListener('click', event_listener_function)
 	let scene = document.querySelector("#escena")
-	scene.appendChild(playButton);
+	this.el.appendChild(playButton);
 
 
 	// Play button also can be clicked with space key
@@ -1737,38 +1730,45 @@ AFRAME.registerComponent('controller', {
 
 
 	
-	// Header text for PlayPause button
-	let viewText = document.createElement('a-text');
-	viewText.setAttribute('value', "Play / Pause")
-	viewText.setAttribute('scale', '5 5 5');
-	position.y += 3
-	position.x -= 3
-	viewText.setAttribute('position', position);
-	viewText.setAttribute("color", "white")	
-	this.el.appendChild(viewText)
+	// // Header text for PlayPause button
+	// let viewText = document.createElement('a-text');
+	// viewText.setAttribute('value', "Play / Pause")
+	// viewText.setAttribute('scale', '5 5 5');
+	// position.y += 3
+	// position.x -= 3
+	// viewText.setAttribute('position', position);
+	// viewText.setAttribute("color", "white")	
+	// this.el.appendChild(viewText)
 
 
 
 	// reset button
 	resetButton = document.createElement('a-entity');
         resetButton.setAttribute('gltf-model', '#reset_button');
-	resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });
-	position = Object.assign({}, this.data.position)
-	position.x += 10
+//	resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });
+// 	position = Object.assign({}, this.data.position)
+// //	position.x -= 5
+// 	position.y += 3
+// 	position.z += 32
+//	position = {x: 1, y: -2.7, z: -5.5}
+
+ 	position = Object.assign({}, this.data.position)
+	position.x += 1
+	
         resetButton.setAttribute('position', position);
         resetButton.setAttribute('color', 'orange');
-        resetButton.setAttribute('scale', '3.5 3.5 3.5');
+//        resetButton.setAttribute('scale', '3.5 3.5 3.5');
         resetButton.setAttribute('id', 'resetButton');
         resetButton.setAttribute('sound', {on: 'click', src: '#playPause', volume: 5});
-
+	resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });
+	
         resetButton.addEventListener('mouseenter', function () {
-	    resetButton.setAttribute('scale', {x: 4, y: 4, z: 4});
-	    resetButton.setAttribute('rotation', {x: 80, y: 0, z: 0 });	    
+	    resetButton.setAttribute('scale', {x: 1.2, y: 1.2, z: 1.2});
+	    resetButton.setAttribute('rotation', {x: 70, y: 0, z: 0 });	    
         });
         resetButton.addEventListener('mouseleave', function () {
-	    resetButton.setAttribute('scale', {x: 3.5, y: 3.5, z: 3.5})
+	    resetButton.setAttribute('scale', {x: 1, y: 1, z: 1})
 	    resetButton.removeAttribute('animation');
-	    resetButton.setAttribute('rotation', {x: 0, y: 0, z: 0 });
 	    resetButton.setAttribute('rotation', {x: 60, y: 0, z: 0 });	    
         });
 
@@ -1783,18 +1783,19 @@ AFRAME.registerComponent('controller', {
 
 	    network = document.querySelector('#network')
 	    network.components["network"].update()
+
 	}
 	resetButton.addEventListener('click', reset)
 
 	// Header text for Reset button
-	viewText = document.createElement('a-text');
-	viewText.setAttribute('value', "Reset")
-	viewText.setAttribute('scale', '5 5 5');
-	position.x -= 1.5
-	position.y += 3
-	viewText.setAttribute('position', position);
-	viewText.setAttribute("color", "white")	
-	this.el.appendChild(viewText)
+	// viewText = document.createElement('a-text');
+	// viewText.setAttribute('value', "Reset")
+	// viewText.setAttribute('scale', '5 5 5');
+	// position.x -= 1.5
+	// position.y += 3
+	// viewText.setAttribute('position', position);
+	// viewText.setAttribute("color", "white")	
+	// scene.appendChild(viewText)
 
 
 	
@@ -1807,7 +1808,7 @@ AFRAME.registerComponent('controller', {
 
 	position = Object.assign({}, this.data.position)
 	position.x += 15
-	position.y -= 1
+	position.y -= 10
 	let f = createViewSelector.bind(null, this.el, position)
         requestViewsMenuFile.onload = function() {
             response = requestViewsMenuFile.response;
@@ -1816,12 +1817,15 @@ AFRAME.registerComponent('controller', {
 	}
 
 
+
+	// infoPanel
         let infoPanel = document.createElement('a-entity');
         infoPanel.setAttribute('html', '#info-panel');
 	position = Object.assign({}, this.data.position)
-	position.x -= 25
-	position.y -= 5
-	position.z -= 20
+
+	position.x = -10
+	position.y = 7.5
+	position.z = 20
         infoPanel.setAttribute('position', position);
         infoPanel.setAttribute('scale', '30 30 30');
         infoPanel.setAttribute('id', 'infoPanel');
@@ -1830,7 +1834,7 @@ AFRAME.registerComponent('controller', {
 	infoPanel.setAttribute('look-at', "[camera]");
 
 	
-        this.el.appendChild(infoPanel);
+        scene.appendChild(infoPanel);
 	
 	
     }
@@ -1840,7 +1844,6 @@ AFRAME.registerComponent('controller', {
 
 
 function createNetwork(filename, machineNamesFile, elementScale){
-    console.log("create network")
     
     // initialize global variables
     nodeList.length = 0
@@ -1857,7 +1860,7 @@ function createNetwork(filename, machineNamesFile, elementScale){
     let promise1 =
 	new Promise((resolve) =>
 		    request.onload = function() {
-			console.log("cargados netkit.nkp")
+
 			nodeList.length=0 // need to reinitialize
 					  // because this handler is
 					  // called twice sometimes
@@ -1887,7 +1890,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 	.then(() => {return new Promise
 		     ((resolve) =>
 		      requestMachineNames.onload = function() {
-			  console.log("cargados machineNames")
 
 			  response = requestMachineNames.response;
 			  responseParse = JSON.parse(response);
@@ -1930,8 +1932,6 @@ function createNetwork(filename, machineNamesFile, elementScale){
 		      requestConsoles.onload = function() {
 			  response = requestConsoles.response;
 			  consoles = JSON.parse(response);
-			  console.log("consoles")
-			  console.log(consoles)
 			  resolve()	    
 		      }
 		     )})
@@ -2084,26 +2084,36 @@ function deleteLinks(finalConnectionsLinks){
 function deleteNodes(nodeList){
     scene = document.querySelector('#escena');
 
+
     
     for (var i = 0; i < nodeList.length; i++){
-	
-	node_a_entity = nodeList[i].node_a_entity 
 
-	if (! scene.contains(node_a_entity))
+	var nodeFromAnimation = document.getElementById(nodeList[i].name);
+	
+	if (! scene.contains(nodeList[i].node_a_entity))
 	    // Not all nodes are in the scene
 	    continue
 	
 	// Destroy node's text
-	scene.removeChild(nodeList[i].text)
+	if (nodeList[i].text)
+	    scene.removeChild(nodeList[i].text)
 
-	// Destroy node's routingTableText and ARPCache
+	// Destroy node's routingTableText,  ARPCache and consoleText
 	if(!nodeList[i].name.startsWith('hub')){
-            scene.removeChild(nodeList[i].routingTableText)
-            scene.removeChild(nodeList[i].ARPCacheInfoText)
+	    if (nodeList[i].routingTableText)
+		scene.removeChild(nodeList[i].routingTableText)
+	    if (nodeList[i].ARPCacheInfoText)
+		scene.removeChild(nodeList[i].ARPCacheInfoText)
+
+	    // This works in desktop, not in Oculus: it raises exception
+	    if (nodeList[i].hasOwnProperty('consoleText') ){
+	    	nodeFromAnimation.removeChild(nodeList[i].consoleText)		
+	    	nodeList[i].console_log = ""
+	    }
 	}
 
 	// Destroy node
-        scene.removeChild(node_a_entity);
+        scene.removeChild(nodeFromAnimation);	
     }
 
     // reset nodeList
@@ -2128,15 +2138,11 @@ function createNodes(nodes, nodeList, elementsScale) {
 	    node_a_entity:""
         }
 
-
-
 	
         let newNodeElement = document.createElement('a-entity');
 	newNode.node_a_entity = newNodeElement 
 	nodeList.push(newNode)	    
 	
-	console.log("createNodes newNode")
-	console.log(newNode)
 	
         if(newNode.name.startsWith('pc') || newNode.name.startsWith('dns')){
             newNodeElement.setAttribute('gltf-model', '#computer');
@@ -2210,12 +2216,17 @@ function createNodes(nodes, nodeList, elementsScale) {
         var newSectionTemplate = document.createElement("section");
         templateText = '<h1 style="padding: 0rem 1rem; margin:0; font-size: 3rem; font-weight: 700; font-family: monospace">' + newNode.name + '</h1>'
         newSectionTemplate.innerHTML = templateText;
-        newSectionTemplate.style = "display: inline-block; background: LightSlateGray; color: gold; border-radius: 1em; padding: 1em; margin:0;"
+	newSectionTemplate.style = "display: inline-block; background: LightSlateGray; color: gold; border-radius: 1em; padding: 1em; margin:0;"
         newSectionTemplate.id = newNode.name + '-template'
         htmltemplates.appendChild(newSectionTemplate);
 
         let newText = document.createElement('a-entity');
-        newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: 2.5 + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
+
+	if (newNode.name.startsWith('pc'))
+	    height = 2.5
+	else height = 1.5
+		
+	newText.setAttribute('position', { x: ((newNode.position.split(',')[0] / 15) - 0.5)/elementsScale, y: height + data.SHIFT_Y, z: (newNode.position.split(',')[1] / 15)/elementsScale });
         newText.setAttribute('html', '#' + newNode.name + '-template');
         newText.setAttribute('scale', {x: 10/elementsScale, y: 10/elementsScale, z: 10/elementsScale});
         newText.setAttribute('look-at', "[camera]");
@@ -2368,11 +2379,6 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
 	    label_id += "      " + connectionsLinksStandard[k].hwaddr[j] 
 
 	    
-	    console.log("writeConnections")
-	    console.log("k: " + k)
-	    console.log("j: " + j)
-	    console.log(connectionsLinksStandard)
-	    
 	    var id_text = connectionsLinksStandard[k].ipaddr[j].replace(/\./g, "_");
 
 	    
@@ -2380,7 +2386,9 @@ function writeConnections(connectionsLinksStandard, nodeList, data) {
             var newSectionTemplate = document.createElement("section");
             templateText = '<h1 style="padding: 0rem 0rem 0rem 0rem; margin: 0; font-size: 2.5rem; font-family: monospace; font-weight: 400;">' + label_id + '</h1>'
             newSectionTemplate.innerHTML = templateText;
-            newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
+//	    newSectionTemplate.style = "display: inline-block; background: #34495e; color: #a9cce3; border-radius: 1em; padding: 1em; margin:0;"
+	    newSectionTemplate.style = "display: inline-block; background: #aeadcd; color: #ffffff; border-radius: 1em; padding: 1em; margin:0;"	    
+
             newSectionTemplate.id = id_text + "-template";
             htmltemplates.appendChild(newSectionTemplate);
 
@@ -2874,11 +2882,11 @@ function create_animations(finalPackets){
         newPacket.setAttribute('packet','from', finalPackets[currentPacket].from.from);
         newPacket.setAttribute('packet','to', finalPackets[currentPacket].to.from);	
         newPacket.setAttribute('packet','xPosition', finalPackets[currentPacket].xPosition);
-        newPacket.setAttribute('packet','yPosition', ' ' + SHIFT_Y + ' ');
+	newPacket.setAttribute('packet','yPosition', SHIFT_Y);
         newPacket.setAttribute('packet','zPosition', finalPackets[currentPacket].zPosition);
         newPacket.setAttribute('packet','duration', finalPackets[currentPacket].duration);
         newPacket.setAttribute('packet','toXPosition', finalPackets[currentPacket].toXPosition);
-        newPacket.setAttribute('packet','toYPosition', ' ' + SHIFT_Y + ' ');
+        newPacket.setAttribute('packet','toYPosition', SHIFT_Y);
         newPacket.setAttribute('packet','toZPosition', finalPackets[currentPacket].toZPosition);
         newPacket.setAttribute('packet','elementsScale', data.elementsScale);
         newPacket.setAttribute('packet','class', 'packetClass')
