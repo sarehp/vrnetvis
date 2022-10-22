@@ -586,12 +586,19 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	    ethDst = ""
 	}
 	else
-	    ethDst = packetParams.eth['eth.dst'] 
+	    ethDst = packetParams.eth['eth.dst']
+
+
+	if (packetParams.eth['eth.type'] == '0x0806')
+	    type = "ARP"
+	else if (packetParams.eth['eth.type'] == '0x0800')
+	    type = "IPv4"
+	
 	infoText += h2 + 
             'Ethernet Protocol:</h2>' + h3 +
             'Destination: ' + ethDst + '<br>' +
             'Source: '  + packetParams.eth['eth.src']  + '<br>' +  
-            'Type: '    + packetParams.eth['eth.type'] + '</h3>'
+            'Type: '    + type + " (" + packetParams.eth['eth.type'] + ")" + '</h3>'
 	break;
 
     }
