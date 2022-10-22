@@ -546,16 +546,16 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 
     case 'icmp':
 	infoText += h2 + 
-            'Nivel ICMP:</h2>' + h3 + 
+            'ICMP Protocol:</h2>' + h3 + 
             'Type: ' + packetParams.icmp['icmp.type'] + '<br>' +  
             'Code: ' + packetParams.icmp['icmp.code'] + '</h3>'
 	break;
 
     case 'ip':
 	infoText += h2 + 
-            'Nivel IP:</h2>' + h3 +
-            'Origen: '  + packetParams.ip['ip.src']  + '<br>' + 
-            'Destino: ' + packetParams.ip['ip.dst']  + '<br>' + 
+            'IP Protocol:</h2>' + h3 +
+            'Source: '  + packetParams.ip['ip.src']  + '<br>' + 
+            'Destination: ' + packetParams.ip['ip.dst']  + '<br>' + 
             'TTL: '     + packetParams.ip['ip.ttl']  + '</h3>'
 	break;
 
@@ -563,17 +563,22 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
         operation=""
 
 
-        if (packetParams.arp['arp.opcode'] == "1")
-            operation="Solicitud"
-        else
-            operation="Respuesta"
+        if (packetParams.arp['arp.opcode'] == "1"){
+            operation="1 (request)"
+	    target_mac = ""
+	}
+        else{
+            operation="2 (reply)"
+	    target_mac = packetParams.arp['arp.dst.hw_mac']
+	}
 
 	infoText += h2 + 
-            'Nivel ARP:</h2>' + h3 + 
-            'Origen: '    + packetParams.arp['arp.src.hw_mac']     + '<br>' + 
-            'Destino: '   + packetParams.arp['arp.dst.hw_mac']     + '<br>' +  
-            'Operación: ' + operation                              + '<br>' +
-            'Target: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</h3>'
+            'ARP Protocol:</h2>' + h3 + 
+            'Opcode: ' + operation                              + '<br>' +
+            'Sender MAC: '    + packetParams.arp['arp.src.hw_mac']     + '<br>' +
+            'Sender IP: '    + packetParams.arp['arp.src.proto_ipv4']     + '<br>' + 	    
+            'Target MAC: '   + target_mac     + '<br>' +  
+            'Target IP: '    + packetParams.arp['arp.dst.proto_ipv4'] + '</h3>'
 	break;
 
     case 'eth':
@@ -583,10 +588,10 @@ function showInfoText(protocol, packetParams, newInfoText, newBox, noEth=false){
 	else
 	    ethDst = packetParams.eth['eth.dst'] 
 	infoText += h2 + 
-            'Nivel Ethernet:</h2>' + h3 +
-            'Origen: '  + packetParams.eth['eth.src']  + '<br>' +  
-            'Destino: ' + ethDst + '<br>' +
-            'Tipo: '    + packetParams.eth['eth.type'] + '</h3>'
+            'Ethernet Protocol:</h2>' + h3 +
+            'Destination: ' + ethDst + '<br>' +
+            'Source: '  + packetParams.eth['eth.src']  + '<br>' +  
+            'Type: '    + packetParams.eth['eth.type'] + '</h3>'
 	break;
 
     }
@@ -986,7 +991,7 @@ AFRAME.registerComponent('packet', {
 	    let eth_src = packet.eth["eth.src"]
 
 	    if (packet["arp"]
-		&& packet["arp"]["arp.opcode"] == "2") // ARP request
+		&& packet["arp"]["arp.opcode"] == "2") // ARP response
 	    {		
 		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_dst))
 		var node = nodeList.find(o => o.name === connectionLink.from)               
@@ -999,6 +1004,30 @@ AFRAME.registerComponent('packet', {
 	    }
 	}
 
+
+	let receivingARPRequest = function(packet){
+	    // to be called when an arp request is received:
+	    // add in the receiver's ARPCache the eth_src
+	    let ip_dst = packet["arp"]["arp.dst.proto_ipv4"]
+	    let eth_src = packet.eth["eth.src"]
+
+	    var node = nodeList.find(o => o.name === nodeName)
+	    
+	    if (packet["arp"]
+		&& packet["arp"]["arp.opcode"] == "1" // ARP request
+		&& node.ipaddr.includes(ip_dst)) 
+	    {		
+		var connectionLink = finalConnectionsLinks.find(o => o.ipaddr.includes(ip_dst))
+		var node = nodeList.find(o => o.name === connectionLink.from)               
+		var i = connectionLink.ipaddr.findIndex(o => o == ip_dst)
+
+		var ipaddr = packet["arp"]["arp.src.proto_ipv4"]
+		
+		node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_src}
+
+	    }
+	}
+	
 	
 	var node = nodeList.find(o => o.name === nodeName)
 	
@@ -1082,13 +1111,25 @@ AFRAME.registerComponent('packet', {
 
 
 		
-
+		if (packetParams["arp"]){
+		    // Fill ARP Cache
+		    receivingARPResponse(packetParams)
+		    receivingARPRequest(packetParams)
+		}
+		
 		isIPDestination = packetParams.ip && node.ipaddr.includes(packetParams.ip["ip.dst"])
 		switch(packet.levels[i]["protocol"]){
 		case "eth":
 		    promise = promise
 			.then(() => box.setAttribute('visible', false))
 		    break;
+		case "arp":
+		    promise = promise
+			.then(() => showARPCacheInfoText(node.ARPCacheInfoText, node.ARPCache))
+			.then(() => wait(3000))
+			.then(() => node.ARPCacheInfoText.setAttribute('visible', false))
+		    break;
+//pheras		    
 		case "ip":
 		    if (isIPDestination){
 			promise = promise
@@ -1149,7 +1190,6 @@ AFRAME.registerComponent('packet', {
 
 	    
 	    
-	    receivingARPResponse(packetParams)
 	    
 	    
 	    isNotIPDestination = packetParams.ip && ! node.ipaddr.includes(packetParams.ip["ip.dst"])
@@ -1509,28 +1549,6 @@ AFRAME.registerComponent('controller', {
 
 	}
 	
-	let sendingARPResponse = function(packet_index){
-	    // to be called when an arp response is sent:
-	    // add in the sender's ARPCache the eth_dst
-	    let packet = finalPackets[packet_index]
-	    let eth_dst = packet.eth["eth.dst"]
-	    let eth_src = packet.eth["eth.src"]
-
-	    if (packet["arp"]
-		&& packet["arp"]["arp.opcode"] == "2") // ARP response
-	    {		
-		var connectionLink = finalConnectionsLinks.find(o => o.hwaddr.includes(eth_src))
-		var node = nodeList.find(o => o.name === connectionLink.from)               
-		var i = connectionLink.hwaddr.findIndex(o => o == eth_src)
-
-		var ipaddr = packet["arp"]["arp.dst.proto_ipv4"]
-
-		node.ARPCache[ipaddr]={"iface": "eth"+i, "hwaddr": eth_dst}
-	    }
-	    
-	}
-
-
 	while (next_packet < finalPackets.length && !packets_ready){
 	    CURRENT_TIME += 500
 
@@ -1539,10 +1557,6 @@ AFRAME.registerComponent('controller', {
 		// delete from the sender of the ARP request the
 		// requested IP
 		deleteARPCache(next_packet)
-		// in case it's an ARP response update cache with what
-		// we learnt from the sender of the previous ARP
-		// request
-		sendingARPResponse(next_packet)
 		
 		next_ip_position = finalPackets[next_packet].next_ip_position
 		
